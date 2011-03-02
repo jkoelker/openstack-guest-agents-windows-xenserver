@@ -1,0 +1,166 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="3.5" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{3A7163E4-D916-40AF-AAFE-783194AB3808}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Rackspace.Cloud.Server.Agent</RootNamespace>
+    <AssemblyName>Rackspace.Cloud.Server.Agent</AssemblyName>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkSubset>
+    </TargetFrameworkSubset>
+    <SignAssembly>false</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="ICSharpCode.SharpZipLib, Version=0.85.5.452, Culture=neutral, PublicKeyToken=1b03e6acf1164f73, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\lib\sharplibzip\ICSharpCode.SharpZipLib.dll</HintPath>
+    </Reference>
+    <Reference Include="LinqBridge, Version=1.0.0.0, Culture=neutral, PublicKeyToken=c2b14eb747628076, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\lib\LinQBridge\LinqBridge.dll</HintPath>
+    </Reference>
+    <Reference Include="log4net, Version=1.2.10.0, Culture=neutral, PublicKeyToken=1b44e1d426115821, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\lib\log4net\log4net.dll</HintPath>
+    </Reference>
+    <Reference Include="StructureMap, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\lib\structuremap\StructureMap.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Management" />
+    <Reference Include="System.Security" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.ServiceProcess" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.Extensions, Version=1.0.61025.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\lib\asp.netajax1.0\System.Web.Extensions.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Actions\ChecksumValidator.cs" />
+    <Compile Include="Actions\Downloader.cs" />
+    <Compile Include="Actions\FileCopier.cs" />
+    <Compile Include="Actions\FileCreator.cs" />
+    <Compile Include="Actions\Finalizer.cs" />
+    <Compile Include="Actions\InjectFileMessageHandler.cs" />
+    <Compile Include="Actions\Installer.cs" />
+    <Compile Include="Actions\ServiceRestarter.cs" />
+    <Compile Include="Actions\Sleeper.cs" />
+    <Compile Include="Actions\ServiceStarter.cs" />
+    <Compile Include="Actions\ServiceStopper.cs" />
+    <Compile Include="Commands\Unrescue.cs" />
+    <Compile Include="Actions\Unzipper.cs" />
+    <Compile Include="Actions\VersionChecker.cs" />
+    <Compile Include="AdministratorAccountNameFinder.cs" />
+    <Compile Include="Actions\AgentUpdateMessageHandler.cs" />
+    <Compile Include="AgentUpdateMessageSender.cs" />
+    <Compile Include="Commands\Features.cs" />
+    <Compile Include="Commands\InjectFile.cs" />
+    <Compile Include="Commands\UpdaterUpdate.cs" />
+    <Compile Include="Commands\XentoolsUpdate.cs" />
+    <Compile Include="DiffieHellmanPrerequisitesChecker.cs" />
+    <Compile Include="Actions\SetNetworkRoutes.cs" />
+    <Compile Include="FileInfo.cs" />
+    <Compile Include="Interfaces\IAdministratorAccountNameFinder.cs" />
+    <Compile Include="Interfaces\IDiffieHellmanPrerequisitesChecker.cs" />
+    <Compile Include="Interfaces\IInjectFile.cs" />
+    <Compile Include="Interfaces\IRegistryReader.cs" />
+    <Compile Include="OperatingSystemChecker.cs" />
+    <Compile Include="RegistryReader.cs" />
+    <Compile Include="Security\Encryption.cs" />
+    <Compile Include="Utilities\Commands.cs" />
+    <Compile Include="Utilities\Statics.cs" />
+    <Compile Include="Commands\KmsActivate.cs" />
+    <Compile Include="Actions\ConnectionChecker.cs" />
+    <Compile Include="Actions\ActivateWindowsUsingKms.cs" />
+    <Compile Include="Interfaces\IAgentUpdateMessageSender.cs" />
+    <Compile Include="Commands\KeyInit.cs" />
+    <Compile Include="Commands\Password.cs" />
+    <Compile Include="Commands\Ready.cs" />
+    <Compile Include="Commands\AgentUpdate.cs" />
+    <Compile Include="Commands\Version.cs" />
+    <Compile Include="Configuration\Command.cs" />
+    <Compile Include="Configuration\ExecutableResult.cs" />
+    <Compile Include="ExecutableProcess.cs" />
+    <Compile Include="Commands\ResetNetwork.cs" />
+    <Compile Include="Configuration\NetworkInterface.cs" />
+    <Compile Include="Configuration\NameServer.cs" />
+    <Compile Include="ExecutableProcessCommandPatternSubsitution.cs" />
+    <Compile Include="ExecutableProcessQueue.cs" />
+    <Compile Include="Actions\SetNetworkInterface.cs" />
+    <Compile Include="Actions\SetPassword.cs" />
+    <Compile Include="ExtensionAttribute.cs" />
+    <Compile Include="Interfaces\IExecutableProcessCommandPatternSubsitution.cs" />
+    <Compile Include="Interfaces\IExecutableCommand.cs" />
+    <Compile Include="Interfaces\ICommandFactory.cs" />
+    <Compile Include="Interfaces\IExecutableProcess.cs" />
+    <Compile Include="Interfaces\IExecutableProcessQueue.cs" />
+    <Compile Include="CustomExceptions.cs" />
+    <Compile Include="CommandQueue.cs" />
+    <Compile Include="Configuration\IpTuple.cs" />
+    <Compile Include="Interfaces\ITimer.cs" />
+    <Compile Include="Configuration\Network.cs" />
+    <Compile Include="ProdTimer.cs" />
+    <Compile Include="IoC.cs" />
+    <Compile Include="Utilities\Extensions.cs" />
+    <Compile Include="Utilities\Json.cs" />
+    <Compile Include="Utilities\SystemInformation.cs" />
+    <Compile Include="WMI\WmiMacNetworkNameGetter.cs" />
+    <Compile Include="XenNetworkInformation.cs" />
+    <Compile Include="Configuration\NetworkRoute.cs" />
+    <Compile Include="ServiceWork.cs" />
+    <Compile Include="Constants.cs" />
+    <Compile Include="XenStore.cs" />
+    <Compile Include="CommandFactory.cs" />
+    <Compile Include="Interfaces\IXenStore.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Rackspace.Cloud.Server.Agent.DiffieHellman\Rackspace.Cloud.Server.DiffieHellman.csproj">
+      <Project>{63062513-08CA-428F-9582-CDFF0BA3B206}</Project>
+      <Name>Rackspace.Cloud.Server.DiffieHellman</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Rackspace.Cloud.Server.Common\Rackspace.Cloud.Server.Common.csproj">
+      <Project>{3E0EB720-DA49-48AE-AAA5-43CCA95D2E6D}</Project>
+      <Name>Rackspace.Cloud.Server.Common</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Id="*" Name="AgentDeployment" Language="1033" Version="1.0.0.0" Manufacturer="RackspaceCloud" UpgradeCode="36516CDA-1C1D-404A-A44C-53D2A16292F1">
+    <Package InstallerVersion="100" Compressed="yes" Description="Installs the Cloud agent on the guest" Manufacturer="RackspaceCloud" Comments="RackspaceCloud is a subsidiary of Rackspace"/>
+
+    <Condition Message="You need to be an administrator to install this product.">
+      Privileged
+    </Condition>
+
+    <Property Id="PREVIOUSVERSIONSINSTALLED" Secure="yes" />
+    <Upgrade Id="36516CDA-1C1D-404A-A44C-53D2A16292F1">
+      <UpgradeVersion Minimum="1.0.0.0" Maximum="99.0.0.0" Property="PREVIOUSVERSIONSINSTALLED" IncludeMinimum="yes" IncludeMaximum="no" />
+    </Upgrade>
+
+    <InstallExecuteSequence>
+      <RemoveExistingProducts Before="InstallInitialize" />
+    </InstallExecuteSequence>
+
+    <Media Id="1" Cabinet="agent.cab" EmbedCab="yes" />
+
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFilesFolder">
+        <Directory Id="INSTALLLOCATION_LEVEL1" Name="RackspaceCloud">
+          <Directory Id="INSTALLLOCATION_LEVEL2" Name="Servers">
+            <Component Id="ProductComponent" Guid="912B377E-6E1C-494F-A1D4-55E4F7CDE2FB" NeverOverwrite="no">
+              <!--<File Id="File1" Name="Rackspace.Cloud.Server.Agent.Service.vshost.exe"
+                    Source="C:\Source\Rackspace.Cloud.Server\winconfigagent-srv2008\src\Rackspace.Cloud.Server.Agent.Service\bin\Debug\Rackspace.Cloud.Server.Agent.Service.vshost.exe.config"
+                    DiskId="1" KeyPath="yes" Checksum="yes" Vital="yes" />-->
+
+              <CreateFolder />
+            </Component>
+
+            <!--<Component Id='ServiceExeComponent' Guid='YOURGUID-D752-4C4F-942A-657B02AE8325'
+                SharedDllRefCount='no' KeyPath='no' NeverOverwrite='no' Permanent='no' Transitive='no'
+                Win64='no' Location='either'>
+
+              <File Id='ServiceExeFile' Name='ServiceExe.exe' Source='ServiceExe.exe'
+                ReadOnly='no' Compressed='yes' KeyPath='yes' Vital='yes' Hidden='no' System='no'
+                Checksum='no' PatchAdded='no' />
+
+              <ServiceInstall Id='MyServiceInstall' DisplayName='My Test Service' Name='MyServiceExeName'
+                ErrorControl='normal' Start='auto' Type='ownProcess' Vital='yes' />
+
+              <ServiceControl Id='MyServiceControl' Name='MyServiceExeName'
+                Start='install' Stop='uninstall' Remove='uninstall' />
+
+            </Component>-->
+          </Directory>
+        </Directory>
+      </Directory>
+    </Directory>
+
+    <Feature Id="ProductFeature" Title="AgentDeployment" Level="1">
+      <ComponentRef Id="ProductComponent" />
+    </Feature>
+  </Product>
+</Wix>
