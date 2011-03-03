@@ -1,0 +1,10 @@
+*.suo
+bin
+obj
+_[Rr]e{Ss]harper*
+_ReSharper*
+*.cache
+TestResult.xml
+agent-unit-tests-results.xml
+diffiehellman-unit-tests-results.xml
+builds
