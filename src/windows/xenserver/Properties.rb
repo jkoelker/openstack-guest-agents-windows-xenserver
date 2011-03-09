@@ -1,26 +1,20 @@
-#Paths
-MSBUILD_DIR = "#{ENV["SystemRoot"]}\\Microsoft.Net\\Framework\\v3.5\\"
-SOURCE_DIR = "src"
-UNITTESTS_RESULTS_DIR = "unittestresults"
-RELEASE_DIR = "release"
-AGENT_SERVICE_DIR = "src\\Rackspace.Cloud.Server.Agent.Service\\bin\\Debug"
-UPDATE_SERVICE_DIR = "src\\Rackspace.Cloud.Server.Agent.UpdaterService\\bin\\Debug"
-WXS_PATH = "src\\Rackspace.Cloud.Server.Agent.Deployer\\Product.wxs"
+ABSOLUTE_PATH = File.expand_path(File.dirname(__FILE__))
 
-#General Config
-SERVICE = "Rackspace.Cloud.Server.Agent.Service"
-RELEASE_PACKAGE_NAME = "release.zip"
-
-#Tools
-NUNIT_EXE = "lib\\nunit\\nunit-console.exe"
-CANDLE_EXE = "C:\\Program Files\\Windows Installer XML v3\\bin\\candle.exe"
-LIGHT_EXE = "C:\\Program Files\\Windows Installer XML v3\\bin\\light.exe"
-
-
-#Assembly Attributes
-RELEASE_VERSION = "1.0"
-RELEASE_BUILD_NUMBER = ENV['BUILD_NUMBER'] ||= "28" + ".0"
+COMPILE_TARGET = 'release'
 PRODUCT = "Rackspace Cloud Server Agent"
-COPYRIGHT = "Copyright (c) 2009 2010, Rackspace Cloud.  All Rights Reserved";
+COPYRIGHT = "Copyright (c) 2009 2010 2011, Rackspace Cloud.  All Rights Reserved";
 COMPANY = "Rackspace Cloud"
 DESCRIPTION = "C#.NET Agent for Windows Virtual Machines"
+CLR_VERSION = 'v3.5'
+RELEASE_BUILD_NUMBER = "1.0.28.0"
+
+#Paths
+SLN_FILE = File.join(ABSOLUTE_PATH,'src','WindowsConfigurationAgent.sln')
+AGENT_UNIT_TEST_DLL = File.join(ABSOLUTE_PATH,'src','Rackspace.Cloud.Server.Agent.Specs','bin',COMPILE_TARGET,'Rackspace.Cloud.Server.Agent.Specs.dll')
+DIFFIEHELLMAN_UNIT_TEST_DLL = File.join(ABSOLUTE_PATH,'src','Rackspace.Cloud.Server.DiffieHellman.Specs','bin',COMPILE_TARGET,'Rackspace.Cloud.Server.DiffieHellman.Specs.dll')
+AGENT_SERVICE_DIR = File.join(ABSOLUTE_PATH,'src','Rackspace.Cloud.Server.Agent.Service','bin','Debug')
+UPDATE_SERVICE_DIR = File.join(ABSOLUTE_PATH,'src','Rackspace.Cloud.Server.Agent.UpdaterService','bin','Debug')
+BUILDS_DIR = File.join(ABSOLUTE_PATH,'builds')
+NUNIT_CMD_EXE = File.join(ABSOLUTE_PATH,'lib','nunit','nunit-console.exe')
+FRAMEWORK_DIR = File.join(ENV['windir'].dup, 'Microsoft.NET', 'Framework', CLR_VERSION)
+MSBUILD_EXE = File.join(FRAMEWORK_DIR, 'msbuild.exe')
