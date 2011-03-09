@@ -36,6 +36,7 @@ class command_metaclass(type):
         if not hasattr(cls, '_cmd_classes'):
             cls._cmd_classes = []
             cls._cmd_instances = []
+            cls._cmds = {}
         else:
             cls._cmd_classes.append(cls)
 
@@ -48,23 +49,38 @@ class command(object):
     __metaclass__ = command_metaclass
 
     @classmethod
-    def create_instances(self, *args, **kwargs):
-        for cls in self._cmd_classes:
-            self._cmd_instances.append(cls(*args, **kwargs))
+    def _get_commands(self, inst):
+        cmds = {}
+        for objname in dir(inst):
+            obj = getattr(inst, objname)
+            if getattr(obj, '_is_cmd', False):
+                try:
+                    cmds[obj._cmd_name] = obj
+                except AttributeError:
+                    # skip it if there's no _cmd_name
+                    pass
+        return cmds
 
     @classmethod
-    def get_commands(self):
-        cmds = {}
-        for inst in self._cmd_instances:
-            for objname in dir(inst):
-                obj = getattr(inst, objname)
-                if getattr(obj, '_is_cmd', False):
-                    try:
-                        cmds[obj._cmd_name] = obj
-                    except AttributeError:
-                        # skip it if there's no _cmd_name
-                        pass
-        return cmds
+    def create_instances(self, *args, **kwargs):
+        for cls in self._cmd_classes:
+            inst = cls(*args, **kwargs)
+            self._cmd_instances.append(inst)
+            self._cmds.update(self._get_commands(inst))
+
+    @classmethod
+    def command_names(self):
+        return [x for x in self._cmds]
+
+    @classmethod
+    def run_command(self, cmd_name, arg):
+        try:
+            result = self._cmds[cmd_name](arg)
+        except KeyError:
+            raise CommandNotFoundError(cmd_name)
+
+        return result
+
 
 def command_add(cmd_name):
     """
@@ -89,16 +105,6 @@ class command_parser(nova_agent.plugin):
 
         __import__("plugins.jsonparser.commands")
         command.create_instances()
-        self._commands = command.get_commands()
-
-    def run_command(self, cmd_name, arg):
-
-        try:
-            result = self._commands[cmd_name](arg)
-        except KeyError:
-            raise CommandNotFoundError(cmd_name)
-
-        return result
 
     def encode_result(self, result):
 
@@ -129,7 +135,7 @@ class command_parser(nova_agent.plugin):
             cmd_string = ''
 
         try:
-            result = self.run_command(cmd_name, cmd_string)
+            result = command.run_command(cmd_name, cmd_string)
         except CommandNotFoundError, e:
             print e
             return self.encode_result((404, str(e)))

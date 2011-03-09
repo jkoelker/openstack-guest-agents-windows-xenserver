@@ -29,7 +29,8 @@ class misc_commands(jsonparser.command):
 
     @jsonparser.command_add('features')
     def features_cmd(self, data):
-        return (0, 'version,features')
+        commands = ','.join(self.command_names())
+        return (0, commands)
 
     @jsonparser.command_add('version')
     def version_cmd(self, data):
