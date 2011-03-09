@@ -29,8 +29,8 @@ class misc_commands(jsonparser.command):
 
     @jsonparser.command_add('features')
     def features_cmd(self, data):
-        return {'returncode': '0', 'message': 'version,features'}
+        return (0, 'version,features')
 
     @jsonparser.command_add('version')
     def version_cmd(self, data):
-        return {'returncode': '0', 'message': '1.0.0.0'}
+        return (0, '1.0.0.0')
