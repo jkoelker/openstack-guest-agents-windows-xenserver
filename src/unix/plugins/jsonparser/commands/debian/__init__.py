@@ -17,8 +17,7 @@
 #
 
 """
-JSON command plugins
+debian/ubuntu helper module
 """
 
-from . import misc
 from . import network

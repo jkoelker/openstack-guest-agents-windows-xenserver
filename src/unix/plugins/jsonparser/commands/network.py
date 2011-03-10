@@ -17,8 +17,19 @@
 #
 
 """
-JSON command plugins
+JSON misc commands plugin
 """
 
-from . import misc
-from . import network
+from plugins.jsonparser import jsonparser
+import debian
+
+class network_commands(jsonparser.command):
+
+    def __init__(self, *args, **kwargs):
+        super(jsonparser.command, self).__init__(*args, **kwargs)
+
+    @jsonparser.command_add('resetnetwork')
+    def resetnetwork_cmd(self, data):
+        # XXX -- Need to figure out our OS.. 
+        debian.network.write_interfaces(data)
+        return (0, "")
