@@ -21,15 +21,44 @@ JSON misc commands plugin
 """
 
 from plugins.jsonparser import jsonparser
-import debian
+import os
+import platform
 
 class network_commands(jsonparser.command):
 
     def __init__(self, *args, **kwargs):
         super(jsonparser.command, self).__init__(*args, **kwargs)
 
+    @classmethod
+    def detect_os(self):
+        """
+        Return the Linux Distribution or other OS name
+        """
+
+        translations = {"ubuntu": "debian",
+                        "centos": "redhat",
+                        "fedora": "redhat",
+                        "oracle": "redhat"}
+
+        system = os.uname()[0]
+        if system == "Linux":
+            system = platform.linux_distribution(None)[0]
+
+        try:
+            system = translations[system.lower()]
+        except Exception:
+            pass
+
+        return system
+
     @jsonparser.command_add('resetnetwork')
     def resetnetwork_cmd(self, data):
-        # XXX -- Need to figure out our OS.. 
-        debian.network.write_interfaces(data)
-        return (0, "")
+
+        system = self.detect_os()
+        if not system:
+            raise SystemError("Couldn't figure out my OS")
+
+        os_mod = __import__("%s" % system, globals(), locals(),
+                ["network"], -1)
+
+        return os_mod.network.configure_network(data)

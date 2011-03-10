@@ -20,4 +20,3 @@
 debian/ubuntu helper module
 """
 
-from . import network

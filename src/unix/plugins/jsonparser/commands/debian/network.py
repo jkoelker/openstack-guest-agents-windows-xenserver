@@ -35,19 +35,25 @@ auto lo
 iface lo inet loopback
 """
 
-#{"label":"public","ips":[{"netmask":"255.255.255.0","enabled":"1","ip":"10.127.31.38"}],"mac":"40:40:8f:1e:a0:0a","gateway":"10.127.31.1","slice":"25630","dns":["10.6.24.4","10.6.24.5"]}
-
-#{"label":"private","ips":[{"netmask":"255.255.224.0","enabled":"1","ip":"192.168.2.30"}],"routes":[{"route":"10.176.0.0","netmask":"255.248.0.0","gateway":"10.177.96.1"},{"route":"10.191.192.0","netmask":"255.255.192.0","gateway":"10.177.96.1"}],"mac":"40:40:a2:87:6e:26"}
-
 INTERFACE_LABELS = {"public": "eth0",
                     "private": "eth1"}
+
+def configure_network(network_config, *args, **kwargs):
+
+    write_interfaces(network_config, dont_rename=0)
+    return (0, "")
 
 def write_interfaces(network_config, *args, **kwargs):
     """
     Write out a new interfaces file
     """
 
-    bak_file = INTERFACE_FILE + str(int(time.time()))
+    try:
+        dont_rename = kwargs['dont_rename']
+    except KeyError:
+        dont_rename = 0
+
+    bak_file = INTERFACE_FILE + '.' + str(int(time.time()))
     tmp_file = TMP_INTERFACE_FILE
 
     data = _get_file_data(network_config)
@@ -59,17 +65,19 @@ def write_interfaces(network_config, *args, **kwargs):
     try:
         os.chown(tmp_file, 0, 0)
         os.chmod(tmp_file, 0644)
-        rename(INTERFACE_FILE, bak_file)
+        if not dont_rename:
+            os.rename(INTERFACE_FILE, bak_file)
     except Exception, e:
         os.unlink(tmp_file)
         raise e
 
-    try:
-        rename(tmp_file, INTERFACE_FILE)
-        pass
-    except Exception, e:
-        rename(bak_file, INTERFACE_FILE)
-        raise e
+    if not dont_rename:
+        try:
+            os.rename(tmp_file, INTERFACE_FILE)
+            pass
+        except Exception, e:
+            os.rename(bak_file, INTERFACE_FILE)
+            raise e
 
 
 def _get_file_data(network_config):
