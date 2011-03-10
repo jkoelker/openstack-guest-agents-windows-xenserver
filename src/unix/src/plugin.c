@@ -121,9 +121,6 @@ static void *_agent_parser_plugin_thread(void *arg)
         return NULL;
     }
 
-    Py_INCREF(e_instance);
-    Py_INCREF(p_instance);
-
     get_req = PyObject_GetAttrString(plugin->cls, "get_request");
 
     put_resp = PyObject_GetAttrString(plugin->cls, "put_response");
@@ -179,6 +176,9 @@ static void *_agent_parser_plugin_thread(void *arg)
     Py_DECREF(get_req);
     Py_DECREF(put_resp);
     Py_DECREF(parse);
+
+    Py_DECREF(p_instance);
+    Py_DECREF(e_instance);
 
     PyGILState_Release(gstate);
 
