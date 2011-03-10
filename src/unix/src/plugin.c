@@ -125,13 +125,10 @@ static void *_agent_parser_plugin_thread(void *arg)
     Py_INCREF(p_instance);
 
     get_req = PyObject_GetAttrString(plugin->cls, "get_request");
-    Py_INCREF(get_req);
 
     put_resp = PyObject_GetAttrString(plugin->cls, "put_response");
-    Py_INCREF(put_resp);
 
     parse = PyObject_GetAttrString(plugin->parser, "parse_request");
-    Py_INCREF(parse);
 
     PyGILState_Release(gstate);
 
