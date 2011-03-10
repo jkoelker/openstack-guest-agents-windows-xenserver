@@ -47,6 +47,35 @@ static PyTypeObject _xenstore_type =
 
 #define NETWORKRESET_EVENT "{\"name\":\"resetnetwork\",\"value\":"
 #define XENSTORE_NETWORKING_PATH "vm-data/networking"
+#define XENSTORE_HOSTNAME_PATH "vm-data/hostname"
+
+
+static int _string_append(char **dest_string, u_int *dest_string_len,
+        u_int *dest_string_sz, char *src_string, u_int src_string_len)
+{
+    u_int sz_needed;
+
+    sz_needed = *dest_string_len + src_string_len + 32;
+
+    if (sz_needed > *dest_string_sz)
+    {
+        void *ptr = realloc(*dest_string, sz_needed);
+
+        if (!ptr)
+        {
+            return -1;
+        }
+
+        *dest_string = ptr;
+        *dest_string_sz = sz_needed;
+    }
+
+    memcpy(*dest_string + *dest_string_len, src_string, src_string_len);
+
+    (*dest_string_len) += src_string_len;
+
+    return 0;
+}
 
 /*
  * Pull the networking data out of a the xenstore, and return a new
@@ -62,30 +91,76 @@ static int _convert_network_event(xenstore_info_t *xsi, xs_transaction_t t, char
     unsigned int dir_list_num;
     void *dir_entry;
     unsigned int dir_entry_len;
+    void *hostname;
+    unsigned int hostname_len;
     char **d;
     unsigned int i;
-    char *new_buf;
-    unsigned int new_buf_len;
-    void *vptr;
+    char *new_buf = NULL;
+    unsigned int new_buf_len = 0;
+    unsigned int new_buf_sz = 0;
+    static char prefix2[] = "{\"hostname\":\"";
+    static char prefix3[] = "\",\"interfaces\":[";
+
+    hostname = xs_read(xsi->handle, t, XENSTORE_HOSTNAME_PATH,
+                        &hostname_len);
+    if (hostname == NULL)
+    {
+        hostname = strdup("");
+        if (hostname == NULL)
+        {
+            return -1;
+        }
+
+        hostname_len = 0;
+    }
 
     dir_list = xs_directory(xsi->handle, t,
                                 XENSTORE_NETWORKING_PATH, &dir_list_num);
     if (dir_list == NULL)
     {
+        free(hostname);
         return -1;
     }
 
-    new_buf_len = strlen(prefix);
+#define STRING_APPEND(__x, __x_len) \
+        _string_append(&new_buf, &new_buf_len, &new_buf_sz, \
+                __x, __x_len)
 
-    /* make sure there's room for starting '[', and ending ']' '}' and '\0' */
-    new_buf = malloc(new_buf_len + 4);
-    if (new_buf == NULL)
+    /* 
+     * We're going to add starting:
+     * {"hostname": hostname, "interfaces": [
+     *
+     * And we'll need to add ending ']' and '}'
+     *
+     */
+
+    if (STRING_APPEND(prefix, strlen(prefix)) < 0)
     {
+        free(hostname);
         return -1;
     }
 
-    strcpy(new_buf, prefix);
-    new_buf[new_buf_len++] = '[';
+    if (STRING_APPEND(prefix2, strlen(prefix2)) < 0)
+    {
+        free(hostname);
+        return -1;
+    }
+
+    if (STRING_APPEND(hostname, hostname_len) < 0)
+    {
+        free(hostname);
+        free(new_buf);
+        return -1;
+    }
+
+    /* Don't need this anymore */
+    free(hostname);
+
+    if (STRING_APPEND(prefix3, strlen(prefix3)) < 0)
+    {
+        free(new_buf);
+        return -1;
+    }
 
     for(i=0,d=dir_list;i<dir_list_num;i++,d++)
     {
@@ -100,9 +175,16 @@ static int _convert_network_event(xenstore_info_t *xsi, xs_transaction_t t, char
             return -1;
         }
 
-        /* make sure there's room for ending ',' ']' '}' and '\0' */
-        vptr = realloc(new_buf, new_buf_len + dir_entry_len + 4);
-        if (vptr == NULL)
+        if (i != 0)
+        {
+            /* 
+             * Always room for 1 character, so we don't need to check
+             * for errors
+             */
+            STRING_APPEND(",", 1);
+        }
+
+        if (STRING_APPEND(dir_entry, dir_entry_len) < 0)
         {
             free(dir_entry);
             free(new_buf);
@@ -110,18 +192,15 @@ static int _convert_network_event(xenstore_info_t *xsi, xs_transaction_t t, char
             return -1;
         }
 
-        new_buf = vptr;
-        if (i != 0)
-            new_buf[new_buf_len++] = ',';
-
-        memcpy(new_buf + new_buf_len, dir_entry, dir_entry_len);
-        new_buf_len += dir_entry_len;
-
         free(dir_entry);
     }
 
-    new_buf[new_buf_len++] = ']';
-    new_buf[new_buf_len++] = '}';
+    /*
+     * Always room for 4 characters, so we don't need to check for
+     * errors.  I say 4, because we're going to set \0 too
+     *
+     */
+    STRING_APPEND("]}}", 3);
     new_buf[new_buf_len] = '\0';
 
     free(dir_list);

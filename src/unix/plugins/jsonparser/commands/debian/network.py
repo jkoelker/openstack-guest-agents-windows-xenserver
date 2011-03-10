@@ -40,10 +40,21 @@ INTERFACE_LABELS = {"public": "eth0",
 
 def configure_network(network_config, *args, **kwargs):
 
-    write_interfaces(network_config, dont_rename=0)
+    try:
+        hostname = network_config['hostname']
+    except KeyError:
+        hostname = None
+
+    try:
+        interfaces = network_config['interfaces']
+    except KeyError:
+        interfaces = []
+
+    write_interfaces(interfaces, dont_rename=0)
+
     return (0, "")
 
-def write_interfaces(network_config, *args, **kwargs):
+def write_interfaces(interfaces, *args, **kwargs):
     """
     Write out a new interfaces file
     """
@@ -56,7 +67,7 @@ def write_interfaces(network_config, *args, **kwargs):
     bak_file = INTERFACE_FILE + '.' + str(int(time.time()))
     tmp_file = TMP_INTERFACE_FILE
 
-    data = _get_file_data(network_config)
+    data = _get_file_data(interfaces)
 
     f = open(tmp_file, 'w')
     f.write(data)
@@ -80,14 +91,14 @@ def write_interfaces(network_config, *args, **kwargs):
             raise e
 
 
-def _get_file_data(network_config):
+def _get_file_data(interfaces):
     """
     Return interfaces file data in 1 long string
     """
 
     file_data = INTERFACE_HEADER
 
-    for interface in network_config:
+    for interface in interfaces:
         try:
             label = interface['label']
         except KeyError:
