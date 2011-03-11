@@ -69,7 +69,7 @@ static void *_signal_handler_thread(void *args)
 
 static void _usage(FILE *f, char *progname, int long_vers)
 {
-    fprintf(f, "Usage: %s [-h] config.py\n", progname);
+    fprintf(f, "Usage: %s [-h] [-n] [-o <filename>] [-l <level>] config.py\n", progname);
     if (long_vers)
     {
         fprintf(f, "\n");
@@ -77,6 +77,8 @@ static void _usage(FILE *f, char *progname, int long_vers)
         fprintf(f, "Options:\n");
         fprintf(f, "  -h, --help     Output this help information\n");
         fprintf(f, "  -n, --nofork   Don't fork into the background\n");
+        fprintf(f, "  -o, --logfile  Call logging.basicConfig with filename\n");
+        fprintf(f, "  -l, --level    Call logging.basicConfig with level\n");
     }
     else
     {
@@ -90,6 +92,8 @@ int main(int argc, char * const *argv)
     {
         { "help", no_argument, NULL, 'h' },
         { "nofork", no_argument, NULL, 'n' },
+        { "logfile", required_argument, NULL, 'o' },
+        { "level", required_argument, NULL, 'l' },
         { NULL, 0, NULL, 0 }
     };
 
@@ -100,10 +104,12 @@ int main(int argc, char * const *argv)
     int err;
     int do_fork = 1;
     char *progname = argv[0];
+    char *logfile = NULL;
+    char *level = NULL;
 
     /* Don't let getopt_long() output to stderr directly */
     opterr = 0;
-    while((opt = getopt_long(argc, argv, ":hn", longopts, NULL)) != -1)
+    while((opt = getopt_long(argc, argv, ":hno:l:", longopts, NULL)) != -1)
     {
         switch(opt)
         {
@@ -114,6 +120,14 @@ int main(int argc, char * const *argv)
             case 'n':
                 do_fork = 0;
                 return 0;
+
+            case 'o':
+                logfile = optarg;
+                break;
+
+            case 'l':
+                level = optarg;
+                break;
 
             case ':':
                 fprintf(stderr, "Error: Missing argument to option '%c'\n",
@@ -167,6 +181,13 @@ int main(int argc, char * const *argv)
     if (pi == NULL)
     {
         return 1;
+    }
+
+    err = agent_open_log(logfile, level);
+    if (err < 0)
+    {
+        agent_python_deinit(pi);
+        exit(-err);
     }
 
     /* init the plugin system */

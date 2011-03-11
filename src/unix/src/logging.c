@@ -20,6 +20,9 @@
 #include "logging.h"
 
 
+static PyObject *logging = NULL;
+
+
 #define VSMPRINTF(p, fmt) \
     va_list ap;	\
     int n, size = 100;	\
@@ -51,31 +54,125 @@
     }
 
 
-static void _log(char *level, char *p)
+static int basic_config(char *filename, char *level)
 {
-    static PyObject *logging = NULL;
-    static int logging_imported = 0;
-    PyGILState_STATE gstate;
+    PyObject *args = PyTuple_New(0);
+    if (!args)
+        goto err_args;
 
-    gstate = PyGILState_Ensure();
+    PyObject *kwargs = PyDict_New();
+    if (!args)
+        goto err_kwargs;
 
-    if (!logging_imported)
+    if (filename)
     {
-        logging = PyImport_ImportModule("logging");
-        if (!logging)
-            fprintf(stderr, "unable to import logging module\n");
+        PyObject *value = PyString_FromString(filename);
+        if (!value)
+            goto err_value;
 
-        logging_imported = 1;
+        int ret = PyDict_SetItemString(kwargs, "filename", value);
+        Py_DECREF(value);
+        if (ret < 0)
+            goto err_value;
     }
 
-    PyObject *ret = NULL;
-    if (logging)
+    if (level)
     {
-        ret = PyObject_CallMethod(logging, level, "s", p);
-        Py_XDECREF(ret);
+        PyObject *value = PyObject_GetAttrString(logging, level);
+        if (!value)
+            goto err_value;
+
+        int ret = PyDict_SetItemString(kwargs, "level", value);
+        Py_DECREF(value);
+        if (ret < 0)
+            goto err_value;
+    }
+
+    PyObject *callable = PyObject_GetAttrString(logging, "basicConfig");
+    if (!callable)
+        goto err_callable;
+
+    PyObject *ret = PyObject_Call(callable, args, kwargs);
+    Py_DECREF(callable);
+    Py_DECREF(args);
+    Py_DECREF(kwargs);
+
+    int retcode = -1;
+    if (ret)
+    {
+        retcode = 0;
+        Py_DECREF(ret);
+    }
+
+    return retcode;
+
+err_callable:
+err_value:
+    Py_DECREF(kwargs);
+
+err_kwargs:
+    Py_DECREF(args);
+
+err_args:
+    return -1;
+}
+
+
+int agent_open_log(char *filename, char *level)
+{
+    PyGILState_STATE gstate = PyGILState_Ensure();
+
+    logging = PyImport_ImportModule("logging");
+    if (!logging)
+    {
+        fprintf(stderr, "unable to import logging module\n");
+        goto err;
+    }
+
+    if (filename || level)
+    {
+        int ret = basic_config(filename, level);
+        if (ret < 0)
+        {
+            fprintf(stderr, "could not setup basic config\n");
+            goto err;
+        }
     }
 
     PyGILState_Release(gstate);
+
+    return 0;
+
+err:
+    Py_CLEAR(logging);
+
+    PyErr_Print();
+    PyErr_Clear();
+
+    PyGILState_Release(gstate);
+
+    return -1;
+}
+
+
+static void _log(char *level, char *p)
+{
+    PyObject *ret = NULL;
+    if (logging)
+    {
+        PyGILState_STATE gstate = PyGILState_Ensure();
+
+        ret = PyObject_CallMethod(logging, level, "s", p);
+        Py_XDECREF(ret);
+
+        if (!ret)
+        {
+            PyErr_Print();
+            PyErr_Clear();
+        }
+
+        PyGILState_Release(gstate);
+    }
 
     if (!ret)
         fprintf(stderr, "%s\n", p);
