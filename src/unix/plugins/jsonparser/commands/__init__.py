@@ -22,3 +22,4 @@ JSON command plugins
 
 from . import misc
 from . import network
+from . import password
