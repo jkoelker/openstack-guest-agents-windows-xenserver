@@ -17,7 +17,7 @@
 #
 
 """
-JSON misc commands plugin
+JSON password reset handling plugin
 """
 
 import base64
