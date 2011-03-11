@@ -28,6 +28,7 @@
 #include <assert.h>
 #include <errno.h>
 #include "python.h"
+#include "logging.h"
 #include "plugin_int.h"
 #include "nova-agent.h"
 
@@ -619,7 +620,7 @@ int agent_plugin_start_exchanges(void)
     if (num_started == 0)
     {
         pthread_mutex_unlock(&_plugins_lock);
-        printf("No exchange plugins found with parsers set\n");
+        agent_debug("no exchange plugins found with parsers set");
         return -1;
     }
 
@@ -681,7 +682,7 @@ int __attribute__ ((visibility("default"))) agent_plugin_register(const char *pl
     }
     else
     {
-        fprintf(stderr, "Invalid plugin type, '%s'\n", type);
+        agent_error("invalid plugin type, '%s'", type);
         Py_DECREF(cls_dict);
         /* Release GIL */
         PyGILState_Release(gstate); 

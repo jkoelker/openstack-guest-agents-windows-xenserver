@@ -28,6 +28,7 @@
 #include <errno.h>
 #include "nova-agent.h"
 #include "python.h"
+#include "logging.h"
 #include "plugin_int.h"
 
 static void *_signal_handler_thread(void *args)
@@ -50,15 +51,15 @@ static void *_signal_handler_thread(void *args)
         switch(sig)
         {
             case SIGINT:
-                printf("Got SIGINT\n");
+                agent_error("got SIGINT\n");
                 return NULL;
 
             case SIGTERM:
-                printf("Got SIGTERM\n");
+                agent_error("got SIGTERM\n");
                 return NULL;
 
             default:
-                printf("Got sig %d\n", sig);
+                agent_debug("got sig %d\n", sig);
                 continue;
         }
     }
@@ -172,7 +173,7 @@ int main(int argc, char * const *argv)
     err = agent_plugin_init(pi);
     if (err < 0)
     {
-        fprintf(stderr, "Error: Couldn't init the plugin system: %d\n", err);
+        agent_error("couldn't init the plugin system: %d", err);
         agent_python_deinit(pi);
         exit(-err);
     }
@@ -182,7 +183,7 @@ int main(int argc, char * const *argv)
     err = pthread_create(&thr_id, NULL, _signal_handler_thread, NULL);
     if (err)
     {
-        fprintf(stderr, "Error: Couldn't create signal handler thread: %s",
+        agent_error("couldn't create signal handler thread: %s",
                 strerror(err));
         exit(err);
     }
@@ -196,7 +197,7 @@ int main(int argc, char * const *argv)
     err = agent_python_run_file(pi, argv[0]);
     if (err < 0)
     {
-        fprintf(stderr, "Error parsing the python config file\n");
+        agent_error("failed to parse config file '%s'", argv[0]);
         agent_python_deinit(pi);
         exit(-err);
     }
@@ -206,7 +207,7 @@ int main(int argc, char * const *argv)
     err = agent_plugin_start_exchanges();
     if (err < 0)
     {
-        fprintf(stderr, "Error starting exchange plugins\n");
+        agent_error("failed to start exchange plugins");
         agent_python_deinit(pi);
         exit(-err);
     }
