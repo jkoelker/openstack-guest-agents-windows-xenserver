@@ -55,6 +55,9 @@ static void _log(char *level, char *p)
 {
     static PyObject *logging = NULL;
     static int logging_imported = 0;
+    PyGILState_STATE gstate;
+
+    gstate = PyGILState_Ensure();
 
     if (!logging_imported)
     {
@@ -71,6 +74,8 @@ static void _log(char *level, char *p)
         ret = PyObject_CallMethod(logging, level, "s", p);
         Py_XDECREF(ret);
     }
+
+    PyGILState_Release(gstate);
 
     if (!ret)
         fprintf(stderr, "%s\n", p);
