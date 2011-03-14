@@ -22,6 +22,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <getopt.h>
 #include <string.h>
 #include <signal.h>
@@ -35,6 +36,7 @@ static void *_signal_handler_thread(void *args)
     sigset_t mask;
     int err;
     int sig;
+    int status;
 
     sigfillset(&mask);
     sigdelset(&mask, SIGSEGV);
@@ -56,6 +58,11 @@ static void *_signal_handler_thread(void *args)
             case SIGTERM:
                 printf("Got SIGTERM\n");
                 return NULL;
+
+            case SIGCHLD:
+                /* Reap all children */
+                while(waitpid(-1, &status, WNOHANG) == 0);
+                break;
 
             default:
                 printf("Got sig %d\n", sig);
