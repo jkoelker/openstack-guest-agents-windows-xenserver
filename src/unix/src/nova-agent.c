@@ -29,6 +29,7 @@
 #include <errno.h>
 #include "nova-agent.h"
 #include "python.h"
+#include "logging.h"
 #include "plugin_int.h"
 
 static void *_signal_handler_thread(void *args)
@@ -51,18 +52,18 @@ static void *_signal_handler_thread(void *args)
         switch(sig)
         {
             case SIGINT:
-                printf("Got SIGINT\n");
+                agent_error("got SIGINT\n");
                 return NULL;
 
             case SIGTERM:
-                printf("Got SIGTERM\n");
+                agent_error("got SIGTERM\n");
                 return NULL;
 
             case SIGCHLD:
                 break;
 
             default:
-                printf("Got sig %d\n", sig);
+                agent_debug("got sig %d\n", sig);
                 continue;
         }
     }
@@ -72,7 +73,7 @@ static void *_signal_handler_thread(void *args)
 
 static void _usage(FILE *f, char *progname, int long_vers)
 {
-    fprintf(f, "Usage: %s [-h] config.py\n", progname);
+    fprintf(f, "Usage: %s [-h] [-n] [-o <filename>] [-l <level>] config.py\n", progname);
     if (long_vers)
     {
         fprintf(f, "\n");
@@ -80,6 +81,8 @@ static void _usage(FILE *f, char *progname, int long_vers)
         fprintf(f, "Options:\n");
         fprintf(f, "  -h, --help     Output this help information\n");
         fprintf(f, "  -n, --nofork   Don't fork into the background\n");
+        fprintf(f, "  -o, --logfile  Call logging.basicConfig with filename\n");
+        fprintf(f, "  -l, --level    Call logging.basicConfig with level\n");
     }
     else
     {
@@ -93,6 +96,8 @@ int main(int argc, char * const *argv)
     {
         { "help", no_argument, NULL, 'h' },
         { "nofork", no_argument, NULL, 'n' },
+        { "logfile", required_argument, NULL, 'o' },
+        { "level", required_argument, NULL, 'l' },
         { NULL, 0, NULL, 0 }
     };
 
@@ -103,10 +108,12 @@ int main(int argc, char * const *argv)
     int err;
     int do_fork = 1;
     char *progname = argv[0];
+    char *logfile = NULL;
+    char *level = NULL;
 
     /* Don't let getopt_long() output to stderr directly */
     opterr = 0;
-    while((opt = getopt_long(argc, argv, ":hn", longopts, NULL)) != -1)
+    while((opt = getopt_long(argc, argv, ":hno:l:", longopts, NULL)) != -1)
     {
         switch(opt)
         {
@@ -117,6 +124,14 @@ int main(int argc, char * const *argv)
             case 'n':
                 do_fork = 0;
                 return 0;
+
+            case 'o':
+                logfile = optarg;
+                break;
+
+            case 'l':
+                level = optarg;
+                break;
 
             case ':':
                 fprintf(stderr, "Error: Missing argument to option '%c'\n",
@@ -172,11 +187,18 @@ int main(int argc, char * const *argv)
         return 1;
     }
 
+    err = agent_open_log(logfile, level);
+    if (err < 0)
+    {
+        agent_python_deinit(pi);
+        exit(-err);
+    }
+
     /* init the plugin system */
     err = agent_plugin_init(pi);
     if (err < 0)
     {
-        fprintf(stderr, "Error: Couldn't init the plugin system: %d\n", err);
+        agent_error("couldn't init the plugin system: %d", err);
         agent_python_deinit(pi);
         exit(-err);
     }
@@ -186,7 +208,7 @@ int main(int argc, char * const *argv)
     err = pthread_create(&thr_id, NULL, _signal_handler_thread, NULL);
     if (err)
     {
-        fprintf(stderr, "Error: Couldn't create signal handler thread: %s",
+        agent_error("couldn't create signal handler thread: %s",
                 strerror(err));
         exit(err);
     }
@@ -200,7 +222,7 @@ int main(int argc, char * const *argv)
     err = agent_python_run_file(pi, argv[0]);
     if (err < 0)
     {
-        fprintf(stderr, "Error parsing the python config file\n");
+        agent_error("failed to parse config file '%s'", argv[0]);
         agent_python_deinit(pi);
         exit(-err);
     }
@@ -210,7 +232,7 @@ int main(int argc, char * const *argv)
     err = agent_plugin_start_exchanges();
     if (err < 0)
     {
-        fprintf(stderr, "Error starting exchange plugins\n");
+        agent_error("failed to start exchange plugins");
         agent_python_deinit(pi);
         exit(-err);
     }

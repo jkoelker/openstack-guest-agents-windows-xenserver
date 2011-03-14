@@ -25,6 +25,7 @@
 #include <string.h>
 #include <errno.h>
 #include "python.h"
+#include "logging.h"
 #include "plugin_int.h"
 
 struct _agent_python_info
@@ -110,7 +111,7 @@ static PyObject *_agent_python_run_file(const char *filename, PyObject *dict)
 
         if (!PyErr_GivenExceptionMatches(ptype, PyExc_SystemExit))
         { 
-            fprintf(stderr, "Failed to run the Python code.\n");
+            agent_error("Failed to run Python code");
 
             PyErr_Clear();
             Py_XDECREF(result);
@@ -163,7 +164,7 @@ static PyObject *_agent_python_load_module(const char *filename, const char *mod
 
         if (!PyErr_GivenExceptionMatches(ptype, PyExc_SystemExit))
         { 
-            fprintf(stderr, "Failed to run the Python code.\n");
+            agent_error("Failed to run Python code");
 
             PyErr_Clear();
 
