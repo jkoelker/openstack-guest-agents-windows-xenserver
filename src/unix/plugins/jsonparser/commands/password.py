@@ -25,6 +25,8 @@ import binascii
 import hashlib
 import math
 import os
+import subprocess
+import time
 from Crypto.Cipher import AES
 from plugins.jsonparser import jsonparser
 
@@ -71,6 +73,30 @@ class password_commands(jsonparser.command):
         # Needs to be a string response right now
         return (0, str(my_public_key))
 
+    def change_password(self, passwd):
+
+        try:
+            p = subprocess.Popen(["/usr/sbin/chpasswd"],
+                    stdin=subprocess.PIPE,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE)
+            p.communicate("root:%s\n" % passwd)
+            ret = p.wait()
+            if ret:
+                raise SystemError("Return code from chpasswd was %d" % ret)
+
+        except Exception, e:
+            p = subprocess.Popen(["/usr/bin/passwd", "root"],
+                    stdin=subprocess.PIPE,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE)
+            p.stdin.write("%s\n" % passwd)
+            time.sleep(1)
+            p.stdin.write("%s\n" % passwd)
+            ret = p.wait()
+            if ret:
+                raise SystemError("Return code from passwd was %d" % ret)
+
     @jsonparser.command_add('password')
     def password_cmd(self, data):
 
@@ -80,10 +106,18 @@ class password_commands(jsonparser.command):
             a = AES.new(self.aes_key, AES.MODE_CBC, self.aes_iv)
             passwd = a.decrypt(real_data)
 
-            print "Got passwd: %s" % passwd
         except Exception, e:
-            print e
             print "Ignoring password without keyinit"
             return (500, "No keyinit")
 
-        return (0, "")
+        cut_off_sz = ord(passwd[len(passwd)-1])
+        if cut_off_sz > 16:
+            return (500, "Invalid password data received")
+
+        passwd = passwd[:-cut_off_sz]
+
+        try:
+            self.change_password(passwd)
+            return (0, "")
+        except:
+            return(500, "Couldn't change password")
