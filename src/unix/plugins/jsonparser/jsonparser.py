@@ -21,6 +21,7 @@ JSON agent command parser main code module
 """
 
 import nova_agent
+import logging
 import anyjson
 
 class CommandNotFoundError(Exception):
@@ -134,10 +135,16 @@ class command_parser(nova_agent.plugin):
         except KeyError:
             cmd_string = ''
 
+        logging.info("Received command '%s' with argument: '%s'" % \
+                (cmd_name, cmd_string))
+
         try:
             result = command.run_command(cmd_name, cmd_string)
         except CommandNotFoundError, e:
-            print e
+            logging.warn(str(e))
             return self.encode_result((404, str(e)))
+        
+        logging.info("'%s' completed with code '%s', message '%s'" % \
+                (cmd_name, result[0], result[1]))
 
         return self.encode_result(result)

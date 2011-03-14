@@ -237,7 +237,11 @@ int main(int argc, char * const *argv)
         exit(-err);
     }
 
+    agent_info("Agent started");
+
     pthread_join(thr_id, NULL);
+
+    agent_info("Agent stopping");
 
     agent_plugin_stop_exchanges();
 

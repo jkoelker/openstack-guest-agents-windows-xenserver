@@ -28,5 +28,6 @@
 int agent_open_log(char *filename, char *level);
 void agent_error(char *fmt, ...);
 void agent_debug(char *fmt, ...);
+void agent_info(char *fmt, ...);
 
 #endif /* __NOVA_AGENT_LOGGING_H__ */

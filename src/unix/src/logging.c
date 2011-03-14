@@ -82,6 +82,12 @@ static int basic_config(char *filename, char *level)
         if (!value)
             goto err_value;
 
+        if (!PyInt_Check(value))
+        {
+            Py_DECREF(value);
+            goto err_value;
+        }
+
         int ret = PyDict_SetItemString(kwargs, "level", value);
         Py_DECREF(value);
         if (ret < 0)
@@ -193,6 +199,15 @@ void agent_error(char *fmt, ...)
     char *p;
     VSMPRINTF(p, fmt);
     _log("error", p);
+    free(p);
+}
+
+void agent_info(char *fmt, ...)
+{
+    char *p;
+    printf("calling logging.info\n");
+    VSMPRINTF(p, fmt);
+    _log("info", p);
     free(p);
 }
 
