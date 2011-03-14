@@ -1,5 +1,5 @@
 AC_PREREQ([2.59])
-AC_INIT([agent-smith], [0.0.0.5], [chris.behrens@rackspace.com])
+AC_INIT([agent-smith], [0.0.1.0], [chris.behrens@rackspace.com])
 AC_CONFIG_SRCDIR([src/nova-agent.c])
 AC_CONFIG_HEADERS([include/config.h])
 

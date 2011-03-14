@@ -482,6 +482,11 @@ static PyObject *_na_module_set_parser(PyObject *self, PyObject *args, PyObject 
     Py_RETURN_NONE;
 }
 
+static PyObject *_na_module_get_version(PyObject *self, PyObject *args)
+{
+    return PyString_FromString(AGENT_VERSION);
+}
+
 static int _plugin_init(PyObject *cls, PyObject *args, PyObject *kwds)
 {
     return 0;
@@ -500,6 +505,8 @@ static int _na_pymodule_init(void)
                 METH_NOARGS, "Get a list of loaded 'parser' plugins" },
         { "set_parser", (PyCFunction)_na_module_set_parser,
                 METH_VARARGS|METH_KEYWORDS, "Set the parser class for an Exchange plugin or a list of exchange plugins" },
+        { "get_version", (PyCFunction)_na_module_get_version,
+                METH_NOARGS, "Get the agent version string" },
         { NULL, NULL, METH_NOARGS, NULL }
     };
 

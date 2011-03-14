@@ -20,6 +20,7 @@
 JSON misc commands plugin
 """
 
+import nova_agent
 from plugins.jsonparser import jsonparser
 
 
@@ -35,4 +36,4 @@ class misc_commands(jsonparser.command):
 
     @jsonparser.command_add('version')
     def version_cmd(self, data):
-        return (0, '1.0.0.0')
+        return (0, nova_agent.get_version())
