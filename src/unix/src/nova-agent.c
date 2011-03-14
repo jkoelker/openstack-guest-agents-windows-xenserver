@@ -36,7 +36,6 @@ static void *_signal_handler_thread(void *args)
     sigset_t mask;
     int err;
     int sig;
-    int status;
 
     sigfillset(&mask);
     sigdelset(&mask, SIGSEGV);
@@ -60,8 +59,6 @@ static void *_signal_handler_thread(void *args)
                 return NULL;
 
             case SIGCHLD:
-                /* Reap all children */
-                while(waitpid(-1, &status, WNOHANG) == 0);
                 break;
 
             default:

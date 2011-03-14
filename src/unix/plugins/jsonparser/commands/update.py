@@ -21,20 +21,29 @@ JSON agent update handling plugin
 """
 
 import os
+import shutil
+import subprocess
+import tarfile
 import urllib
 from plugins.jsonparser import jsonparser
 
-TMP_PATH = "/tmp"
+TMP_PATH = "/var/run"
+DEST_PATH = "/usr/share/nova-agent"
+DEST_FILE = "/var/run/agent-smith.tar"
+INIT_SCRIPT = "/etc/init.d/agent-smith"
 
+# This is to support older python versions that don't have hashlib
 try:
     import hashlib
 except ImportError:
     import md5
 
     class hashlib(object):
+
         @staticmethod
         def md5():
             return md5.new()
+
 
 class AgentUpdateError(Exception):
 
@@ -90,7 +99,6 @@ class update_command(jsonparser.command):
 
         return local_filename
 
-
     @jsonparser.command_add('agentupdate')
     def update_cmd(self, data):
 
@@ -111,6 +119,78 @@ class update_command(jsonparser.command):
         except AgentUpdateError, e:
             return (500, str(e))
 
-        return (0, "")
+        ext = local_filename[local_filename.rindex('.') + 1:]
 
+        if ext != ".tar":
+            dest_filename = "%s.%s" % (
+                    DEST_FILE,
+                    ext)
+        else:
+            dest_filename = "%s"
+
+        try:
+            t = tarfile.open(local_filename, 'r:*')
+        except tarfile.TarError, e:
+            os.unlink(local_filename)
+            return (500, str(e))
+
+        found_installer = False
+        for tarinfo in t.getmembers():
+            name = tarinfo.name
+            while name.startswith('./') or name.startswith('/'):
+                name = name[1:]
+            if name == "installer.sh":
+                found_installer = True
+
+        if found_installer:
+            dest_path = "%s.%d" % (DEST_PATH, os.getpid())
+
+            try:
+                t.extractall(dest_path)
+                t.close()
+            except tarfile.TarError, e:
+                os.unlink(local_filename)
+                return (500, str(e))
+
+            os.unlink(local_filename)
+
+            p = subprocess.Popen("%s/installer.sh %s" % \
+                    (dest_path, dest_path),
+                    shell=True,
+                    stdin=subprocess.PIPE,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE)
+            p.communicate(None)
+            retcode = p.returncode
+
+            shutil.rmtree(dest_path, ignore_errors=True)
+
+            if retcode != 0:
+                return (500, "Agent installer script failed: %d" % retcode)
+
+            return (0, "")
+
+        #
+        # Old way, no installer
+        #
+
+        t.close()
+
+        os.rename(local_filename, dest_filename)
+
+        try:
+            p = subprocess.Popen("sh %s restart" % INIT_SCRIPT,
+                    shell=True,
+                    stdin=subprocess.PIPE,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE)
+            p.communicate(None)
+            retcode = p.returncode
+        except OSError, e:
+            return (500, "Couldn't restart the agent: %s" % str(e))
+
+        if retcode != 0:
+            return (500, "Couldn't restart the agent: %d" % retcode)
+
+        return (0, "")
 

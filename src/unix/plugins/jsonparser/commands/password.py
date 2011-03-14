@@ -1,14 +1,14 @@
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
-# 
+#
 #  Copyright (c) 2011 Openstack, LLC.
 #  All Rights Reserved.
-# 
+#
 #     Licensed under the Apache License, Version 2.0 (the "License"); you may
 #     not use this file except in compliance with the License. You may obtain
 #     a copy of the License at
-# 
+#
 #          http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 #     Unless required by applicable law or agreed to in writing, software
 #     distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 #     WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -30,6 +30,7 @@ import time
 from Crypto.Cipher import AES
 from plugins.jsonparser import jsonparser
 
+
 class password_commands(jsonparser.command):
 
     def __init__(self, *args, **kwargs):
@@ -44,6 +45,35 @@ class password_commands(jsonparser.command):
             num = (num * num) % mod
         return result
 
+    def _change_password(self, passwd):
+
+        try:
+            p = subprocess.Popen(["/usr/sbin/chpasswd"],
+                    stdin=subprocess.PIPE,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE)
+            p.communicate("root:%s\n" % passwd)
+            ret = p.returncode
+            if ret:
+                raise SystemError("Return code from chpasswd was %d" % ret)
+
+        except Exception, e:
+            p = subprocess.Popen(["/usr/bin/passwd", "root"],
+                    stdin=subprocess.PIPE,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE)
+            # Some password programs clear stdin after they display
+            # prompts.  So, we can hack around this by sleeping.  Another
+            # Option would be to do some read()s, but we might need to
+            # poll on where to read(stderr vs stdout).  It seems stderr
+            # is the one mostly used, but can I trust that?
+            time.sleep(1)
+            p.stdin.write("%s\n" % passwd)
+            time.sleep(1)
+            p.communicate("%s\n" % passwd)
+            ret = p.returncode
+            if ret:
+                raise SystemError("Return code from passwd was %d" % ret)
 
     @jsonparser.command_add('keyinit')
     def keyinit_cmd(self, data):
@@ -71,31 +101,7 @@ class password_commands(jsonparser.command):
         self.aes_iv = m.digest()
 
         # Needs to be a string response right now
-        return (0, str(my_public_key))
-
-    def change_password(self, passwd):
-
-        try:
-            p = subprocess.Popen(["/usr/sbin/chpasswd"],
-                    stdin=subprocess.PIPE,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE)
-            p.communicate("root:%s\n" % passwd)
-            ret = p.wait()
-            if ret:
-                raise SystemError("Return code from chpasswd was %d" % ret)
-
-        except Exception, e:
-            p = subprocess.Popen(["/usr/bin/passwd", "root"],
-                    stdin=subprocess.PIPE,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE)
-            p.stdin.write("%s\n" % passwd)
-            time.sleep(1)
-            p.stdin.write("%s\n" % passwd)
-            ret = p.wait()
-            if ret:
-                raise SystemError("Return code from passwd was %d" % ret)
+        return ("D0", str(my_public_key))
 
     @jsonparser.command_add('password')
     def password_cmd(self, data):
@@ -107,17 +113,16 @@ class password_commands(jsonparser.command):
             passwd = a.decrypt(real_data)
 
         except Exception, e:
-            print "Ignoring password without keyinit"
             return (500, "No keyinit")
 
         cut_off_sz = ord(passwd[len(passwd)-1])
         if cut_off_sz > 16:
             return (500, "Invalid password data received")
 
-        passwd = passwd[:-cut_off_sz]
+        passwd = passwd[: - cut_off_sz]
 
         try:
-            self.change_password(passwd)
+            self._change_password(passwd)
             return (0, "")
         except:
             return(500, "Couldn't change password")
