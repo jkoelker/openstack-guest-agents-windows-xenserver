@@ -218,7 +218,6 @@ void agent_error(char *fmt, ...)
 void agent_info(char *fmt, ...)
 {
     char *p;
-    printf("calling logging.info\n");
     VSMPRINTF(p, fmt);
     _log("info", p);
     free(p);
