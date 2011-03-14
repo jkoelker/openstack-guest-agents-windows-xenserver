@@ -22,6 +22,7 @@
 #include <assert.h>
 #include <xs.h>
 #include "plugin.h"
+#include "logging.h"
 
 #define XENSTORE_REQUEST_PATH "data/host"
 #define XENSTORE_RESPONSE_PATH "data/guest"
@@ -78,11 +79,15 @@ static int _string_append(char **dest_string, u_int *dest_string_len,
 }
 
 /*
- * Pull the networking data out of a the xenstore, and return a new
+ * Pull the networking data out of the xenstore, and return a new
  * buffer that contains 'prefix' appended with the networking data
  * Prefix is assumed to be of format:
  *    "{\"opt\":\"opt_value\",\"value\":"
  * The final '}' will be appended by this call.
+ *
+ * As for 'value', it will be a dictionary containing these keys:
+ * 'hostname' -- The value is hostname string or ""
+ * 'interfaces' -- This will be a list of interfaces.
  */
 static int _convert_network_event(xenstore_info_t *xsi, xs_transaction_t t, char *prefix, char **buf, unsigned int *buflen)
 {
@@ -116,10 +121,14 @@ static int _convert_network_event(xenstore_info_t *xsi, xs_transaction_t t, char
 
     dir_list = xs_directory(xsi->handle, t,
                                 XENSTORE_NETWORKING_PATH, &dir_list_num);
-    if (dir_list == NULL)
+    if ((dir_list == NULL) ||
+            (dir_list_num == 0))
     {
-        free(hostname);
-        return -1;
+        agent_debug("No interface entries found in xenstore path '%s'",
+                XENSTORE_NETWORKING_PATH);
+
+        dir_list_num = 0; /* make sure, if dir_list == NULL */
+        /* fall through */
     }
 
 #define STRING_APPEND(__x, __x_len) \
@@ -162,10 +171,13 @@ static int _convert_network_event(xenstore_info_t *xsi, xs_transaction_t t, char
         return -1;
     }
 
+    /* Won't execute if dir_list is NULL */
     for(i=0,d=dir_list;i<dir_list_num;i++,d++)
     {
         snprintf(dir_entry_path, sizeof(dir_entry_path), "%s/%s",
                 XENSTORE_NETWORKING_PATH, *d);
+
+        agent_debug("Reading xenstore interface entry '%s'", dir_entry_path);
 
         dir_entry = xs_read(xsi->handle, t, dir_entry_path, &dir_entry_len);
         if (dir_entry == NULL)
@@ -253,14 +265,16 @@ static int _fill_requests(xenstore_info_t *xsi, char *path)
             return -1;
         }
 
+        agent_debug("Reading xenstore entry '%s'", entry_path);
+
         /* We read from the path, now do something with the data */
 
         if (!strncmp(entry_data, NETWORKRESET_EVENT, strlen(NETWORKRESET_EVENT)))
         {
             /*
              * A 'networkreset' event comes in with an empty value, so we
-             * need to pull the networking data out of xenstore separately
-             * and shove it in as the value
+             * need to pull the networking data out of a separate path
+             * in xenstore and shove it in as the value
              */
 
             free(entry_data);
@@ -406,10 +420,14 @@ static PyObject *_xenstore_put_response(xenstore_info_t *xsi,
 
     path_to_rm = PyString_AsString(req_path);
 
-    xs_rm(xsi->handle, XBT_NULL, path_to_rm);
+    if (!xs_rm(xsi->handle, XBT_NULL, path_to_rm))
+    {
+        agent_warn("Removing xenstore entry '%s' failed", path_to_rm);
+    }
 
     if (resp == Py_None)
     {
+        agent_warn("Ignoring empty response in _xenstore_put_response");
         Py_RETURN_NONE;
     }
 
@@ -436,7 +454,8 @@ static PyObject *_xenstore_put_response(xenstore_info_t *xsi,
                         PyString_AsString(resp_data),
                         PyString_GET_SIZE(resp_data)))
     {
-        printf("Failed to write response to xenstore\n");
+        agent_error("Failed to write xenstore entry to '%s'",
+                path_to_write);
     }
 
     Py_RETURN_NONE;

@@ -197,8 +197,11 @@ static void _log(char *level, char *p)
         fprintf(stderr, "%s\n", p);
 }
 
+/*
+ * The logging calls below should be exported to modules
+ */
 
-void agent_debug(char *fmt, ...)
+void __attribute__ ((visibility("default"))) agent_debug(char *fmt, ...)
 {
     char *p;
     VSMPRINTF(p, fmt);
@@ -207,7 +210,7 @@ void agent_debug(char *fmt, ...)
 }
 
 
-void agent_error(char *fmt, ...)
+void __attribute__ ((visibility("default"))) agent_error(char *fmt, ...)
 {
     char *p;
     VSMPRINTF(p, fmt);
@@ -215,11 +218,19 @@ void agent_error(char *fmt, ...)
     free(p);
 }
 
-void agent_info(char *fmt, ...)
+void __attribute__ ((visibility("default"))) agent_info(char *fmt, ...)
 {
     char *p;
     VSMPRINTF(p, fmt);
     _log("info", p);
+    free(p);
+}
+
+void __attribute__ ((visibility("default"))) agent_warn(char *fmt, ...)
+{
+    char *p;
+    VSMPRINTF(p, fmt);
+    _log("warn", p);
     free(p);
 }
 
