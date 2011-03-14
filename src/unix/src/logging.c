@@ -78,13 +78,26 @@ static int basic_config(char *filename, char *level)
 
     if (level)
     {
-        PyObject *value = PyObject_GetAttrString(logging, level);
+        char *buf = strdup(level);
+        if (!buf)
+        {
+            PyErr_NoMemory();
+            goto err_value;
+        }
+
+        char *p;
+        for (p = buf; *p; p++)
+            *p = toupper(*p);
+
+        PyObject *value = PyObject_GetAttrString(logging, buf);
+        free(buf);
         if (!value)
             goto err_value;
 
         if (!PyInt_Check(value))
         {
             Py_DECREF(value);
+            PyErr_Format(PyExc_ValueError, "logging level must resolve to integer");
             goto err_value;
         }
 
