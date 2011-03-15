@@ -116,6 +116,8 @@ def _get_file_data(interfaces):
         except KeyError:
             raise SystemError("No IPs found for interface")
 
+        ip6s = interface.get('ip6s', [])
+
         try:
             mac = interface['mac']
         except KeyError:
@@ -139,35 +141,60 @@ def _get_file_data(interfaces):
 
         ifname_suffix_num = 0
 
-        for ip_info in ips:
-            try:
-                enabled = ip_info['enabled']
-            except KeyError:
-                enabled = "0"
-
-            if enabled == "0":
-                continue
-
-            try:
-                ip = ip_info['ip']
-                netmask = ip_info['netmask']
-            except KeyError:
-                raise SystemError(
-                        "Missing IP or netmask in interface's IP list")
-
+        for i in xrange(max(len(ips), len(ip6s))):
             if ifname_suffix_num:
                 ifname = "%s:%d" % (ifname_prefix, ifname_suffix_num)
             else:
                 ifname = ifname_prefix
 
+            if i < len(ips):
+                ip_info = ips[i]
+            else:
+                ip_info = None
+
+            if i < len(ip6s):
+                ip6_info = ip6s[i]
+            else:
+                ip6_info = None
+
+            if not ip_info and not ip6_info:
+                continue
+
             file_data += "auto %s\n" % ifname
-            file_data += "    address %s\n" % ip
-            file_data += "    netmask %s\n" % netmask
-            if label == "public":
-                file_data += "    gateway %s\n" % gateway
-                nameservers = ' '.join(dns)
-                file_data += "    dns-nameservers %s\n" % nameservers
-            file_data += "\n"
+
+            if ip_info and ip_info.get('enabled', '0') != '0':
+                try:
+                    ip = ip_info['ip']
+                    netmask = ip_info['netmask']
+                except KeyError:
+                    raise SystemError(
+                            "Missing IP or netmask in interface's IP list")
+
+                file_data += "iface %s inet static\n" % ifname
+                file_data += "    address %s\n" % ip
+                file_data += "    netmask %s\n" % netmask
+                if label == "public":
+                    file_data += "    gateway %s\n" % gateway
+                    nameservers = ' '.join(dns)
+                    file_data += "    dns-nameservers %s\n" % nameservers
+                file_data += "\n"
+
+            if ip6_info and ip6_info.get('enabled', '0') != '0':
+                try:
+                    ip = ip6_info['address']
+                    netmask = ip6_info['netmask']
+                except KeyError:
+                    raise SystemError(
+                            "Missing IP or netmask in interface's IPv6 list")
+
+                gateway = ip6_info.get('gateway')
+
+                file_data += "iface %s inet6 static\n" % ifname
+                file_data += "    address %s\n" % ip
+                file_data += "    netmask %s\n" % netmask
+                if gateway:
+                    file_data += "    gateway %s\n" % gateway
+                file_data += "\n"
 
             ifname_suffix_num += 1
 
