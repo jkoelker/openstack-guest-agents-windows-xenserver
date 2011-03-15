@@ -26,6 +26,7 @@ import anyjson
 
 
 class CommandNotFoundError(Exception):
+
     def __init__(self, cmd):
         self.cmd = cmd
 
@@ -34,6 +35,7 @@ class CommandNotFoundError(Exception):
 
 
 class command_metaclass(type):
+
     def __init__(cls, cls_name, bases, attrs):
         if not hasattr(cls, '_cmd_classes'):
             cls._cmd_classes = []
@@ -122,15 +124,13 @@ class command_parser(nova_agent.plugin):
         try:
             request = anyjson.deserialize(request['data'])
         except Exception, e:
-            # log it
-            print "Missing data"
-            print e
+            logging.error("Request dictionary contains no 'data' key")
             return None
 
         try:
             cmd_name = request['name']
         except KeyError:
-            print "Missing command name"
+            logging.error("Request is missing 'name' key")
             return None
 
         try:
