@@ -354,7 +354,7 @@ PyObject *agent_python_class_create(PyObject *module, const char *name,
     }
 
     /* Add the class name to the module's dictionary */
-    PyObject_SetAttrString(module, name, cls);
+    PyObject_SetAttrString(module, (char *)name, cls);
 
     Py_DECREF(cls_name);
     Py_DECREF(bases);
