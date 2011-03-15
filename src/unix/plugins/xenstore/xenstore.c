@@ -22,7 +22,18 @@
 #include <assert.h>
 #include <xs.h>
 #include "plugin.h"
-#include "logging.h"
+
+/* Support for older versions of Python */
+#ifndef PyVarObject_HEAD_INIT
+#define PyVarObject_HEAD_INIT(type, size)	\
+	_PyObject_EXTRA_INIT			\
+	1, type, size,
+#endif
+
+#ifndef Py_TYPE
+#define Py_TYPE(ob)	(((PyObject*)(ob))->ob_type)
+#endif
+
 
 #define XENSTORE_REQUEST_PATH "data/host"
 #define XENSTORE_RESPONSE_PATH "data/guest"

@@ -22,7 +22,21 @@ JSON agent command parser main code module
 
 import nova_agent
 import logging
-import anyjson
+try:
+    import anyjson
+except ImportError:
+    import json
+
+    class anyjson(object):
+        """Fake anyjson module as a class"""
+
+        @staticmethod
+        def serialize(buf):
+            return json.write(buf)
+
+        @staticmethod
+        def deserialize(buf):
+            return json.read(buf)
 
 
 class CommandNotFoundError(Exception):
