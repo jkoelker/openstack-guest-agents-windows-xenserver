@@ -119,13 +119,13 @@ class command_parser(nova_agent.plugin):
         try:
             request = anyjson.deserialize(request['data'])
         except Exception, e:
-            logging.error("Request dictionary contains no 'data' key")% \
+            logging.error("Request dictionary contains no 'data' key")
             return None
 
         try:
             cmd_name = request['name']
         except KeyError:
-            logging.error("Request is missing 'name' key")% \
+            logging.error("Request is missing 'name' key")
             return None
 
         try:
