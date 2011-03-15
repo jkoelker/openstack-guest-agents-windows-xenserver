@@ -160,9 +160,9 @@ def _get_file_data(interface):
             ifname = ifname_prefix
 
         iface_data = "# Automatically generated, do not edit\n"
-	iface_data += "DEVICE=%s\n" % ifname
-	iface_data += "BOOTPROTO=static\n"
-	iface_data += "HWADDR=%s\n" % mac
+        iface_data += "DEVICE=%s\n" % ifname
+        iface_data += "BOOTPROTO=static\n"
+        iface_data += "HWADDR=%s\n" % mac
 
         if i < len(ips):
             ip_info = ips[i]
@@ -176,8 +176,8 @@ def _get_file_data(interface):
                     raise SystemError(
                             "Missing IP or netmask in interface's IP list")
 
-	        iface_data += "IPADDR=%s\n" % ip
-	        iface_data += "NETMASK=%s\n" % netmask
+                iface_data += "IPADDR=%s\n" % ip
+                iface_data += "NETMASK=%s\n" % netmask
                 if label == "public":
                     iface_data += "DEFROUTE=yes\n"
                     iface_data += "GATEWAY=%s\n" % gateway
@@ -198,15 +198,15 @@ def _get_file_data(interface):
 
                 gateway = ip_info.get('gateway')
 
-	        iface_data += "IPV6INIT=yes\n"
-	        iface_data += "IPV6_AUTOCONF=no\n"
-	        iface_data += "IPV6ADDR=%s/%s\n" % (ip, netmask)
+                iface_data += "IPV6INIT=yes\n"
+                iface_data += "IPV6_AUTOCONF=no\n"
+                iface_data += "IPV6ADDR=%s/%s\n" % (ip, netmask)
 
                 if gateway:
-	            iface_data += "IPV6_DEFAULTGW=%s\n" % gateway
+                    iface_data += "IPV6_DEFAULTGW=%s\n" % gateway
 
         iface_data += "ONBOOT=yes\n"
-	iface_data += "NM_CONTROLLED=no\n"
+        iface_data += "NM_CONTROLLED=no\n"
         ifname_suffix_num += 1
 
         ifaces.append((ifname, iface_data))
