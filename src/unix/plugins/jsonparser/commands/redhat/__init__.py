@@ -17,5 +17,5 @@
 #
 
 """
-debian/ubuntu helper module
+redhat/centos helper module
 """
