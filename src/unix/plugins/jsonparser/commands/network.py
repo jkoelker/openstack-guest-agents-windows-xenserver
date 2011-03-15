@@ -43,7 +43,12 @@ class network_commands(jsonparser.command):
 
         system = os.uname()[0]
         if system == "Linux":
-            system = platform.linux_distribution(None)[0]
+            try:
+                system = platform.linux_distribution(None)[0]
+            except AttributeError:
+                # linux_distribution doesn't exist... try the older
+                # call
+                system = platform.dist(None)[0]
 
         try:
             system = translations[system.lower()]

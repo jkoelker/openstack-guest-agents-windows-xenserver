@@ -22,13 +22,23 @@ JSON password reset handling plugin
 
 import base64
 import binascii
-import hashlib
-import math
 import os
 import subprocess
 import time
 from Crypto.Cipher import AES
 from plugins.jsonparser import jsonparser
+
+# This is to support older python versions that don't have hashlib
+try:
+    import hashlib
+    except ImportError:
+        import md5
+
+        class hashlib(object):
+
+            @staticmethod
+            def md5():
+                return md5.new()
 
 
 class password_commands(jsonparser.command):
@@ -100,7 +110,7 @@ class password_commands(jsonparser.command):
 
         self.aes_iv = m.digest()
 
-        # Needs to be a string response right now
+        # The key needs to be a string response right now
         return ("D0", str(my_public_key))
 
     @jsonparser.command_add('password')
@@ -116,13 +126,13 @@ class password_commands(jsonparser.command):
             return (500, "No keyinit")
 
         cut_off_sz = ord(passwd[len(passwd) - 1])
-        if cut_off_sz > 16:
+        if cut_off_sz > 16 or len(passwd) < 16:
             return (500, "Invalid password data received")
 
         passwd = passwd[: - cut_off_sz]
 
         try:
             self._change_password(passwd)
-            return (0, "")
         except:
             return(500, "Couldn't change password")
+        return (0, "")
