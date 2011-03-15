@@ -20,4 +20,4 @@
 JSON agent command parser
 """
 
-from . import jsonparser
+import jsonparser
