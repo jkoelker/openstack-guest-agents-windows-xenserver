@@ -31,14 +31,15 @@ from plugins.jsonparser import jsonparser
 # This is to support older python versions that don't have hashlib
 try:
     import hashlib
-    except ImportError:
-        import md5
+except ImportError:
+    import md5
 
-        class hashlib(object):
+    class hashlib(object):
+        """Fake hashlib module as a class"""
 
-            @staticmethod
-            def md5():
-                return md5.new()
+        @staticmethod
+        def md5():
+            return md5.new()
 
 
 class password_commands(jsonparser.command):

@@ -39,6 +39,7 @@ except ImportError:
     import md5
 
     class hashlib(object):
+        """Fake hashlib module as a class"""
 
         @staticmethod
         def md5():
