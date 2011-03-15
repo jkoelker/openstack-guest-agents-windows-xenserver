@@ -1,14 +1,14 @@
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
-# 
+#
 #  Copyright (c) 2011 Openstack, LLC.
 #  All Rights Reserved.
-# 
+#
 #     Licensed under the Apache License, Version 2.0 (the "License"); you may
 #     not use this file except in compliance with the License. You may obtain
 #     a copy of the License at
-# 
+#
 #          http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 #     Unless required by applicable law or agreed to in writing, software
 #     distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 #     WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -32,15 +32,17 @@ ROUTE_FILE = NETCONFIG_DIR + "/route-%s"
 INTERFACE_LABELS = {"public": "eth0",
                     "private": "eth1"}
 
+
 def configure_network(network_config, *args, **kwargs):
 
     hostname = network_config.get('hostname')
 
     interfaces = network_config.get('interfaces', [])
 
-    write_interfaces(interfaces, dont_rename = 0)
+    write_interfaces(interfaces, dont_rename=0)
 
     return (0, "")
+
 
 def write_interfaces(interfaces, *args, **kwargs):
     """
@@ -68,7 +70,7 @@ def write_interfaces(interfaces, *args, **kwargs):
         route_file = ROUTE_FILE % ifname
         if route_data:
             logging.info("writing %s" % route_file)
-            _write_file(route_file, route_data, dont_rename = dont_rename)
+            _write_file(route_file, route_data, dont_rename=dont_rename)
 
             if route_file in old_files:
                 old_files.remove(route_file)
@@ -76,7 +78,7 @@ def write_interfaces(interfaces, *args, **kwargs):
         for ifname, data in ifaces:
             iface_file = INTERFACE_FILE % ifname
             logging.info("writing %s" % iface_file)
-            _write_file(iface_file, data, dont_rename = dont_rename)
+            _write_file(iface_file, data, dont_rename=dont_rename)
 
             if iface_file in old_files:
                 old_files.remove(iface_file)
@@ -86,7 +88,8 @@ def write_interfaces(interfaces, *args, **kwargs):
         if not dont_rename:
             os.rename(filename, filename + "." + str(int(time.time())))
 
-def _write_file(filename, data, dont_rename = 0):
+
+def _write_file(filename, data, dont_rename=0):
     tmp_file = filename + ".tmp.%s" % os.getpid()
     bak_file = filename + "." + str(int(time.time()))
 
@@ -110,6 +113,7 @@ def _write_file(filename, data, dont_rename = 0):
         except Exception, e:
             os.rename(bak_file, filename)
             raise e
+
 
 def _get_file_data(interface):
     """
@@ -221,4 +225,3 @@ def _get_file_data(interface):
                 network, netmask, gateway)
 
     return (ifname_prefix, ifaces, route_data)
-

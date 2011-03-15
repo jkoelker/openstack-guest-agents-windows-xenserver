@@ -1,14 +1,14 @@
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
-# 
+#
 #  Copyright (c) 2011 Openstack, LLC.
 #  All Rights Reserved.
-# 
+#
 #     Licensed under the Apache License, Version 2.0 (the "License"); you may
 #     not use this file except in compliance with the License. You may obtain
 #     a copy of the License at
-# 
+#
 #          http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 #     Unless required by applicable law or agreed to in writing, software
 #     distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 #     WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -23,6 +23,7 @@ JSON agent command parser main code module
 import nova_agent
 import logging
 import anyjson
+
 
 class CommandNotFoundError(Exception):
     def __init__(self, cmd):
@@ -40,6 +41,7 @@ class command_metaclass(type):
             cls._cmds = {}
         else:
             cls._cmd_classes.append(cls)
+
 
 class command(object):
     """
@@ -94,6 +96,7 @@ def command_add(cmd_name):
         return f
     return wrap
 
+
 class command_parser(nova_agent.plugin):
     """
     JSON command parser plugin for nova-agent
@@ -143,7 +146,7 @@ class command_parser(nova_agent.plugin):
         except CommandNotFoundError, e:
             logging.warn(str(e))
             return self.encode_result((404, str(e)))
-        
+
         logging.info("'%s' completed with code '%s', message '%s'" % \
                 (cmd_name, result[0], result[1]))
 

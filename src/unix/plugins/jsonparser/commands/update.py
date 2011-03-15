@@ -193,4 +193,3 @@ class update_command(jsonparser.command):
             return (500, "Couldn't restart the agent: %d" % retcode)
 
         return (0, "")
-
