@@ -1,14 +1,14 @@
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
-# 
+#
 #  Copyright (c) 2011 Openstack, LLC.
 #  All Rights Reserved.
-# 
+#
 #     Licensed under the Apache License, Version 2.0 (the "License"); you may
 #     not use this file except in compliance with the License. You may obtain
 #     a copy of the License at
-# 
+#
 #          http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 #     Unless required by applicable law or agreed to in writing, software
 #     distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 #     WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -38,6 +38,7 @@ iface lo inet loopback
 INTERFACE_LABELS = {"public": "eth0",
                     "private": "eth1"}
 
+
 def configure_network(network_config, *args, **kwargs):
 
     try:
@@ -53,6 +54,7 @@ def configure_network(network_config, *args, **kwargs):
     write_interfaces(interfaces, dont_rename=0)
 
     return (0, "")
+
 
 def write_interfaces(interfaces, *args, **kwargs):
     """
@@ -180,4 +182,3 @@ def _get_file_data(interfaces):
                     network, netmask, gateway)
 
     return file_data
-

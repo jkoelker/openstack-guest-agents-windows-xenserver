@@ -115,7 +115,7 @@ class password_commands(jsonparser.command):
         except Exception, e:
             return (500, "No keyinit")
 
-        cut_off_sz = ord(passwd[len(passwd)-1])
+        cut_off_sz = ord(passwd[len(passwd) - 1])
         if cut_off_sz > 16:
             return (500, "Invalid password data received")
 
