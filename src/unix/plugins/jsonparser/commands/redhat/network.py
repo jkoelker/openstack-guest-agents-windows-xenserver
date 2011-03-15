@@ -131,6 +131,8 @@ def _get_file_data(interface):
     except KeyError:
         raise SystemError("No IPs found for interface")
 
+    ip6s = interface.get('ip6s', [])
+
     try:
         mac = interface['mac']
     except KeyError:
@@ -151,19 +153,7 @@ def _get_file_data(interface):
 
     ifname_suffix_num = 0
 
-    for ip_info in ips:
-        enabled = ip_info.get('enabled', '0')
-
-        if enabled == '0':
-            continue
-
-        try:
-            ip = ip_info['ip']
-            netmask = ip_info['netmask']
-        except KeyError:
-            raise SystemError(
-                    "Missing IP or netmask in interface's IP list")
-
+    for i in xrange(max(len(ips), len(ip6s))):
         if ifname_suffix_num:
             ifname = "%s:%d" % (ifname_prefix, ifname_suffix_num)
         else:
@@ -173,15 +163,50 @@ def _get_file_data(interface):
 	iface_data += "DEVICE=%s\n" % ifname
 	iface_data += "BOOTPROTO=static\n"
 	iface_data += "HWADDR=%s\n" % mac
-	iface_data += "IPADDR=%s\n" % ip
-	iface_data += "NETMASK=%s\n" % netmask
-        if label == "public":
-            iface_data += "DEFROUTE=yes\n"
-            iface_data += "GATEWAY=%s\n" % gateway
-            for i, nameserver in enumerate(dns):
-                iface_data += "DNS%d=%s\n" % (i + 1, nameserver)
+
+        if i < len(ips):
+            ip_info = ips[i]
+
+            enabled = ip_info.get('enabled', '0')
+            if enabled != '0':
+                try:
+                    ip = ip_info['ip']
+                    netmask = ip_info['netmask']
+                except KeyError:
+                    raise SystemError(
+                            "Missing IP or netmask in interface's IP list")
+
+	        iface_data += "IPADDR=%s\n" % ip
+	        iface_data += "NETMASK=%s\n" % netmask
+                if label == "public":
+                    iface_data += "DEFROUTE=yes\n"
+                    iface_data += "GATEWAY=%s\n" % gateway
+                    for j, nameserver in enumerate(dns):
+                        iface_data += "DNS%d=%s\n" % (j + 1, nameserver)
+
+        if i < len(ip6s):
+            ip_info = ip6s[i]
+
+            enabled = ip_info.get('enabled', '0')
+            if enabled != '0':
+                try:
+                    ip = ip_info['address']
+                    netmask = ip_info['netmask']
+                except KeyError:
+                    raise SystemError(
+                            "Missing IP or netmask in interface's IP list")
+
+                gateway = ip_info.get('gateway')
+
+	        iface_data += "IPV6INIT=yes\n"
+	        iface_data += "IPV6_AUTOCONF=no\n"
+	        iface_data += "IPV6ADDR=%s/%s\n" % (ip, netmask)
+
+                if gateway:
+	            iface_data += "IPV6_DEFAULTGW=%s\n" % gateway
 
         iface_data += "ONBOOT=yes\n"
+	iface_data += "NM_CONTROLLED=no\n"
         ifname_suffix_num += 1
 
         ifaces.append((ifname, iface_data))
