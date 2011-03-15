@@ -25,6 +25,17 @@
 #undef _POSIX_C_SOURCE
 #include <Python.h>
 
+/* Support for older versions of Python */
+#ifndef PyVarObject_HEAD_INIT
+#define PyVarObject_HEAD_INIT(type, size)	\
+	_PyObject_EXTRA_INIT			\
+	1, type, size,
+#endif
+
+#ifndef PY_SSIZE_T_CLEAN
+typedef ssize_t Py_ssize_t;
+#endif
+
 typedef struct _agent_python_info agent_python_info_t;
 
 /* These assume the GIL is not acquired */
