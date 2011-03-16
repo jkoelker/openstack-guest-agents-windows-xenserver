@@ -73,7 +73,7 @@ static void *_signal_handler_thread(void *args)
 
 static void _usage(FILE *f, char *progname, int long_vers)
 {
-    fprintf(f, "Usage: %s [-h] [-n] [-o <filename>] [-l <level>] [-t] config.py\n", progname);
+    fprintf(f, "Usage: %s [-h] [-n] [-o <filename>] [-l <level>] [-t] [--] config.py [optional arguments to config.py]\n", progname);
     if (long_vers)
     {
         fprintf(f, "\n");
