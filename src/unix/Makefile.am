@@ -1,4 +1,6 @@
 
+AM_CFLAGS =-I../include @PYTHON_CFLAGS@ -Wall -Werror $(GCOV_CFLAGS)
+   
 ACLOCAL_MFLAGS = -I m4
 
 SUBDIRS = src plugins
