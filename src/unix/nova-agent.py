@@ -1,9 +1,8 @@
 
 import sys
-
-sys.path.append("./")
-
 import plugins
+
+test_mode = False
 
 exchanges = nova_agent.exchange_plugins()
 parsers = nova_agent.parser_plugins()

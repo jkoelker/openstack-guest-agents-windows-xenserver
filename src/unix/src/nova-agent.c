@@ -73,7 +73,7 @@ static void *_signal_handler_thread(void *args)
 
 static void _usage(FILE *f, char *progname, int long_vers)
 {
-    fprintf(f, "Usage: %s [-h] [-n] [-o <filename>] [-l <level>] config.py\n", progname);
+    fprintf(f, "Usage: %s [-h] [-n] [-o <filename>] [-l <level>] [-t] config.py\n", progname);
     if (long_vers)
     {
         fprintf(f, "\n");
@@ -83,6 +83,8 @@ static void _usage(FILE *f, char *progname, int long_vers)
         fprintf(f, "  -n, --nofork   Don't fork into the background\n");
         fprintf(f, "  -o, --logfile  Call logging.basicConfig with filename\n");
         fprintf(f, "  -l, --level    Call logging.basicConfig with level\n");
+        fprintf(f, "  -t, --testmode Treat self like 'python' binary\n");
+        fprintf(f, "  -q, --quiet    Don't output startup/shutdown messages to stdout\n");
     }
     else
     {
@@ -90,7 +92,7 @@ static void _usage(FILE *f, char *progname, int long_vers)
     }
 }
 
-int main(int argc, char * const *argv)
+int main(int argc, char **argv)
 {
     struct option longopts[] =
     {
@@ -98,6 +100,8 @@ int main(int argc, char * const *argv)
         { "nofork", no_argument, NULL, 'n' },
         { "logfile", required_argument, NULL, 'o' },
         { "level", required_argument, NULL, 'l' },
+        { "testmode", no_argument, NULL, 't' },
+        { "quiet", no_argument, NULL, 'q' },
         { NULL, 0, NULL, 0 }
     };
 
@@ -107,13 +111,16 @@ int main(int argc, char * const *argv)
     int opt;
     int err;
     int do_fork = 1;
+    int test_mode = 0;
+    int quiet = 0;
     char *progname = argv[0];
     char *logfile = NULL;
     char *level = NULL;
+    char *config_file = NULL;
 
     /* Don't let getopt_long() output to stderr directly */
     opterr = 0;
-    while((opt = getopt_long(argc, argv, ":hno:l:", longopts, NULL)) != -1)
+    while((opt = getopt_long(argc, argv, ":hno:l:tq", longopts, NULL)) != -1)
     {
         switch(opt)
         {
@@ -131,6 +138,14 @@ int main(int argc, char * const *argv)
 
             case 'l':
                 level = optarg;
+                break;
+
+            case 't':
+                test_mode = 1;
+                break;
+
+            case 'q':
+                quiet = 1;
                 break;
 
             case ':':
@@ -172,16 +187,24 @@ int main(int argc, char * const *argv)
     argv += optind;
     argc -= optind;
 
-    if (argc != 1)
+    if ((argc < 1) && !test_mode)
     {
         fprintf(stderr, "Error: No python configuration file specified\n");
         _usage(stderr, progname, 0);
         return 1;
     }
 
-    printf("Agent starting.\n");
+    config_file = argv[0];
 
-    pi = agent_python_init();
+    /*
+     * Leave argc and argv alone.  We'll pass them into python and
+     * it wants the script name as argv[0]...
+     */
+
+    if (!quiet)
+        printf("Agent starting.\n");
+
+    pi = agent_python_init(argc, argv);
     if (pi == NULL)
     {
         return 1;
@@ -203,6 +226,22 @@ int main(int argc, char * const *argv)
         exit(-err);
     }
 
+    if (test_mode)
+    {
+        if (!argc)
+        {
+            err = agent_python_start_interpreter(pi);
+        }
+        else
+        {
+            err = agent_python_run_file(pi, config_file);
+        }
+
+        agent_python_deinit(pi);
+
+        exit(err);
+    }
+
     /* block signals */
 
     err = pthread_create(&thr_id, NULL, _signal_handler_thread, NULL);
@@ -219,7 +258,7 @@ int main(int argc, char * const *argv)
 
     pthread_sigmask(SIG_SETMASK, &mask, NULL);
 
-    err = agent_python_run_file(pi, argv[0]);
+    err = agent_python_run_file(pi, config_file);
     if (err < 0)
     {
         agent_error("failed to parse config file '%s'", argv[0]);
@@ -227,8 +266,8 @@ int main(int argc, char * const *argv)
         exit(-err);
     }
 
-    err = agent_python_test_mode(pi);
-    if (err < 0)
+    test_mode = agent_python_test_mode(pi);
+    if (test_mode < 0)
     {
         /* Switch this to the new python error call when logging-dev is
          * merged
@@ -238,12 +277,12 @@ int main(int argc, char * const *argv)
         exit(1);
     }
 
-    if (err)
+    if (test_mode)
     {
         /* Test mode */
 
-        agent_info("Agent stopping due to test mode");
-        printf("Agent stopping due to test mode.\n");
+        if (!quiet)
+            printf("Agent stopping due to test mode.\n");
 
         agent_python_deinit(pi);
         exit(0);
@@ -259,18 +298,21 @@ int main(int argc, char * const *argv)
         exit(-err);
     }
 
-    agent_info("Agent started");
+    if (!quiet)
+        agent_info("Agent started");
 
     pthread_join(thr_id, NULL);
 
-    agent_info("Agent stopping");
+    if (!quiet)
+        agent_info("Agent stopping");
 
     agent_plugin_stop_exchanges();
 
     agent_plugin_deinit();
     agent_python_deinit(pi);
 
-    printf("Agent stopping.\n");
+    if (!quiet)
+        printf("Agent stopping.\n");
 
     return 0;
 }
