@@ -32,7 +32,7 @@
 	1, type, size,
 #endif
 
-#ifndef PY_SSIZE_T_CLEAN
+#ifndef PY_SSIZE_T_MAX
 typedef ssize_t Py_ssize_t;
 #endif
 
