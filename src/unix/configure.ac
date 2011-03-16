@@ -94,9 +94,6 @@ AC_SUBST([PYTHON_LIB])
 AC_CONFIG_FILES([Makefile
                  src/Makefile
                  plugins/Makefile
-                 plugins/jsonparser/Makefile
-                 plugins/jsonparser/commands/Makefile
-                 plugins/xenstore/Makefile
                  ])
 
 AC_OUTPUT
