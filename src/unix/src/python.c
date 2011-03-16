@@ -272,6 +272,10 @@ int agent_python_handle_error(char *log_prefix)
     {
         agent_error("%s: No python error available", log_prefix);
 
+        /* Just in case */
+        Py_XDECREF(pvalue);
+        Py_XDECREF(ptraceback);
+
         /* Release GIL */
         PyGILState_Release(gstate); 
         return -1;
@@ -282,7 +286,7 @@ int agent_python_handle_error(char *log_prefix)
     {
         PyErr_Clear();
 
-        Py_XDECREF(ptype);
+        Py_DECREF(ptype);
         Py_XDECREF(pvalue);
         Py_XDECREF(ptraceback);
 
@@ -294,13 +298,17 @@ int agent_python_handle_error(char *log_prefix)
         return -1;
     }
 
+    /*
+     * Call traceback.format_exception(ptype, pvalue, ptraceback)
+     */
+
     PyObject *pobj_list = PyObject_CallMethod(tb_mod, "format_exception",
             "OOO", ptype, pvalue, ptraceback);
     if (pobj_list == NULL)
     {
         PyErr_Clear();
 
-        Py_XDECREF(ptype);
+        Py_DECREF(ptype);
         Py_XDECREF(pvalue);
         Py_XDECREF(ptraceback);
 
@@ -311,9 +319,16 @@ int agent_python_handle_error(char *log_prefix)
         return -1;
     }
 
-    Py_XDECREF(ptype);
+    Py_DECREF(ptype);
     Py_XDECREF(pvalue);
     Py_XDECREF(ptraceback);
+
+    /*
+     * Now we have a list of 'lines'.  Each 'line' might actually be
+     * multiple lines, however ('line' might contain '\n's).  So, we
+     * need to go through every list entry and log each real line
+     * (looking for \n separator)
+     */
 
     agent_error("%s: A python exception has occurred:", log_prefix);
 
@@ -344,6 +359,7 @@ int agent_python_handle_error(char *log_prefix)
         char *ptr = strchr(obj_str, '\n');
         if (ptr == NULL)
         {
+            /* No \n... just log this element and go to the next */
             agent_error("[EXC] %s", obj_str);
             free(obj_str);
 
