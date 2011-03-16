@@ -1,11 +1,15 @@
 
-AM_CFLAGS =-I../include @PYTHON_CFLAGS@ -Wall -Werror $(GCOV_CFLAGS)
-   
+include $(top_srcdir)/Common.am
+
 ACLOCAL_MFLAGS = -I m4
 
 SUBDIRS = src plugins
 BINTARNAME = @PACKAGE@-`uname -m`-@PACKAGE_VERSION@.tar.gz
 EXTRA_DIST = 
+
+install-exec-local:
+	src/nova-agent -- install_modules.py $(modulesdir)
+	sh install_libs.sh $(libdir)
 
 clean-local::
 	find . -name '*.gcov' -delete -o -name '*.gcda' -delete -o -name '*.gcno' -delete

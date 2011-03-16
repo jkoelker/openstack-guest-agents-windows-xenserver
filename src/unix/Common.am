@@ -1,0 +1,8 @@
+
+datadir=${prefix}/share/${PACKAGE}
+pluginsdir=${datadir}/plugins
+pkglibdir=${pluginsdir}
+modulesdir=${datadir}/modules
+libdir=${datadir}/lib
+
+AM_CFLAGS =-I$(top_srcdir)/include ${PYTHON_CFLAGS}  -Wall -Werror ${GCOV_CFLAGS}

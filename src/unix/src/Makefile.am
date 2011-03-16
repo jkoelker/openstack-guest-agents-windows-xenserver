@@ -1,9 +1,7 @@
 
-pluginsdir=$(datadir)/nova-agent/plugins
+include $(top_srcdir)/Common.am
 
-#AM_CFLAGS =-I../include @PYTHON_CFLAGS@ -DAGENT_VERSION=\"@PACKAGE_VERSION@\" -DPLUGINS_DIR=\"${pluginsdir}\" -Wall -Werror $(GCOV_CFLAGS) -fvisibility=hidden
-AM_CFLAGS =-I../include @PYTHON_CFLAGS@ -Wall -Werror $(GCOV_CFLAGS)
-AM_CFLAGS +=-DAGENT_VERSION=\"@PACKAGE_VERSION@\" -DPLUGINS_DIR=\"${pluginsdir}\" -fvisibility=hidden
+AM_CFLAGS += -DAGENT_VERSION=\"@PACKAGE_VERSION@\" -DPLUGINS_DIR=\"${pluginsdir}\" -fvisibility=hidden
 
 sbin_PROGRAMS = nova-agent
 
