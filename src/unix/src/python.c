@@ -281,6 +281,32 @@ int agent_python_handle_error(char *log_prefix)
         return -1;
     }
 
+    if (ptraceback == NULL)
+    {
+        PyObject *obj;
+
+        agent_error("%s: A python exception has occurred:", log_prefix);
+
+        if (pvalue != NULL)
+        {
+            obj = PyObject_Str(pvalue);
+        }
+        else
+        {
+            obj = PyObject_Str(ptype);
+        }
+
+        agent_error("[EXC] %s", PyString_AsString(obj));
+
+        Py_DECREF(obj);
+        Py_DECREF(ptype);
+        Py_XDECREF(pvalue);
+
+        /* Release GIL */
+        PyGILState_Release(gstate); 
+        return 0;
+    }
+
     PyObject *tb_mod = PyImport_AddModule("traceback");
     if (tb_mod == NULL)
     {
