@@ -37,5 +37,6 @@ PyObject *agent_python_dict_create(PyMethodDef *methods, PyObject *self);
 PyObject *agent_python_class_create(PyObject *module, const char *name,
         PyObject *meta_cls, PyObject *base_cls, PyObject *cls_dict,
         int set_metaclass);
+int agent_python_handle_error(char *log_prefix);
 
 #endif /* __NOVA_AGENT_PYTHON_H__ */

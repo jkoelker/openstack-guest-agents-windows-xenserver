@@ -146,6 +146,11 @@ static void *_agent_parser_plugin_thread(void *arg)
         req = PyObject_CallFunctionObjArgs(get_req, e_instance, NULL);
         if ((req == NULL) || (req == Py_None))
         {
+            if (PyErr_Occurred())
+            {
+                agent_python_handle_error("Error receiving request");
+            }
+
             Py_XDECREF(req);
             PyGILState_Release(gstate);
             sleep(1);
@@ -155,9 +160,9 @@ static void *_agent_parser_plugin_thread(void *arg)
         resp = PyObject_CallFunctionObjArgs(parse, p_instance, req, NULL);
         if (resp == NULL)
         {
-            PyErr_Print();
+            agent_python_handle_error("Error parsing request");
+
             Py_DECREF(req);
-            Py_XDECREF(resp);
             PyGILState_Release(gstate);
             continue;
         }
@@ -165,7 +170,7 @@ static void *_agent_parser_plugin_thread(void *arg)
         PyObject_CallFunctionObjArgs(put_resp, e_instance, req, resp, NULL);
         if (PyErr_Occurred())
         {
-            PyErr_Print();
+            agent_python_handle_error("Error putting response");
         }
 
         Py_DECREF(req);
@@ -571,6 +576,7 @@ int agent_plugin_init(agent_python_info_t *pi)
     err = _na_pymodule_init();
     if (err < 0)
     {
+        agent_python_handle_error("Error setting up the agent");
         pthread_mutex_destroy(&_plugins_lock);
         /* TODO: list_deinit()s */
         return err;
