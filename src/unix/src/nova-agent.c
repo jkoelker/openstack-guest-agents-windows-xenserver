@@ -227,6 +227,28 @@ int main(int argc, char * const *argv)
         exit(-err);
     }
 
+    err = agent_python_test_mode(pi);
+    if (err < 0)
+    {
+        /* Switch this to the new python error call when logging-dev is
+         * merged
+         */
+        agent_error("test_mode error");
+        agent_python_deinit(pi);
+        exit(1);
+    }
+
+    if (err)
+    {
+        /* Test mode */
+
+        agent_info("Agent stopping due to test mode");
+        printf("Agent stopping due to test mode.\n");
+
+        agent_python_deinit(pi);
+        exit(0);
+    }
+
     /* Continue */
 
     err = agent_plugin_start_exchanges();

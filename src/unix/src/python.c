@@ -237,7 +237,6 @@ void agent_python_deinit(agent_python_info_t *pi)
     free(pi);
 }
 
-
 int agent_python_run_file(agent_python_info_t *pi, const char *filename)
 {
     PyGILState_STATE gstate;
@@ -260,5 +259,30 @@ int agent_python_run_file(agent_python_info_t *pi, const char *filename)
     PyGILState_Release(gstate); 
 
     return err;
+}
+
+int agent_python_test_mode(agent_python_info_t *pi)
+{
+    PyObject *obj;
+
+    obj = PyDict_GetItemString(pi->main_dict, "test_mode");
+    if (obj == NULL)
+    {
+        return 0;
+    }
+
+    if (PyInt_Check(obj))
+    {
+        return (PyInt_AsLong(obj) != 0) ? 1 : 0;
+    }
+
+    if (PyBool_Check(obj))
+    {
+        return (obj == Py_True) ? 1 : 0;
+    }
+
+    PyErr_Format(PyExc_TypeError, "If test_mode is set, it should be an int or bool");
+
+    return -1;
 }
 
