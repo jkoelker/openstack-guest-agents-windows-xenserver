@@ -192,7 +192,7 @@ static PyObject *_agent_python_load_module(const char *filename, const char *mod
 }
 #endif
 
-agent_python_info_t *agent_python_init(void)
+agent_python_info_t *agent_python_init(int argc, char * const *argv)
 {
     agent_python_info_t *pi;
     PyObject *main_module;
@@ -220,7 +220,9 @@ agent_python_info_t *agent_python_init(void)
 
     pi->main_dict = PyModule_GetDict(main_module);
 
-//    PySys_SetPath("./lib");
+    PySys_SetArgv(argc, (char **)argv);
+
+    PyEval_ReleaseLock();
 
     /* Swap out and return current thread state and release the GIL */
     pi->main_thread_state = PyEval_SaveThread();
@@ -230,8 +232,11 @@ agent_python_info_t *agent_python_init(void)
 
 void agent_python_deinit(agent_python_info_t *pi)
 {
-    /* Acquire the GIL before shutting down */
-    PyEval_RestoreThread(pi->main_thread_state);
+    if (pi->main_thread_state != NULL)
+    {
+        /* Acquire the GIL before shutting down */
+        PyEval_RestoreThread(pi->main_thread_state);
+    }
 
     Py_Finalize();
     free(pi);
@@ -263,26 +268,57 @@ int agent_python_run_file(agent_python_info_t *pi, const char *filename)
 
 int agent_python_test_mode(agent_python_info_t *pi)
 {
+    PyGILState_STATE gstate;
     PyObject *obj;
+    int ret;
+
+    /* Acquire GIL */
+    gstate = PyGILState_Ensure();
 
     obj = PyDict_GetItemString(pi->main_dict, "test_mode");
     if (obj == NULL)
     {
+        /* Release GIL */
+        PyGILState_Release(gstate); 
         return 0;
     }
 
     if (PyInt_Check(obj))
     {
-        return (PyInt_AsLong(obj) != 0) ? 1 : 0;
+        ret = (PyInt_AsLong(obj) != 0) ? 1 : 0;
+        /* Release GIL */
+        PyGILState_Release(gstate); 
+        return ret;
     }
 
     if (PyBool_Check(obj))
     {
-        return (obj == Py_True) ? 1 : 0;
+        ret = (obj == Py_True) ? 1 : 0;
+        /* Release GIL */
+        PyGILState_Release(gstate); 
+        return ret;
     }
 
     PyErr_Format(PyExc_TypeError, "If test_mode is set, it should be an int or bool");
 
+    /* Release GIL */
+    PyGILState_Release(gstate); 
+
     return -1;
 }
 
+int agent_python_start_interpreter(agent_python_info_t *pi)
+{
+    PyGILState_STATE gstate;
+    int err;
+
+    /* Acquire GIL */
+    gstate = PyGILState_Ensure();
+
+    err = PyRun_InteractiveLoop(stdin, "<stdin>");
+
+    /* Release GIL */
+    PyGILState_Release(gstate); 
+
+    return err;
+}
