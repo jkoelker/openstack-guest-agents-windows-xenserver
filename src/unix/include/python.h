@@ -38,15 +38,8 @@ typedef ssize_t Py_ssize_t;
 
 typedef struct _agent_python_info agent_python_info_t;
 
-/* These assume the GIL is not acquired */
 agent_python_info_t *agent_python_init(void);
 void agent_python_deinit(agent_python_info_t *pi);
 int agent_python_run_file(agent_python_info_t *pi, const char *filename);
-
-/* These assume the GIL is acquired */
-PyObject *agent_python_dict_create(PyMethodDef *methods, PyObject *self);
-PyObject *agent_python_class_create(PyObject *module, const char *name,
-        PyObject *meta_cls, PyObject *base_cls, PyObject *cls_dict,
-        int set_metaclass);
 
 #endif /* __NOVA_AGENT_PYTHON_H__ */
