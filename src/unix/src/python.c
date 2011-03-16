@@ -233,7 +233,6 @@ void agent_python_deinit(agent_python_info_t *pi)
     free(pi);
 }
 
-
 int agent_python_run_file(agent_python_info_t *pi, const char *filename)
 {
     PyGILState_STATE gstate;
@@ -256,106 +255,6 @@ int agent_python_run_file(agent_python_info_t *pi, const char *filename)
     PyGILState_Release(gstate); 
 
     return err;
-}
-
-/* Assumes GIL is acquired */
-PyObject *agent_python_dict_create(PyMethodDef *methods, PyObject *self)
-{
-    PyMethodDef *def;
-    PyObject *dict;
-    PyObject *c_func;
-    PyObject *c_method;
-
-    dict = PyDict_New();
-
-    if (methods == NULL)
-        return dict;
-
-    for(def = methods;def->ml_name != NULL;def++)
-    {
-        c_func = PyCFunction_New(def, self);
-        c_method = PyMethod_New(c_func, NULL, NULL);
-        Py_DECREF(c_func);
-
-        PyDict_SetItemString(dict, def->ml_name, c_method);
-
-        Py_DECREF(c_method);
-    }
-
-    return dict;
-}
-
-/* Assumes GIL is acquired */
-PyObject *agent_python_class_create(PyObject *module, const char *name,
-        PyObject *meta_cls, PyObject *base_cls, PyObject *cls_dict,
-        int set_metaclass)
-{
-    PyObject *bases;
-    PyObject *cls;
-    PyObject *cls_name;
-
-    cls_name = PyString_FromString(name);
-
-    if (base_cls != NULL)
-    {
-        /* bases needs to be a tuple, but we're only receiving 1 base */
-        bases = PyTuple_New(1);
-        PyTuple_SetItem(bases, 0, base_cls);
-    }
-    else
-    {
-        bases = PyTuple_New(0);
-    }
-
-    /*
-     * We create a new class by calling type('name', bases, cls_dict)
-     *
-     * 'type' could be a subclass of 'type', which can be used to
-     * set a metaclass for the new class.  An __init__ call in such
-     * a metaclass can be used to catch all subclassing...
-     *
-     */
-
-    Py_INCREF(meta_cls);
-
-    cls = PyObject_CallFunctionObjArgs(meta_cls, cls_name,
-            bases, cls_dict, NULL);
-    if (cls == NULL)
-    {
-        Py_DECREF(meta_cls);
-        Py_DECREF(cls_name);
-        Py_DECREF(bases);
-
-        return NULL;
-    }
-
-    Py_DECREF(meta_cls);
-
-    if (set_metaclass)
-    {
-        /* 
-         * Python v2 syntax for defining a class's metaclass is like so:
-         *
-         * class MyClass(object):
-         *     __metaclass__ = module_meta_class
-         *
-         * So, we'll go ahead and set this attribute if requested.
-         *
-         * It doesn't appear to be needed when using the C API, because
-         * we always create classes from a metaclass of some sort.
-         *
-         * We'll still set it, just to be consistent..
-         */
-        PyObject_SetAttrString(cls, "__metaclass__", meta_cls);
-    }
-
-    /* Add the class name to the module's dictionary */
-    PyObject_SetAttrString(module, name, cls);
-
-    Py_DECREF(cls_name);
-    Py_DECREF(bases);
-
-    return cls;
 }
 
 int agent_python_handle_error(char *log_prefix)

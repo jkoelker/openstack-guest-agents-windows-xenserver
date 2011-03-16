@@ -64,7 +64,6 @@ class network_commands(jsonparser.command):
         if not system:
             raise SystemError("Couldn't figure out my OS")
 
-        os_mod = __import__("%s" % system, globals(), locals(),
-                ["network"], -1)
+        os_mod = __import__("%s" % system, globals(), locals(), ["network"])
 
         return os_mod.network.configure_network(data)

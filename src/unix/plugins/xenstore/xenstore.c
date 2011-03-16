@@ -24,6 +24,7 @@
 #include "plugin.h"
 #include "logging.h"
 
+
 #define XENSTORE_REQUEST_PATH "data/host"
 #define XENSTORE_RESPONSE_PATH "data/guest"
 

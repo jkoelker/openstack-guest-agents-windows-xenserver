@@ -25,33 +25,15 @@
 #undef _POSIX_C_SOURCE
 #include <Python.h>
 
-typedef struct _agent_plugin_def agent_plugin_def_t;
+/* Support for older versions of Python */
+#ifndef PyVarObject_HEAD_INIT
+#define PyVarObject_HEAD_INIT(type, size)   \
+        _PyObject_EXTRA_INIT            \
+    1, type, size,
+#endif
 
-struct _agent_plugin_def
-{
-#define NOVA_AGENT_PLUGIN_VERSION 1
-    unsigned int version;
-
-    PyObject *(*init_callback)(PyObject *self, PyObject *args);
-    PyObject *(*deinit_callback)(PyObject *self, PyObject *args);
-
-    union
-    {
-        struct /* _agent_exchange_plugin */
-        {
-            PyObject *(*get_request)(PyObject *self, PyObject *args);
-            PyObject *(*put_response)(PyObject *self, PyObject *args);
-        };
-
-        struct /* _agent_parser_plugin */
-        {
-            PyObject *(*parse_request)(PyObject *self, PyObject *args);
-        };
-    };
-};
-
-#if 0
-int agent_plugin_register(const char *mod_name, const char *type, agent_plugin_def_t *mod_def);
+#ifndef PY_SSIZE_T_MAX
+typedef ssize_t Py_ssize_t;
 #endif
 
 int agent_plugin_register(const char *plugin_name, PyTypeObject *class_def, const char *type);

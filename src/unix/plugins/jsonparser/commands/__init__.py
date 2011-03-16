@@ -20,8 +20,8 @@
 JSON command plugins
 """
 
-from . import file_inject
-from . import misc
-from . import network
-from . import password
-from . import update
+import file_inject
+import misc
+import network
+import password
+import update

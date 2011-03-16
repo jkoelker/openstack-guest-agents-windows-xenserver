@@ -545,8 +545,10 @@ static int _na_pymodule_init(void)
         return -1;
     }
 
+    /* some versions of gcc get bitchy about strict aliasing, hence the
+     * double typecast */
     PyModule_AddObject(pymod, PLUGIN_METATYPE_NAME,
-            (PyObject *)&agent_plugin_metatype);
+            (PyObject *)(void *)&agent_plugin_metatype);
 
     agent_plugin_class.tp_base = &PyBaseObject_Type;
     agent_plugin_class.tp_flags = Py_TPFLAGS_DEFAULT|Py_TPFLAGS_BASETYPE;
@@ -558,8 +560,10 @@ static int _na_pymodule_init(void)
         return -1;
     }
 
+    /* some versions of gcc get bitchy about strict aliasing, hence the
+     * double typecast */
     PyModule_AddObject(pymod, PLUGIN_CLASS_NAME,
-            (PyObject *)&agent_plugin_class);
+            (PyObject *)(void *)&agent_plugin_class);
 
     /* Release GIL */
     PyGILState_Release(gstate);
@@ -703,7 +707,7 @@ int __attribute__ ((visibility("default"))) agent_plugin_register(const char *pl
     PyDict_SetItemString(cls_dict, "type", PyString_FromString(type));
     class_def->tp_dict = cls_dict;
 
-    pymod = Py_InitModule(plugin_name, _mod_methods);
+    pymod = Py_InitModule((char *)plugin_name, _mod_methods);
 
     if (PyType_Ready(class_def) < 0)
     {
@@ -724,7 +728,7 @@ int __attribute__ ((visibility("default"))) agent_plugin_register(const char *pl
         return -1;
     }
 
-    PyModule_AddObject(pymod, plugin_name, (PyObject *)class_def);
+    PyModule_AddObject(pymod, (char *)plugin_name, (PyObject *)class_def);
 
     /* Release GIL */
     PyGILState_Release(gstate); 
