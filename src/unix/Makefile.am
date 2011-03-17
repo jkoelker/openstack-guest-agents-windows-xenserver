@@ -25,12 +25,12 @@ distclean-local:
 	rm -f $(top_srcdir)/{depcomp,install-sh,ltmain.sh,missing}
 	find $(top_srcdir) -name Makefile.in -exec rm -f {} \;
 	find $(top_srcdir) -name configure.in -exec rm -f {} \;
-	find $(top_srcdir) -name '*.pyc' -exec rm -f {} \;
 	rm -rf $(top_srcdir)/m4
 	rm -rf $(top_srcdir)/autom4te.cache
 
 clean-local::
 	find . -name '*.gcov' -delete -o -name '*.gcda' -delete -o -name '*.gcno' -delete
+	find . -name '*.pyc' -exec rm -f {} \;
 	rm -rf $(CURDIR)/fakeroot
 
 coverage:: check
