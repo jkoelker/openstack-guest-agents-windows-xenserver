@@ -22,3 +22,12 @@ nobase_pkglib_LTLIBRARIES=xenstore/xenstore.la
 xenstore_xenstore_la_SOURCES=xenstore/xenstore.c
 xenstore_xenstore_la_LIBADD = -lxenstore
 xenstore_xenstore_la_LDFLAGS = -module -avoid-version
+
+nodist_noinst_DATA = xenstore/xenstore.so
+
+xenstore/xenstore.so:
+	ln -s .libs/xenstore.so xenstore/xenstore.so
+
+clean-local:
+	rm -f xenstore/xenstore.so
+
