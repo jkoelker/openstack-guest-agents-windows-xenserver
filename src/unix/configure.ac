@@ -83,6 +83,12 @@ int main(int argc, char **argv)
 LIBS=$SAVE_LIBS
 CFLAGS=$SAVE_CFLAGS
 
+AC_CHECK_PROG([PATCHELF], [patchelf], [yes])
+if test "$PATCHELF" != "yes"; then
+    missing "patchelf"
+    exit 1
+fi
+
 AC_CHECK_LIB([pthread], [pthread_create], [], [
     missing "the pthread library"
     exit 1
