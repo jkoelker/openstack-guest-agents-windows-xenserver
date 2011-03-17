@@ -85,6 +85,7 @@ static void _usage(FILE *f, char *progname, int long_vers)
         fprintf(f, "  -l, --level    Call logging.basicConfig with level\n");
         fprintf(f, "  -t, --testmode Treat self like 'python' binary\n");
         fprintf(f, "  -q, --quiet    Don't output startup/shutdown messages to stdout\n");
+        fprintf(f, "  -S, --syspython Use system python (for building only)\n");
     }
     else
     {
@@ -102,6 +103,7 @@ int main(int argc, char **argv)
         { "level", required_argument, NULL, 'l' },
         { "testmode", no_argument, NULL, 't' },
         { "quiet", no_argument, NULL, 'q' },
+        { "syspython", no_argument, NULL, 'S' },
         { NULL, 0, NULL, 0 }
     };
 
@@ -113,6 +115,7 @@ int main(int argc, char **argv)
     int do_fork = 1;
     int test_mode = 0;
     int quiet = 0;
+    int syspython = 0;
     char *progname = argv[0];
     char *logfile = NULL;
     char *level = NULL;
@@ -120,7 +123,7 @@ int main(int argc, char **argv)
 
     /* Don't let getopt_long() output to stderr directly */
     opterr = 0;
-    while((opt = getopt_long(argc, argv, ":hno:l:tq", longopts, NULL)) != -1)
+    while((opt = getopt_long(argc, argv, ":hno:l:tqS", longopts, NULL)) != -1)
     {
         switch(opt)
         {
@@ -146,6 +149,10 @@ int main(int argc, char **argv)
 
             case 'q':
                 quiet = 1;
+                break;
+
+            case 'S':
+                syspython = 1;
                 break;
 
             case ':':
@@ -204,7 +211,7 @@ int main(int argc, char **argv)
     if (!quiet)
         printf("Agent starting.\n");
 
-    pi = agent_python_init(argc, argv);
+    pi = agent_python_init(argc, argv, syspython);
     if (pi == NULL)
     {
         return 1;

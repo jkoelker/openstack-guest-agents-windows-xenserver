@@ -1,7 +1,7 @@
 
 include $(top_srcdir)/Common.am
 
-AM_CFLAGS += -DAGENT_VERSION=\"@PACKAGE_VERSION@\" -DPLUGINS_DIR=\"${pluginsdir}\" -fvisibility=hidden
+AM_CFLAGS += -DAGENT_VERSION=\"@PACKAGE_VERSION@\" -DPLUGINS_DIR=\"${pluginsdir}\" -DDATA_DIR=\"${datadir}\" -fvisibility=hidden
 
 sbin_PROGRAMS = nova-agent
 

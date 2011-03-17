@@ -38,7 +38,7 @@ typedef ssize_t Py_ssize_t;
 
 typedef struct _agent_python_info agent_python_info_t;
 
-agent_python_info_t *agent_python_init(int argc, char * const *argv);
+agent_python_info_t *agent_python_init(int argc, char * const *argv, int syspython);
 void agent_python_deinit(agent_python_info_t *pi);
 int agent_python_run_file(agent_python_info_t *pi, const char *filename);
 int agent_python_test_mode(agent_python_info_t *pi);

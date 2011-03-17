@@ -39,6 +39,7 @@ if test "$PYTHON_CFLAGS" = "" -a "$PYTHON_LIB" = ""; then
             if test -f ${dir}/include/${python}/Python.h ; then
                 if test -f ${dir}/lib/lib${python}.so ; then
                     # We're done.  Found header and library
+                    PYTHON_VER=${python}
                     PYTHON_CFLAGS="-I${dir}/include/${python}"
                     PYTHON_LIB="-l${python}"
                     break
@@ -88,6 +89,7 @@ AC_CHECK_LIB([pthread], [pthread_create], [], [
 ])
 
 AC_SUBST([GCOV_CFLAGS])
+AC_SUBST([PYTHON_VER])
 AC_SUBST([PYTHON_CFLAGS])
 AC_SUBST([PYTHON_LIB])
 

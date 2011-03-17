@@ -192,12 +192,19 @@ static PyObject *_agent_python_load_module(const char *filename, const char *mod
 }
 #endif
 
-agent_python_info_t *agent_python_init(int argc, char * const *argv)
+agent_python_info_t *agent_python_init(int argc, char * const *argv, int syspython)
 {
     agent_python_info_t *pi;
     PyObject *main_module;
 
+    if (!syspython)
+        Py_SetPythonHome(DATA_DIR);
+
     Py_Initialize();
+
+    if (!syspython)
+        PyRun_SimpleString("import sys; sys.path.append('" DATA_DIR "')\n");
+
     PyEval_InitThreads();
 
     main_module = PyImport_AddModule("__main__");
