@@ -21,9 +21,13 @@ install-exec-local:
 
 distclean-local:
 	rm -f $(top_srcdir)/{configure,configure.in}
-	find $(top_srcdir) -name Makefile.in -exec rm {} \;
-	find $(top_srcdir) -name configure.in -exec rm {} \;
-	rm -f $(top_srcdir)/m4/{libtool.m4,ltoptions.m4,ltsugar.m4,ltversion.m4,lt~obsolete.m4}
+	rm -f $(top_srcdir)/{aclocal.m4,compile,config.guess,config.sub}
+	rm -f $(top_srcdir)/{depcomp,install-sh,ltmain.sh,missing}
+	find $(top_srcdir) -name Makefile.in -exec rm -f {} \;
+	find $(top_srcdir) -name configure.in -exec rm -f {} \;
+	find $(top_srcdir) -name '*.pyc' -exec rm -f {} \;
+	rm -rf $(top_srcdir)/m4
+	rm -rf $(top_srcdir)/autom4te.cache
 
 clean-local::
 	find . -name '*.gcov' -delete -o -name '*.gcda' -delete -o -name '*.gcno' -delete
