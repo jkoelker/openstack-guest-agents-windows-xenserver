@@ -9,7 +9,7 @@ noinst_HEADERS = include/logging.h include/nova-agent.h \
 				 include/plugin_int.h include/python.h
 include_HEADERS = include/plugin.h
 
-EXTRA_DIST = install_libs.sh install_modules.py nova-agent.py
+EXTRA_DIST = install_libs.py install_modules.py nova-agent.py
 
 data_DATA = nova-agent.py
 
