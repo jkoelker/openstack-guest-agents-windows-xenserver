@@ -32,5 +32,5 @@ clean-local:
 	rm -f xenstore/xenstore.so
 
 install-exec-local:
-	@$(top_srcdir)/src/nova-agent -qS -- $(top_srcdir)/install_libs.py xenstore/xenstore.so ${DESTDIR}/$(libdir)
+	@$(top_srcdir)/src/nova-agent -qS -- $(top_srcdir)/install_libs.py xenstore/xenstore.so ${DESTDIR} $(libdir)
 

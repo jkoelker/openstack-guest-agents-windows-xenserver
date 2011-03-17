@@ -7,16 +7,18 @@ import sys
 # For nova_agent binary
 test_mode = True
 
-def install_libs_for_binary(binary, destdir):
+def install_libs_for_binary(binary, destdir, libdir):
     """
     Install all dynamic library dependencies for a binary
     """
+
+    installdir = destdir + libdir
 
     def _find_libs(target):
         """
         Use ldd on a binary/library to find out its dynamic libraries.
         """
-    
+
         p = subprocess.Popen(["ldd", target],
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
@@ -56,19 +58,31 @@ def install_libs_for_binary(binary, destdir):
 
     for lib in find_libs(binary):
         print "Installing %s" % lib
-        shutil.copy2(lib, destdir)
+        shutil.copy2(lib, installdir)
 
-if len(sys.argv) != 3:
-    print "Usage: install_libs.py <binary_name> <dest_dir>"
+        filename = os.path.basename(lib)
+        if not filename.startswith('ld-'):
+            args = ['patchelf', '--set-rpath', libdir, os.path.join(installdir, filename)]
+            p = subprocess.Popen(args)
+            status = os.waitpid(p.pid, 0)[1]
+
+            if status:
+                raise Exception("failed to execute %s: status %d" % ' '.join(args), status)
+
+if len(sys.argv) != 4:
+    print "Usage: install_libs.py <binary_name> <dest_dir> <lib_dir>"
     sys.exit(1)
 
 binary = sys.argv[1]
 destdir = sys.argv[2]
+libdir = sys.argv[3]
 
-if not os.path.exists(destdir):
-    os.mkdir(destdir)
-elif not os.path.isdir(destdir):
-    print "Error: '%s' exists and is not a directory" % destdir
+installdir = destdir + libdir
+
+if not os.path.exists(installdir):
+    os.makedirs(installdir)
+elif not os.path.isdir(installdir):
+    print "Error: '%s' exists and is not a directory" % installdir
     sys.exit(1)
 
-install_libs_for_binary(binary, destdir)
+install_libs_for_binary(binary, destdir, libdir)

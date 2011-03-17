@@ -83,15 +83,24 @@ int main(int argc, char **argv)
 LIBS=$SAVE_LIBS
 CFLAGS=$SAVE_CFLAGS
 
+AC_CHECK_PROG([PATCHELF], [patchelf], [yes])
+if test "$PATCHELF" != "yes"; then
+    missing "patchelf"
+    exit 1
+fi
+
 AC_CHECK_LIB([pthread], [pthread_create], [], [
     missing "the pthread library"
     exit 1
 ])
 
+DESTDIR="/"
+
 AC_SUBST([GCOV_CFLAGS])
 AC_SUBST([PYTHON_VER])
 AC_SUBST([PYTHON_CFLAGS])
 AC_SUBST([PYTHON_LIB])
+AC_SUBST([DESTDIR])
 
 AC_CONFIG_FILES([Makefile
                  src/Makefile

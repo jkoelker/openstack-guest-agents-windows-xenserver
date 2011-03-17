@@ -67,7 +67,7 @@ if len(sys.argv) != 2:
 destdir = sys.argv[1]
 
 if not os.path.exists(destdir):
-    os.mkdir(destdir)
+    os.makedirs(destdir)
 elif not os.path.isdir(destdir):
     print "Error: '%s' exists and is not a directory" % destdir
     sys.exit(1)

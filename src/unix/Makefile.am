@@ -16,8 +16,9 @@ data_DATA = nova-agent.py
 BINTARNAME = @PACKAGE@-`uname -m`-@PACKAGE_VERSION@.tar.gz
 
 install-exec-local:
-	@$(top_srcdir)/src/nova-agent -qS -- $(top_srcdir)/install_libs.py $(top_srcdir)/src/nova-agent ${DESTDIR}/$(libdir)
+	@$(top_srcdir)/src/nova-agent -qS -- $(top_srcdir)/install_libs.py $(top_srcdir)/src/nova-agent ${DESTDIR} $(libdir)
 	@$(top_srcdir)/src/nova-agent -qS -- $(top_srcdir)/install_modules.py ${DESTDIR}/$(modulesdir)
+	@./patch_binary.py ${DESTDIR}${sbindir}/nova-agent ${DESTDIR} $(libdir)
 
 distclean-local:
 	rm -f $(top_srcdir)/{configure,configure.in}
