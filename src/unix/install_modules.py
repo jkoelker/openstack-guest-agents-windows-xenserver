@@ -13,6 +13,21 @@ def install_plugins(destdir):
     import plugins
 
     to_install = set()
+
+    def copy_tree(srcdir, destdir):
+        print "Installing %s" % srcdir
+        if not os.path.exists(destdir):
+            os.mkdir(destdir)
+        for root, dirs, files in os.walk(srcdir):
+            for d in dirs:
+                if not os.path.exists(os.path.join(destdir, d)):
+                    os.mkdir(os.path.join(destdir, d))
+            for f in files:
+                # Only install .pyc or .sos, etc
+                if not f.endswith('.py'):
+                    shutil.copy2(os.path.join(root, f),
+                        os.path.join(destdir, f))
+
     
     for modname in sys.modules:
         try:
@@ -39,8 +54,9 @@ def install_plugins(destdir):
     for i in to_install:
         if os.path.isdir(i):
             subdir = i.rsplit('/', 1)[1]
-            shutil.copytree(i, "%s/%s" % (destdir, subdir))
+            copy_tree(i, os.path.join(destdir, subdir))
         else:
+            print "Installing %s" % i
             shutil.copy2(i, destdir)
 
 

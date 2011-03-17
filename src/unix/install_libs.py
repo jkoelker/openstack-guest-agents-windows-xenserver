@@ -55,7 +55,7 @@ def install_libs_for_binary(binary, destdir):
         return libs
 
     for lib in find_libs(binary):
-        print "Installing %s into %s" % (lib, destdir)
+        print "Installing %s" % lib
         shutil.copy2(lib, destdir)
 
 if len(sys.argv) != 3:
