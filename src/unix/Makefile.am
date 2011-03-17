@@ -16,12 +16,22 @@ data_DATA = nova-agent.py
 BINTARNAME = @PACKAGE@-`uname -m`-@PACKAGE_VERSION@.tar.gz
 
 install-exec-local:
-	@src/nova-agent -qS -- install_libs.py src/nova-agent ${DESTDIR} $(libdir)
-	@src/nova-agent -qS -- install_modules.py ${DESTDIR}/$(modulesdir)
+	@$(top_srcdir)/src/nova-agent -qS -- $(top_srcdir)/install_libs.py $(top_srcdir)/src/nova-agent ${DESTDIR} $(libdir)
+	@$(top_srcdir)/src/nova-agent -qS -- $(top_srcdir)/install_modules.py ${DESTDIR}/$(modulesdir)
 	@./patch_binary.py ${DESTDIR}${sbindir}/nova-agent ${DESTDIR} $(libdir)
+
+distclean-local:
+	rm -f $(top_srcdir)/{configure,configure.in}
+	rm -f $(top_srcdir)/{aclocal.m4,compile,config.guess,config.sub}
+	rm -f $(top_srcdir)/{depcomp,install-sh,ltmain.sh,missing}
+	find $(top_srcdir) -name Makefile.in -exec rm -f {} \;
+	find $(top_srcdir) -name configure.in -exec rm -f {} \;
+	rm -rf $(top_srcdir)/m4
+	rm -rf $(top_srcdir)/autom4te.cache
 
 clean-local::
 	find . -name '*.gcov' -delete -o -name '*.gcda' -delete -o -name '*.gcno' -delete
+	find . -name '*.pyc' -exec rm -f {} \;
 	rm -rf $(CURDIR)/fakeroot
 
 coverage:: check
