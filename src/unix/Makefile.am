@@ -16,8 +16,14 @@ data_DATA = nova-agent.py
 BINTARNAME = @PACKAGE@-`uname -m`-@PACKAGE_VERSION@.tar.gz
 
 install-exec-local:
-	@src/nova-agent -qS -- install_libs.py src/nova-agent ${DESTDIR}/$(libdir)
-	@src/nova-agent -qS -- install_modules.py ${DESTDIR}/$(modulesdir)
+	@$(top_srcdir)/src/nova-agent -qS -- $(top_srcdir)/install_libs.py $(top_srcdir)/src/nova-agent ${DESTDIR}/$(libdir)
+	@$(top_srcdir)/src/nova-agent -qS -- $(top_srcdir)/install_modules.py ${DESTDIR}/$(modulesdir)
+
+distclean-local:
+	rm -f $(top_srcdir)/{configure,configure.in}
+	find $(top_srcdir) -name Makefile.in -exec rm {} \;
+	find $(top_srcdir) -name configure.in -exec rm {} \;
+	rm -f $(top_srcdir)/m4/{libtool.m4,ltoptions.m4,ltsugar.m4,ltversion.m4,lt~obsolete.m4}
 
 clean-local::
 	find . -name '*.gcov' -delete -o -name '*.gcda' -delete -o -name '*.gcno' -delete
