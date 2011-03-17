@@ -16,8 +16,8 @@ data_DATA = nova-agent.py
 BINTARNAME = @PACKAGE@-`uname -m`-@PACKAGE_VERSION@.tar.gz
 
 install-exec-local:
-	@src/nova-agent -q -- install_modules.py ${DESTDIR}/$(modulesdir)
-	@src/nova-agent -q -- install_libs.py src/nova-agent ${DESTDIR}/$(libdir)
+	@src/nova-agent -qS -- install_libs.py src/nova-agent ${DESTDIR}/$(libdir)
+	@src/nova-agent -qS -- install_modules.py ${DESTDIR}/$(modulesdir)
 
 clean-local::
 	find . -name '*.gcov' -delete -o -name '*.gcda' -delete -o -name '*.gcno' -delete
