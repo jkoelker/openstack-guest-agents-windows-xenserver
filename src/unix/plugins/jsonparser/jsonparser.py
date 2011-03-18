@@ -139,18 +139,14 @@ class command_parser(nova_agent.plugin):
             request = anyjson.deserialize(request['data'])
         except Exception, e:
             logging.error("Request dictionary contains no 'data' key")
-            return None
+            return self.encode_result((500, "Request is malformed"))
 
         try:
             cmd_name = request['name']
         except KeyError:
             logging.error("Request is missing 'name' key")
-            return None
-
-        try:
-            cmd_string = request['value']
-        except KeyError:
-            cmd_string = ''
+            return self.encode_result((500, "Request is missing 'name' key"))
+        cmd_string = request.get('value', '')
 
         logging.info("Received command '%s' with argument: '%s'" % \
                 (cmd_name, cmd_string))
@@ -160,6 +156,9 @@ class command_parser(nova_agent.plugin):
         except CommandNotFoundError, e:
             logging.warn(str(e))
             return self.encode_result((404, str(e)))
+        except Exception, e:
+            logging.error(str(e))
+            return self.encode_result((500, str(e)))
 
         logging.info("'%s' completed with code '%s', message '%s'" % \
                 (cmd_name, result[0], result[1]))
