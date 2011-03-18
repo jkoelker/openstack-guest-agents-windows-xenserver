@@ -107,6 +107,10 @@ static int basic_config(char *filename, char *level)
             goto err_value;
     }
 
+    PyObject *value = PyString_FromString("%(asctime)s [%(levelname)s] %(message)s");
+    PyDict_SetItemString(kwargs, "format", value);
+    Py_DECREF(value);
+
     PyObject *callable = PyObject_GetAttrString(logging, "basicConfig");
     if (!callable)
         goto err_callable;
