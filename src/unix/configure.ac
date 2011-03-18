@@ -39,6 +39,7 @@ if test "$PYTHON_CFLAGS" = "" -a "$PYTHON_LIB" = ""; then
             if test -f ${dir}/include/${python}/Python.h ; then
                 if test -f ${dir}/lib/lib${python}.so ; then
                     # We're done.  Found header and library
+                    PYTHON_VER=${python}
                     PYTHON_CFLAGS="-I${dir}/include/${python}"
                     PYTHON_LIB="-l${python}"
                     break
@@ -82,19 +83,28 @@ int main(int argc, char **argv)
 LIBS=$SAVE_LIBS
 CFLAGS=$SAVE_CFLAGS
 
+AC_CHECK_PROG([PATCHELF], [patchelf], [yes])
+if test "$PATCHELF" != "yes"; then
+    missing "patchelf"
+    exit 1
+fi
+
 AC_CHECK_LIB([pthread], [pthread_create], [], [
     missing "the pthread library"
     exit 1
 ])
 
+DESTDIR="/"
+
 AC_SUBST([GCOV_CFLAGS])
+AC_SUBST([PYTHON_VER])
 AC_SUBST([PYTHON_CFLAGS])
 AC_SUBST([PYTHON_LIB])
+AC_SUBST([DESTDIR])
 
 AC_CONFIG_FILES([Makefile
                  src/Makefile
                  plugins/Makefile
-                 plugins/xenstore/Makefile
                  ])
 
 AC_OUTPUT

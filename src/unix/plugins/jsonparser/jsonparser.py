@@ -38,6 +38,7 @@ except ImportError:
         def deserialize(buf):
             return json.read(buf)
 
+
 class CommandNotFoundError(Exception):
 
     def __init__(self, cmd):
