@@ -259,11 +259,11 @@ int main(int argc, char **argv)
         exit(err);
     }
 
-    sigfillset(&mask);
-    sigdelset(&mask, SIGSEGV);
-    sigdelset(&mask, SIGSTOP);
+    sigemptyset(&mask);
+    sigaddset(&mask, SIGINT);
+    sigaddset(&mask, SIGTERM);
 
-    pthread_sigmask(SIG_SETMASK, &mask, NULL);
+    pthread_sigmask(SIG_BLOCK, &mask, NULL);
 
     err = agent_python_run_file(pi, config_file);
     if (err < 0)
