@@ -41,5 +41,6 @@ typedef struct _agent_python_info agent_python_info_t;
 agent_python_info_t *agent_python_init(void);
 void agent_python_deinit(agent_python_info_t *pi);
 int agent_python_run_file(agent_python_info_t *pi, const char *filename);
+int agent_python_handle_error(char *log_prefix);
 
 #endif /* __NOVA_AGENT_PYTHON_H__ */

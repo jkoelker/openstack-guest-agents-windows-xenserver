@@ -46,12 +46,14 @@ static PyObject *_agent_python_get_code(const char *filename)
     fd = open(filename, O_RDONLY);
     if (fd < 0)
     {
+        agent_error("Couldn't open '%s'\n", filename);
         return NULL;
     }
 
     err = fstat(fd, &sb);
     if (err < 0)
     {
+        agent_error("Couldn't fstat '%s'\n", filename);
         close(fd);
         return NULL;
     }
@@ -59,6 +61,7 @@ static PyObject *_agent_python_get_code(const char *filename)
     python_code = malloc(sb.st_size + 1);
     if (python_code == NULL)
     {
+        agent_error("Out of memory allocating space for '%s'\n", filename);
         close(fd);
         return NULL;
     }
@@ -66,6 +69,7 @@ static PyObject *_agent_python_get_code(const char *filename)
     err = read(fd, python_code, sb.st_size);
     if (err != sb.st_size)
     {
+        agent_error("Error reading from '%s'\n", filename);
         close(fd);
         free(python_code);
         return NULL;
@@ -92,6 +96,10 @@ static PyObject *_agent_python_run_file(const char *filename, PyObject *dict)
     code_obj = _agent_python_get_code(filename);
     if (code_obj == NULL)
     {
+        if (PyErr_Occurred())
+        {
+            agent_python_handle_error("Failed to compile python code");
+        }
         return NULL;
     }
 
@@ -104,33 +112,21 @@ static PyObject *_agent_python_run_file(const char *filename, PyObject *dict)
     { 
         PyObject *ptype = NULL;
         PyObject *pvalue = NULL;
-        PyObject *traceback = NULL;
+        PyObject *ptraceback = NULL;
 
-        PyErr_Print();
-        PyErr_Fetch(&ptype, &pvalue, &traceback);
+        PyErr_Fetch(&ptype, &pvalue, &ptraceback);
 
         if (!PyErr_GivenExceptionMatches(ptype, PyExc_SystemExit))
         { 
-            agent_error("Failed to run Python code");
+            PyErr_Restore(ptype, pvalue, ptraceback);
 
-            PyErr_Clear();
-            Py_XDECREF(result);
-            result = NULL;
+            agent_python_handle_error("Failed to run python code");
         }
-
-        if (ptype != NULL)
+        else
         {
-            Py_DECREF(ptype);
-        }
-
-        if (pvalue != NULL)
-        {
-            Py_DECREF(pvalue);
-        }
-
-        if (traceback != NULL)
-        {
-            Py_DECREF(traceback);
+            Py_XDECREF(ptype);
+            Py_XDECREF(pvalue);
+            Py_XDECREF(ptraceback);
         }
     }
 
@@ -237,7 +233,6 @@ void agent_python_deinit(agent_python_info_t *pi)
     free(pi);
 }
 
-
 int agent_python_run_file(agent_python_info_t *pi, const char *filename)
 {
     PyGILState_STATE gstate;
@@ -262,3 +257,163 @@ int agent_python_run_file(agent_python_info_t *pi, const char *filename)
     return err;
 }
 
+int agent_python_handle_error(char *log_prefix)
+{
+    PyObject *ptype;
+    PyObject *pvalue;
+    PyObject *ptraceback;
+
+    /* Acquire GIL */
+    PyGILState_STATE gstate = PyGILState_Ensure();
+
+    PyErr_Fetch(&ptype, &pvalue, &ptraceback);
+
+    if (ptype == NULL)
+    {
+        agent_error("%s: No python error available", log_prefix);
+
+        /* Just in case */
+        Py_XDECREF(pvalue);
+        Py_XDECREF(ptraceback);
+
+        /* Release GIL */
+        PyGILState_Release(gstate); 
+        return -1;
+    }
+
+    if (ptraceback == NULL)
+    {
+        PyObject *obj;
+
+        agent_error("%s: A python exception has occurred:", log_prefix);
+
+        if (pvalue != NULL)
+        {
+            obj = PyObject_Str(pvalue);
+        }
+        else
+        {
+            obj = PyObject_Str(ptype);
+        }
+
+        agent_error("[EXC] %s", PyString_AsString(obj));
+
+        Py_DECREF(obj);
+        Py_DECREF(ptype);
+        Py_XDECREF(pvalue);
+
+        /* Release GIL */
+        PyGILState_Release(gstate); 
+        return 0;
+    }
+
+    PyObject *tb_mod = PyImport_AddModule("traceback");
+    if (tb_mod == NULL)
+    {
+        PyErr_Clear();
+
+        Py_DECREF(ptype);
+        Py_XDECREF(pvalue);
+        Py_XDECREF(ptraceback);
+
+        agent_error("%s: [Couldn't find traceback module "
+                "to print the error]", log_prefix);
+
+        /* Release GIL */
+        PyGILState_Release(gstate); 
+        return -1;
+    }
+
+    /*
+     * Call traceback.format_exception(ptype, pvalue, ptraceback)
+     */
+
+    PyObject *pobj_list = PyObject_CallMethod(tb_mod, "format_exception",
+            "OOO", ptype, pvalue, ptraceback);
+    if (pobj_list == NULL)
+    {
+        PyErr_Clear();
+
+        Py_DECREF(ptype);
+        Py_XDECREF(pvalue);
+        Py_XDECREF(ptraceback);
+
+        agent_error("%s: [Couldn't format traceback]", log_prefix);
+
+        /* Release GIL */
+        PyGILState_Release(gstate); 
+        return -1;
+    }
+
+    Py_DECREF(ptype);
+    Py_XDECREF(pvalue);
+    Py_XDECREF(ptraceback);
+
+    /*
+     * Now we have a list of 'lines'.  Each 'line' might actually be
+     * multiple lines, however ('line' might contain '\n's).  So, we
+     * need to go through every list entry and log each real line
+     * (looking for \n separator)
+     */
+
+    agent_error("%s: A python exception has occurred:", log_prefix);
+
+    Py_ssize_t list_sz = PyList_Size(pobj_list);
+    PyObject *pobj_str;
+
+    Py_ssize_t i;
+
+    for(i = 0;i < list_sz;i++)
+    {
+        pobj_str = PyList_GetItem(pobj_list, i);
+
+        char *obj_str = strdup(PyString_AsString(pobj_str));
+
+        Py_DECREF(pobj_str);
+    
+        if (obj_str == NULL)
+        {
+            agent_error("Out of memory");
+
+            Py_DECREF(pobj_list);
+    
+            /* Release GIL */
+            PyGILState_Release(gstate); 
+            return 0;
+        }
+    
+        char *ptr = strchr(obj_str, '\n');
+        if (ptr == NULL)
+        {
+            /* No \n... just log this element and go to the next */
+            agent_error("[EXC] %s", obj_str);
+            free(obj_str);
+
+            continue;
+        }
+
+        char *start = obj_str;
+        *(ptr++) = '\0';
+
+        agent_error("[EXC] %s", start);
+    
+        while((ptr != NULL) && (*ptr != '\0'))
+        {
+            start = ptr;
+            ptr = strchr(start, '\n');
+            if (ptr != NULL)
+            {
+                *ptr++ = '\0';
+            }
+
+            agent_error("[EXC] %s", start);
+        }
+    
+        free(obj_str);
+    }
+
+    /* Release GIL */
+    PyGILState_Release(gstate); 
+
+    return 0;
+}

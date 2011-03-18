@@ -36,4 +36,5 @@ class misc_commands(jsonparser.command):
 
     @jsonparser.command_add('version')
     def version_cmd(self, data):
+        # Ignore the version arguments
         return (0, nova_agent.get_version())
