@@ -12,6 +12,11 @@ def install_plugins(destdir):
 
     import plugins
 
+    instances = []
+
+    for x in nova_agent.parser_plugins():
+        instances.append(x())
+
     to_install = set()
 
     def copy_tree(srcdir, destdir):
@@ -26,31 +31,31 @@ def install_plugins(destdir):
                 # Only install .pyc or .sos, etc
                 if not f.endswith('.py'):
                     shutil.copy2(os.path.join(root, f),
-                        os.path.join(destdir, f))
+                            os.path.join(destdir + root[len(srcdir):], f))
 
-    
+
     for modname in sys.modules:
         try:
             mod_fn = __import__(modname).__file__
         except:
             continue
-    
+
         (mod_dir, mod_file) = mod_fn.rsplit('/', 1)
-    
+
         if mod_dir == "%s/%s" % (sys.path[0], "plugins"):
             # Skip our plugins.
             continue
-    
+
         if mod_dir in sys.path:
             to_install.add(mod_fn)
         else:
             to_install.add(mod_dir)
-    
+
     try:
         os.mkdir(destdir)
     except:
         pass
-    
+
     for i in to_install:
         if os.path.isdir(i):
             subdir = i.rsplit('/', 1)[1]

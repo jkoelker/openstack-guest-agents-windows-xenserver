@@ -7,6 +7,7 @@ import sys
 # For nova_agent binary
 test_mode = True
 
+
 def install_libs_for_binary(binary, destdir, libdir):
     """
     Install all dynamic library dependencies for a binary
@@ -24,22 +25,22 @@ def install_libs_for_binary(binary, destdir, libdir):
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE)
         (outdata, errdata) = p.communicate()
-    
+
         libs = set()
-    
+
         for line in outdata.split('\n'):
             fields = line.split()
-    
+
             if not len(fields):
                 continue
-    
+
             if len(fields) > 2 and os.path.exists(fields[2]):
                     libs.add(fields[2])
             elif os.path.exists(fields[0]):
                     libs.add(fields[0])
-    
+
         return libs
-    
+
     def find_libs(target):
         """
         Get a list of libraries for a target.  Recurse through
@@ -48,12 +49,12 @@ def install_libs_for_binary(binary, destdir, libdir):
 
         libs = set()
         more_libs = _find_libs(target)
-    
+
         while libs != more_libs:
             for lib in set(more_libs - libs):
                 libs.add(lib)
                 more_libs.update(_find_libs(lib))
-    
+
         return libs
 
     for lib in find_libs(binary):
@@ -62,12 +63,15 @@ def install_libs_for_binary(binary, destdir, libdir):
 
         filename = os.path.basename(lib)
         if not filename.startswith('ld-'):
-            args = ['patchelf', '--set-rpath', libdir, os.path.join(installdir, filename)]
+            args = ['patchelf', '--set-rpath', libdir,
+                    os.path.join(installdir, filename)]
             p = subprocess.Popen(args)
             status = os.waitpid(p.pid, 0)[1]
 
             if status:
-                raise Exception("failed to execute %s: status %d" % ' '.join(args), status)
+                raise Exception(
+                        "failed to execute %s: status %d" % ' '.join(args),
+                        status)
 
 if len(sys.argv) != 4:
     print "Usage: install_libs.py <binary_name> <dest_dir> <lib_dir>"
