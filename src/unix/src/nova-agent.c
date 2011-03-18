@@ -269,10 +269,7 @@ int main(int argc, char **argv)
     test_mode = agent_python_test_mode(pi);
     if (test_mode < 0)
     {
-        /* Switch this to the new python error call when logging-dev is
-         * merged
-         */
-        agent_error("test_mode error");
+        agent_python_handle_error("Error with test_mode in config file");
         agent_python_deinit(pi);
         exit(1);
     }
