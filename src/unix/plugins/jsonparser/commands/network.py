@@ -24,6 +24,9 @@ from plugins.jsonparser import jsonparser
 import os
 import platform
 
+import debian.network
+import redhat.network
+
 
 class network_commands(jsonparser.command):
 
@@ -36,10 +39,12 @@ class network_commands(jsonparser.command):
         Return the Linux Distribution or other OS name
         """
 
-        translations = {"ubuntu": "debian",
-                        "centos": "redhat",
-                        "fedora": "redhat",
-                        "oracle": "redhat"}
+        translations = {"debian": debian,
+                        "ubuntu": debian,
+                        "redhat": redhat,
+                        "centos": redhat,
+                        "fedora": redhat,
+                        "oracle": redhat}
 
         system = os.uname()[0]
         if system == "Linux":
@@ -50,20 +55,13 @@ class network_commands(jsonparser.command):
                 # call
                 system = platform.dist(None)[0]
 
-        try:
-            system = translations[system.lower()]
-        except Exception:
-            pass
-
-        return system
+        return translations.get(system.lower())
 
     @jsonparser.command_add('resetnetwork')
     def resetnetwork_cmd(self, data):
 
-        system = self.detect_os()
-        if not system:
+        os_mod = self.detect_os()
+        if not os_mod:
             raise SystemError("Couldn't figure out my OS")
-
-        os_mod = __import__("%s" % system, globals(), locals(), ["network"])
 
         return os_mod.network.configure_network(data)
