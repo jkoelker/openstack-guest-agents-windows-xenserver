@@ -20,7 +20,9 @@
 debian/ubuntu network helper module
 """
 
+import logging
 import os
+import subprocess
 import time
 
 INTERFACE_FILE = "/etc/network/interfaces"
@@ -52,6 +54,15 @@ def configure_network(network_config, *args, **kwargs):
         interfaces = []
 
     write_interfaces(interfaces, dont_rename=0)
+
+    logging.debug('executing /etc/init.d/networking restart')
+    p = subprocess.Popen(["/etc/init.d/networking", "restart"])
+    logging.debug('waiting on pid %d' % p.pid)
+    status = os.waitpid(p.pid, 0)[1]
+    logging.debug('status = %d' % status)
+
+    if status != 0:
+        return (500, "Couldn't restart network: %d" % status)
 
     return (0, "")
 
