@@ -23,6 +23,7 @@ redhat/centos network helper module
 import os
 import time
 import glob
+import subprocess
 import logging
 
 NETCONFIG_DIR = "/etc/sysconfig/network-scripts"
@@ -40,6 +41,15 @@ def configure_network(network_config, *args, **kwargs):
     interfaces = network_config.get('interfaces', [])
 
     write_interfaces(interfaces, dont_rename=0)
+
+    logging.debug('executing /etc/init.d/network restart')
+    p = subprocess.Popen(["/etc/init.d/network", "restart"])
+    logging.debug('waiting on pid %d' % p.pid)
+    status = os.waitpid(p.pid, 0)[1]
+    logging.debug('status = %d' % status)
+
+    if status != 0:
+        return (500, "Couldn't restart network: %d" % status)
 
     return (0, "")
 
@@ -86,12 +96,14 @@ def write_interfaces(interfaces, *args, **kwargs):
     for filename in old_files:
         logging.info("moving aside old file %s" % filename)
         if not dont_rename:
-            os.rename(filename, filename + "." + str(int(time.time())))
+            os.rename(filename, filename + ".%d" % time.time() + ".bak")
 
 
 def _write_file(filename, data, dont_rename=0):
-    tmp_file = filename + ".tmp.%s" % os.getpid()
-    bak_file = filename + "." + str(int(time.time()))
+    # Make sure we don't pick filenames that the init script will confuse
+    # as real configuration files
+    tmp_file = filename + ".%d~" % os.getpid()
+    bak_file = filename + ".%d" % time.time() + ".bak"
 
     f = open(tmp_file, 'w')
     f.write(data)
