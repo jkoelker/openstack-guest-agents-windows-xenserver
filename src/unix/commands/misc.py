@@ -23,6 +23,7 @@ JSON misc commands plugin
 import commands
 import lib.agentlib
 
+
 class misc_commands(commands.CommandBase):
 
     def __init__(self, *args, **kwargs):

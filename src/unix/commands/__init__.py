@@ -118,6 +118,7 @@ def command_add(cmd_name):
         return f
     return wrap
 
+
 class CommandModuleWrapper(object):
 
     def __init__(self, wrapped_module):
@@ -134,4 +135,3 @@ class CommandModuleWrapper(object):
 
 if __name__ != "__main__":
     sys.modules[__name__] = CommandModuleWrapper(sys.modules[__name__])
-

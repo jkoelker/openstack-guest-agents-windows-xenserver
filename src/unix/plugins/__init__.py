@@ -1,3 +1,3 @@
 
-import plugins.jsonparser
-import plugins.xenstore
+from jsonparser import jsonparser
+from xenstore import xenstore

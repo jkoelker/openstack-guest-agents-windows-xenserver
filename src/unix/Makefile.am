@@ -14,11 +14,11 @@ data_DATA = nova-agent.py
 BINTARNAME = @PACKAGE@-`uname -m`-@PACKAGE_VERSION@.tar.gz
 
 install-exec-local:
-	@src/.libs/nova-agent -St -l debug $(top_srcdir)/install_libs.py $(sbindir)/nova-agent ${DESTDIR} $(libdir)
-	@src/.libs/nova-agent -St -l debug $(top_srcdir)/install_modules.py ${DESTDIR}/$(modulesdir)
-#	@$(PYTHON_VER) $(top_srcdir)/install_libs.py $(sbindir)/nova-agent ${DESTDIR} $(libdir)
-#	@$(PYTHON_VER) $(top_srcdir)/install_modules.py ${DESTDIR}/$(modulesdir)
-#	@$(PYTHON_VER) $(top_srcdir)/patch_binary.py ${DESTDIR}${sbindir}/nova-agent ${DESTDIR} $(libdir)
+#	@src/.libs/nova-agent -St -l debug $(top_srcdir)/install_libs.py $(sbindir)/nova-agent ${DESTDIR} $(libdir)
+#	@src/.libs/nova-agent -St -l debug $(top_srcdir)/install_modules.py ${DESTDIR}/$(modulesdir)
+	@$(PYTHON_VER) $(top_srcdir)/install_libs.py $(sbindir)/nova-agent ${DESTDIR} $(libdir)
+	@$(PYTHON_VER) $(top_srcdir)/install_modules.py ${DESTDIR}/$(modulesdir)
+	@$(PYTHON_VER) $(top_srcdir)/patch_binary.py ${DESTDIR}${sbindir}/nova-agent ${DESTDIR} $(libdir)
 
 distclean-local:
 	rm -f $(top_srcdir)/{configure,configure.in}
