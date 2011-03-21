@@ -11,7 +11,7 @@ def install_plugins(destdir):
 #    import plugins
     import commands.command_list
 
-    c = commands.init({"testmode": True})
+    c = commands.init(testmode=True)
 
     to_install = set()
 
