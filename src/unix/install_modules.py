@@ -54,6 +54,8 @@ def install_plugins(destdir):
 
     for i in to_install:
         if os.path.isdir(i):
+            if i.endswith('.'):
+                continue
             subdir = i.rsplit('/', 1)[1]
             copy_tree(i, os.path.join(destdir, subdir))
         else:
