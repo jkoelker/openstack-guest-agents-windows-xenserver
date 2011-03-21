@@ -11,7 +11,7 @@ def install_libs_for_binary(binary, destdir, libdir):
     Install all dynamic library dependencies for a binary
     """
 
-    installdir = destdir + libdir
+    installdir = os.path.join(destdir, libdir)
 
     def _find_libs(target):
         """
@@ -56,6 +56,9 @@ def install_libs_for_binary(binary, destdir, libdir):
         return libs
 
     for lib in find_libs(binary):
+        if lib.startswith(installdir):
+            # Already installed
+            continue
         print "Installing %s" % lib
         shutil.copy2(lib, installdir)
 

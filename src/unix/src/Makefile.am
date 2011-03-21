@@ -12,9 +12,9 @@ check_PROGRAMS =
 
 nova_agent_SOURCES = nova-agent.c python.c
 
-nova_agent_LDADD = @PYTHON_LIB@ $(top_srcdir)/lib/libagentlib.la -lpthread
+nova_agent_LDADD = @PYTHON_LIB@ $(top_srcdir)/lib/libagent.la -lpthread
 nova_agent_LDFLAGS = -export-dynamic
 #-static
 
-$(top_srcdir)/lib/libagentlib.la:
+$(top_srcdir)/lib/libagent.la:
 	cd $(top_srcdir)/lib && make

@@ -28,7 +28,7 @@
 #include <errno.h>
 #include "agentlib_int.h"
 
-#define AGENTLIB_MODULE_NAME "agentlib"
+#define AGENTLIB_MODULE_NAME "libagent"
 
 
 static PyObject *_agentlib_get_version(PyObject *self, PyObject *args)
@@ -126,7 +126,7 @@ int AGENTLIB_PUBLIC_API agentlib_stop_threads(void)
     return agent_plugin_stop_threads();
 }
 
-PyMODINIT_FUNC AGENTLIB_PUBLIC_API initagentlib(void)
+PyMODINIT_FUNC AGENTLIB_PUBLIC_API initlibagent(void)
 {
     int err;
 
@@ -134,3 +134,4 @@ PyMODINIT_FUNC AGENTLIB_PUBLIC_API initagentlib(void)
     if (err < 0)
         PyErr_Format(PyExc_SystemError, "Couldn't init agentlib module");
 }
+

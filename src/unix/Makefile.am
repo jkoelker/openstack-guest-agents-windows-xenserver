@@ -17,7 +17,7 @@ install-exec-local:
 #	@src/.libs/nova-agent -St -l debug $(top_srcdir)/install_libs.py $(sbindir)/nova-agent ${DESTDIR} $(libdir)
 #	@src/.libs/nova-agent -St -l debug $(top_srcdir)/install_modules.py ${DESTDIR}/$(modulesdir)
 	@$(PYTHON_VER) $(top_srcdir)/install_libs.py $(sbindir)/nova-agent ${DESTDIR} $(libdir)
-	@$(PYTHON_VER) $(top_srcdir)/install_modules.py ${DESTDIR}/$(modulesdir)
+#	@$(PYTHON_VER) $(top_srcdir)/install_modules.py ${DESTDIR}/$(modulesdir)
 	@$(PYTHON_VER) $(top_srcdir)/patch_binary.py ${DESTDIR}${sbindir}/nova-agent ${DESTDIR} $(libdir)
 
 distclean-local:
@@ -30,7 +30,6 @@ distclean-local:
 	rm -rf $(top_srcdir)/autom4te.cache
 
 clean-local::
-	rm -f lib/agentlib.so
 	find . -name '*.gcov' -delete -o -name '*.gcda' -delete -o -name '*.gcno' -delete
 	find . -name '*.pyc' -exec rm -f {} \;
 	rm -rf $(CURDIR)/fakeroot

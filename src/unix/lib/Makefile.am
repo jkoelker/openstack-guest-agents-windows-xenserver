@@ -6,17 +6,17 @@ AM_CFLAGS += -DAGENT_VERSION=\"@PACKAGE_VERSION@\" -DPLUGINS_DIR=\"${pluginsdir}
 noinst_HEADERS = agentlib_int.h plugin_int.h logging_int.h
 include_HEADERS = agentlib.h plugin.h logging.h
 
-pkglib_LTLIBRARIES = libagentlib.la
+lib_LTLIBRARIES = libagent.la
 
-libagentlib_la_SOURCES = agentlib.c plugin.c logging.c
-libagentlib_la_LDFLAGS = -avoid-version
+libagent_la_SOURCES = agentlib.c plugin.c logging.c
+libagent_la_LDFLAGS = -avoid-version
 
-nodist_noinst_DATA = agentlib.so
+nodist_noinst_DATA = libagent.so
 
-agentlib.so:
-	ln -s .libs/libagentlib.so agentlib.so
+libagent.so:
+	ln -s .libs/libagent.so libagent.so
 
 clean-local:
-	    rm -f agentlib.so
+	    rm -f libagent.so
 
 
