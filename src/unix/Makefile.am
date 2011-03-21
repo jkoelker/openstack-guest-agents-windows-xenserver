@@ -3,7 +3,7 @@ include $(top_srcdir)/Common.am
 
 ACLOCAL_MFLAGS = -I m4
 
-SUBDIRS = src plugins
+SUBDIRS = lib src plugins
 
 noinst_HEADERS = include/logging.h include/nova-agent.h \
 				 include/plugin_int.h include/python.h

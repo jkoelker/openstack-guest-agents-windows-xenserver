@@ -17,24 +17,30 @@
 #
 
 """
-JSON misc commands plugin
+JSON File injection plugin
 """
 
-import nova_agent
-from plugins.jsonparser import jsonparser
+import base64
+import commands
 
 
-class misc_commands(jsonparser.command):
+class file_inject(commands.command):
 
     def __init__(self, *args, **kwargs):
-        super(jsonparser.command, self).__init__(*args, **kwargs)
+        super(commands.command, self).__init__(*args, **kwargs)
 
-    @jsonparser.command_add('features')
-    def features_cmd(self, data):
-        commands = ','.join(self.command_names())
-        return (0, commands)
+    @commands.command_add('injectfile')
+    def injectfile_cmd(self, data):
 
-    @jsonparser.command_add('version')
-    def version_cmd(self, data):
-        # Ignore the version arguments
-        return (0, nova_agent.get_version())
+        try:
+            b64_decoded = base64.b64decode(data)
+        except:
+            return (500, "Error doing base64 decoding of data")
+
+        (filename, data) = b64_decoded.split(',', 1)
+
+        f = open(filename, 'w')
+        f.write(data)
+        f.close()
+
+        return (0, "")

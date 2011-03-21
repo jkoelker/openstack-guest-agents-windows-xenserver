@@ -25,8 +25,9 @@ import binascii
 import os
 import subprocess
 import time
+
 from Crypto.Cipher import AES
-from plugins.jsonparser import jsonparser
+import commands
 
 # This is to support older python versions that don't have hashlib
 try:
@@ -42,10 +43,10 @@ except ImportError:
             return md5.new()
 
 
-class password_commands(jsonparser.command):
+class password_commands(commands.command):
 
     def __init__(self, *args, **kwargs):
-        super(jsonparser.command, self).__init__(*args, **kwargs)
+        super(commands.command, self).__init__(*args, **kwargs)
 
     def _mod_exp(self, num, exp, mod):
         result = 1
@@ -86,7 +87,7 @@ class password_commands(jsonparser.command):
             if ret:
                 raise SystemError("Return code from passwd was %d" % ret)
 
-    @jsonparser.command_add('keyinit')
+    @commands.command_add('keyinit')
     def keyinit_cmd(self, data):
 
         # Remote pubkey comes in as large number
@@ -114,7 +115,7 @@ class password_commands(jsonparser.command):
         # The key needs to be a string response right now
         return ("D0", str(my_public_key))
 
-    @jsonparser.command_add('password')
+    @commands.command_add('password')
     def password_cmd(self, data):
 
         try:

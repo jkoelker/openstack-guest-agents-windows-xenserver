@@ -17,15 +17,10 @@
  *    under the License.
  */
 
-#ifndef __NOVA_AGENT_LOGGING_H__
-#define __NOVA_AGENT_LOGGING_H__
+#ifndef __AGENTLIB_LOGGING_H__
+#define __AGENTLIB_LOGGING_H__
 
-#include <sys/types.h>
-/* Stupid hack.  Python.h redefines this */
-#undef _POSIX_C_SOURCE
-#include <Python.h>
-
-int agent_open_log(char *filename, char *level);
+int agent_log_python_error(char *log_prefix);
 void agent_error(char *fmt, ...);
 void agent_debug(char *fmt, ...);
 void agent_info(char *fmt, ...);

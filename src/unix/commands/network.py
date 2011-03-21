@@ -20,18 +20,18 @@
 JSON misc commands plugin
 """
 
-from plugins.jsonparser import jsonparser
 import os
 import platform
 
+import commands
 import debian.network
 import redhat.network
 
 
-class network_commands(jsonparser.command):
+class network_commands(commands.command):
 
     def __init__(self, *args, **kwargs):
-        super(jsonparser.command, self).__init__(*args, **kwargs)
+        super(commands.command, self).__init__(*args, **kwargs)
 
     @classmethod
     def detect_os(self):
@@ -57,7 +57,7 @@ class network_commands(jsonparser.command):
 
         return translations.get(system.lower())
 
-    @jsonparser.command_add('resetnetwork')
+    @commands.command_add('resetnetwork')
     def resetnetwork_cmd(self, data):
 
         os_mod = self.detect_os()

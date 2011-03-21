@@ -25,8 +25,7 @@
 #include <string.h>
 #include <errno.h>
 #include "python.h"
-#include "logging.h"
-#include "plugin_int.h"
+#include "logging_int.h"
 
 struct _agent_python_info
 {
@@ -98,7 +97,7 @@ static PyObject *_agent_python_run_file(const char *filename, PyObject *dict)
     {
         if (PyErr_Occurred())
         {
-            agent_python_handle_error("Failed to compile python code");
+            agent_log_python_error("Failed to compile python code");
         }
         return NULL;
     }
@@ -120,7 +119,7 @@ static PyObject *_agent_python_run_file(const char *filename, PyObject *dict)
         { 
             PyErr_Restore(ptype, pvalue, ptraceback);
 
-            agent_python_handle_error("Failed to run python code");
+            agent_log_python_error("Failed to run python code");
         }
         else
         {
@@ -265,167 +264,6 @@ int agent_python_run_file(agent_python_info_t *pi, const char *filename)
     PyGILState_Release(gstate); 
 
     return err;
-}
-
-int agent_python_handle_error(char *log_prefix)
-{
-    PyObject *ptype;
-    PyObject *pvalue;
-    PyObject *ptraceback;
-
-    /* Acquire GIL */
-    PyGILState_STATE gstate = PyGILState_Ensure();
-
-    PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-
-    if (ptype == NULL)
-    {
-        agent_error("%s: No python error available", log_prefix);
-
-        /* Just in case */
-        Py_XDECREF(pvalue);
-        Py_XDECREF(ptraceback);
-
-        /* Release GIL */
-        PyGILState_Release(gstate); 
-        return -1;
-    }
-
-    if (ptraceback == NULL)
-    {
-        PyObject *obj;
-
-        agent_error("%s: A python exception has occurred:", log_prefix);
-
-        if (pvalue != NULL)
-        {
-            obj = PyObject_Str(pvalue);
-        }
-        else
-        {
-            obj = PyObject_Str(ptype);
-        }
-
-        agent_error("[EXC] %s", PyString_AsString(obj));
-
-        Py_DECREF(obj);
-        Py_DECREF(ptype);
-        Py_XDECREF(pvalue);
-
-        /* Release GIL */
-        PyGILState_Release(gstate); 
-        return 0;
-    }
-
-    PyObject *tb_mod = PyImport_AddModule("traceback");
-    if (tb_mod == NULL)
-    {
-        PyErr_Clear();
-
-        Py_DECREF(ptype);
-        Py_XDECREF(pvalue);
-        Py_XDECREF(ptraceback);
-
-        agent_error("%s: [Couldn't find traceback module "
-                "to print the error]", log_prefix);
-
-        /* Release GIL */
-        PyGILState_Release(gstate); 
-        return -1;
-    }
-
-    /*
-     * Call traceback.format_exception(ptype, pvalue, ptraceback)
-     */
-
-    PyObject *pobj_list = PyObject_CallMethod(tb_mod, "format_exception",
-            "OOO", ptype, pvalue, ptraceback);
-    if (pobj_list == NULL)
-    {
-        PyErr_Clear();
-
-        Py_DECREF(ptype);
-        Py_XDECREF(pvalue);
-        Py_XDECREF(ptraceback);
-
-        agent_error("%s: [Couldn't format traceback]", log_prefix);
-
-        /* Release GIL */
-        PyGILState_Release(gstate); 
-        return -1;
-    }
-
-    Py_DECREF(ptype);
-    Py_XDECREF(pvalue);
-    Py_XDECREF(ptraceback);
-
-    /*
-     * Now we have a list of 'lines'.  Each 'line' might actually be
-     * multiple lines, however ('line' might contain '\n's).  So, we
-     * need to go through every list entry and log each real line
-     * (looking for \n separator)
-     */
-
-    agent_error("%s: A python exception has occurred:", log_prefix);
-
-    Py_ssize_t list_sz = PyList_Size(pobj_list);
-    PyObject *pobj_str;
-
-    Py_ssize_t i;
-
-    for(i = 0;i < list_sz;i++)
-    {
-        pobj_str = PyList_GetItem(pobj_list, i);
-
-        char *obj_str = strdup(PyString_AsString(pobj_str));
-
-        Py_DECREF(pobj_str);
-    
-        if (obj_str == NULL)
-        {
-            agent_error("Out of memory");
-
-            Py_DECREF(pobj_list);
-    
-            /* Release GIL */
-            PyGILState_Release(gstate); 
-            return 0;
-        }
-    
-        char *ptr = strchr(obj_str, '\n');
-        if (ptr == NULL)
-        {
-            /* No \n... just log this element and go to the next */
-            agent_error("[EXC] %s", obj_str);
-            free(obj_str);
-
-            continue;
-        }
-
-        char *start = obj_str;
-        *(ptr++) = '\0';
-
-        agent_error("[EXC] %s", start);
-    
-        while((ptr != NULL) && (*ptr != '\0'))
-        {
-            start = ptr;
-            ptr = strchr(start, '\n');
-            if (ptr != NULL)
-            {
-                *ptr++ = '\0';
-            }
-
-            agent_error("[EXC] %s", start);
-        }
-    
-        free(obj_str);
-    }
-
-    /* Release GIL */
-    PyGILState_Release(gstate); 
-
-    return 0;
 }
 
 int agent_python_test_mode(agent_python_info_t *pi)

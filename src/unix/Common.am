@@ -5,4 +5,4 @@ pkglibdir=${pluginsdir}
 libdir=${datadir}/lib
 modulesdir=${libdir}/@PYTHON_VER@
 
-AM_CFLAGS =-I$(top_srcdir)/include ${PYTHON_CFLAGS}  -Wall -Werror ${GCOV_CFLAGS}
+AM_CFLAGS =-I$(top_srcdir)/include -I$(top_srcdir)/lib ${PYTHON_CFLAGS}  -Wall -Werror ${GCOV_CFLAGS}

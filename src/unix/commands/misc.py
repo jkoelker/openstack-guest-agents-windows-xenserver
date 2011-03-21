@@ -17,11 +17,24 @@
 #
 
 """
-JSON command plugins
+JSON misc commands plugin
 """
 
-import file_inject
-import misc
-import network
-import password
-import update
+import commands
+
+
+class misc_commands(commands.command):
+
+    def __init__(self, *args, **kwargs):
+        super(commands.command, self).__init__(*args, **kwargs)
+
+    @commands.command_add('features')
+    def features_cmd(self, data):
+        commands = ','.join(self.command_names())
+        return (0, commands)
+
+    @commands.command_add('version')
+    def version_cmd(self, data):
+        return (0, "0.0.0.0")
+        # Ignore the version arguments
+#        return (0, nova_agent.get_version())

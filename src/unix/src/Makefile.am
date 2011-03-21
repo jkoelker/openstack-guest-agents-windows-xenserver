@@ -7,9 +7,9 @@ sbin_PROGRAMS = nova-agent
 
 check_PROGRAMS =
 
-nova_agent_SOURCES = nova-agent.c python.c plugin.c logging.c
+nova_agent_SOURCES = nova-agent.c python.c
 
-nova_agent_LDADD = @PYTHON_LIB@ -lpthread
+nova_agent_LDADD = @PYTHON_LIB@ $(top_srcdir)/lib/agentlib.so -lpthread
 nova_agent_LDFLAGS = -export-dynamic
 #-static
 
