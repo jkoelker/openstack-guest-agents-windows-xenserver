@@ -25,6 +25,7 @@ import os
 import subprocess
 import time
 
+HOSTNAME_FILE = "/etc/hostname"
 INTERFACE_FILE = "/etc/network/interfaces"
 TMP_INTERFACE_FILE = "%s.tmp.%d" % (INTERFACE_FILE, os.getpid())
 
@@ -53,8 +54,21 @@ def configure_network(network_config, *args, **kwargs):
     except KeyError:
         interfaces = []
 
+    update_hostname(hostname, dont_rename=False)
+
     write_interfaces(interfaces, dont_rename=0)
 
+    # Set hostname
+    logging.debug('executing /bin/hostname %s' % hostname)
+    p = subprocess.Popen(["/bin/hostname", hostname])
+    logging.debug('waiting on pid %d' % p.pid)
+    status = os.waitpid(p.pid, 0)[1]
+    logging.debug('status = %d' % status)
+
+    if status != 0:
+        return (500, "Couldn't restart network: %d" % status)
+
+    # Restart network
     logging.debug('executing /etc/init.d/networking restart')
     p = subprocess.Popen(["/etc/init.d/networking", "restart"])
     logging.debug('waiting on pid %d' % p.pid)
@@ -65,6 +79,38 @@ def configure_network(network_config, *args, **kwargs):
         return (500, "Couldn't restart network: %d" % status)
 
     return (0, "")
+
+
+def update_hostname(hostname, dont_rename=False):
+    """
+    Update hostname on system
+    """
+    filename = HOSTNAME_FILE
+    tmp_file = filename + ".%d~" % os.getpid()
+    bak_file = filename + ".%d.bak" % time.time()
+
+    output = open(tmp_file, "w")
+    print >>output, hostname
+    output.close()
+
+    try:
+        os.chown(tmp_file, 0, 0)
+        os.chmod(tmp_file, 0644)
+        if not dont_rename and os.path.exists(filename):
+            os.rename(filename, bak_file)
+    except Exception, e:
+        os.unlink(tmp_file)
+        raise e
+
+    if not dont_rename:
+        try:
+            os.rename(tmp_file, filename)
+            pass
+        except Exception, e:
+            os.rename(bak_file, filename)
+            raise e
+    else:
+        os.rename(bak_file, filename)
 
 
 def write_interfaces(interfaces, *args, **kwargs):
