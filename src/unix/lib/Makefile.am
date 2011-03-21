@@ -3,6 +3,10 @@ include $(top_srcdir)/Common.am
 
 AM_CFLAGS += -DAGENT_VERSION=\"@PACKAGE_VERSION@\" -DPLUGINS_DIR=\"${pluginsdir}\" -DDATA_DIR=\"${datadir}\" -fvisibility=hidden
 
+tmpdir = ${libdir}
+
+dist_tmp_SCRIPTS = __init__.py
+
 noinst_HEADERS = agentlib_int.h plugin_int.h logging_int.h
 include_HEADERS = agentlib.h plugin.h logging.h
 

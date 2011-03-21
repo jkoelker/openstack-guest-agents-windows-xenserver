@@ -1,6 +1,7 @@
 
 datadir=${prefix}/share/${PACKAGE}
 pluginsdir=${datadir}/plugins
+commandsdir=${datadir}/commands
 pkglibdir=${pluginsdir}
 libdir=${datadir}/lib
 modulesdir=${libdir}/@PYTHON_VER@

@@ -5,7 +5,7 @@ ACLOCAL_MFLAGS = -I m4
 
 AM_CFLAGS += -DAGENT_VERSION=\"@PACKAGE_VERSION@\" -DPLUGINS_DIR=\"${pluginsdir}\" -DDATA_DIR=\"${datadir}\" -fvisibility=hidden
 
-SUBDIRS = lib src plugins
+SUBDIRS = lib src plugins commands
 
 EXTRA_DIST = install_libs.py install_modules.py nova-agent.py
 
@@ -17,7 +17,7 @@ install-exec-local:
 #	@src/.libs/nova-agent -St -l debug $(top_srcdir)/install_libs.py $(sbindir)/nova-agent ${DESTDIR} $(libdir)
 #	@src/.libs/nova-agent -St -l debug $(top_srcdir)/install_modules.py ${DESTDIR}/$(modulesdir)
 	@$(PYTHON_VER) $(top_srcdir)/install_libs.py $(sbindir)/nova-agent ${DESTDIR} $(libdir)
-#	@$(PYTHON_VER) $(top_srcdir)/install_modules.py ${DESTDIR}/$(modulesdir)
+	@$(PYTHON_VER) $(top_srcdir)/install_modules.py ${DESTDIR}/$(modulesdir)
 	@$(PYTHON_VER) $(top_srcdir)/patch_binary.py ${DESTDIR}${sbindir}/nova-agent ${DESTDIR} $(libdir)
 
 distclean-local:
