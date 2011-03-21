@@ -1,10 +1,18 @@
 
 import sys
-import plugins
+import plugins.jsonparser
+import plugins.xenstore
+import commands
+import lib.agentlib
 
 test_mode = False
 
-exchanges = nova_agent.exchange_plugins()
-parsers = nova_agent.parser_plugins()
+args = {}
+c = commands.init(args)
 
-nova_agent.set_parser(exchanges, parsers[0])
+parser = plugins.jsonparser.jsonparser(c)
+xs = plugins.xenstore.xenstore()
+
+lib.agentlib.register(xs, parser)
+
+

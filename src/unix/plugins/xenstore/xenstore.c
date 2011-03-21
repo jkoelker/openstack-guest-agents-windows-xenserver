@@ -24,6 +24,9 @@
 #include "plugin.h"
 #include "logging.h"
 
+#define XENSTORE_MODULE_NAME "xenstore"
+#define XENSTORE_CLASS_NAME "xenstore"
+
 
 #define XENSTORE_REQUEST_PATH "data/host"
 #define XENSTORE_RESPONSE_PATH "data/guest"
@@ -473,7 +476,10 @@ static PyMethodDef _xenstore_methods[] =
 
 PyMODINIT_FUNC initxenstore(void)
 {
-    int err;
+    static PyMethodDef _mod_methods[] =
+    {   
+        { NULL, NULL, METH_NOARGS, NULL }
+    };
 
     _xenstore_type.tp_alloc = PyType_GenericAlloc;
     _xenstore_type.tp_new = PyType_GenericNew;
@@ -482,16 +488,16 @@ PyMODINIT_FUNC initxenstore(void)
     _xenstore_type.tp_flags = Py_TPFLAGS_DEFAULT|Py_TPFLAGS_BASETYPE;
     _xenstore_type.tp_del = (destructor)_xenstore_del;
 
-    err = agent_plugin_register("xenstore", &_xenstore_type, "exchange");
-    if (err != 0)
-    {
-        if (PyErr_Occurred())
-            return;
+    PyObject *pymod = Py_InitModule(XENSTORE_MODULE_NAME, _mod_methods);
 
-        printf("Error registering module: %d\n", err);
-        PyErr_Format(PyExc_SystemError, "Couldn't register xenstore module: %d", err);
+    if (PyType_Ready(&_xenstore_type) < 0)
+    {  
+        PyErr_Format(PyExc_SystemError, "Couldn't init xenstore class");
         return;
     }
+
+    PyModule_AddObject(pymod, XENSTORE_CLASS_NAME,
+            (PyObject *)&_xenstore_type);
 
 }
 
