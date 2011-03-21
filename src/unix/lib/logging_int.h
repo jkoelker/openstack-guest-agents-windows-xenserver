@@ -17,25 +17,11 @@
  *    under the License.
  */
 
-#ifndef __INCLUDE_NOVA_AGENT_H__
-#define __INCLUDE_NOVA_AGENT_H__
-
-#include <sys/types.h>
-/* Stupid hack.  Python.h redefines this */
-#undef _POSIX_C_SOURCE
-#include <Python.h>
-
-/* Support for older versions of Python */
-#ifndef PyVarObject_HEAD_INIT
-#define PyVarObject_HEAD_INIT(type, size)   \
-        _PyObject_EXTRA_INIT            \
-    1, type, size,
-#endif
-
-#ifndef PY_SSIZE_T_MAX
-typedef ssize_t Py_ssize_t;
-#endif
+#ifndef __AGENTLIB_LOGGING_INT_H__
+#define __AGENTLIB_LOGGING_INT_H__
 
 #include "logging.h"
 
-#endif /* __INCLUDE_NOVA_AGENT_PYTHON_H__ */
+int agent_open_log(char *filename, char *level);
+
+#endif /* __NOVA_AGENT_LOGGING_H__ */

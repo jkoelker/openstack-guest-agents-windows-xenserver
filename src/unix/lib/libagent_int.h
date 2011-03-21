@@ -17,18 +17,13 @@
  *    under the License.
  */
 
-#ifndef __NOVA_AGENT_LOGGING_H__
-#define __NOVA_AGENT_LOGGING_H__
+#ifndef __LIBAGENT_INT_H__
+#define __LIBAGENT_INT_H__
 
-#include <sys/types.h>
-/* Stupid hack.  Python.h redefines this */
-#undef _POSIX_C_SOURCE
-#include <Python.h>
+#define LIBAGENT_PUBLIC_API __attribute__ ((visibility("default")))
 
-int agent_open_log(char *filename, char *level);
-void agent_error(char *fmt, ...);
-void agent_debug(char *fmt, ...);
-void agent_info(char *fmt, ...);
-void agent_warn(char *fmt, ...);
+#include "agentlib.h"
+#include "plugin_int.h"
+#include "logging_int.h"
 
-#endif /* __NOVA_AGENT_LOGGING_H__ */
+#endif /* __LIBAGENT_INT_H__ */

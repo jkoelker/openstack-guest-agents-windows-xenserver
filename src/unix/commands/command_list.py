@@ -17,24 +17,11 @@
 #
 
 """
-JSON misc commands plugin
+List of command modules to load
 """
 
-import nova_agent
-from plugins.jsonparser import jsonparser
-
-
-class misc_commands(jsonparser.command):
-
-    def __init__(self, *args, **kwargs):
-        super(jsonparser.command, self).__init__(*args, **kwargs)
-
-    @jsonparser.command_add('features')
-    def features_cmd(self, data):
-        commands = ','.join(self.command_names())
-        return (0, commands)
-
-    @jsonparser.command_add('version')
-    def version_cmd(self, data):
-        # Ignore the version arguments
-        return (0, nova_agent.get_version())
+import file_inject
+import misc
+import network
+import password
+import update

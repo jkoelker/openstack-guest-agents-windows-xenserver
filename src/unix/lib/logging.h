@@ -17,18 +17,13 @@
  *    under the License.
  */
 
-#ifndef __NOVA_AGENT_PLUGIN_INT_H__
-#define __NOVA_AGENT_PLUGIN_INT_H__
+#ifndef __AGENTLIB_LOGGING_H__
+#define __AGENTLIB_LOGGING_H__
 
-#include <sys/types.h>
-#include "python.h"
-#include "plugin.h"
+int agent_log_python_error(char *log_prefix);
+void agent_error(char *fmt, ...);
+void agent_debug(char *fmt, ...);
+void agent_info(char *fmt, ...);
+void agent_warn(char *fmt, ...);
 
-int agent_plugin_init(agent_python_info_t *pi);
-void agent_plugin_deinit(void);
-int agent_plugin_load(const char *path);
-void agent_plugin_unload(const char *name);
-int agent_plugin_start_exchanges(void);
-int agent_plugin_stop_exchanges(void);
-
-#endif /* __NOVA_AGENT_PLUGIN_INT_H__ */
+#endif /* __NOVA_AGENT_LOGGING_H__ */

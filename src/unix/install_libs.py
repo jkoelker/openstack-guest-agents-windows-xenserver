@@ -1,11 +1,9 @@
+#!/usr/bin/env python
 
 import os
 import shutil
 import subprocess
 import sys
-
-# For nova_agent binary
-test_mode = True
 
 
 def install_libs_for_binary(binary, destdir, libdir):
@@ -14,6 +12,9 @@ def install_libs_for_binary(binary, destdir, libdir):
     """
 
     installdir = destdir + libdir
+    # Strip extra leading slashses
+    while installdir.startswith('//'):
+        installdir = installdir[1:]
 
     def _find_libs(target):
         """
@@ -58,6 +59,9 @@ def install_libs_for_binary(binary, destdir, libdir):
         return libs
 
     for lib in find_libs(binary):
+        if lib.startswith(installdir):
+            # Already installed
+            continue
         print "Installing %s" % lib
         shutil.copy2(lib, installdir)
 

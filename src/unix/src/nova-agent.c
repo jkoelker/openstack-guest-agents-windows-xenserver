@@ -27,12 +27,11 @@
 #include <string.h>
 #include <signal.h>
 #include <errno.h>
-#include "nova-agent.h"
-#include "python.h"
-#include "logging.h"
-#include "plugin_int.h"
+#include "nova-agent_int.h"
+#include "libagent_int.h"
 
-static void *_signal_handler_thread(void *args)
+
+static void _agent_signal_loop(void)
 {
     sigset_t mask;
     int err;
@@ -52,12 +51,9 @@ static void *_signal_handler_thread(void *args)
         switch(sig)
         {
             case SIGINT:
-                agent_error("got SIGINT\n");
-                return NULL;
-
             case SIGTERM:
-                agent_error("got SIGTERM\n");
-                return NULL;
+                /* Shut down */
+                return;
 
             case SIGCHLD:
                 break;
@@ -68,7 +64,7 @@ static void *_signal_handler_thread(void *args)
         }
     }
 
-    return NULL;
+    return;
 }
 
 static void _usage(FILE *f, char *progname, int long_vers)
@@ -109,7 +105,6 @@ int main(int argc, char **argv)
 
     agent_python_info_t *pi;
     sigset_t mask;
-    pthread_t thr_id;
     int opt;
     int err;
     int do_fork = 1;
@@ -225,7 +220,7 @@ int main(int argc, char **argv)
     }
 
     /* init the plugin system */
-    err = agent_plugin_init(pi);
+    err = agent_plugin_init();
     if (err < 0)
     {
         agent_error("couldn't init the plugin system: %d", err);
@@ -249,16 +244,6 @@ int main(int argc, char **argv)
         exit(err);
     }
 
-    /* block signals */
-
-    err = pthread_create(&thr_id, NULL, _signal_handler_thread, NULL);
-    if (err)
-    {
-        agent_error("couldn't create signal handler thread: %s",
-                strerror(err));
-        exit(err);
-    }
-
     sigemptyset(&mask);
     sigaddset(&mask, SIGINT);
     sigaddset(&mask, SIGTERM);
@@ -276,7 +261,7 @@ int main(int argc, char **argv)
     test_mode = agent_python_test_mode(pi);
     if (test_mode < 0)
     {
-        agent_python_handle_error("Error with test_mode in config file");
+        agent_log_python_error("Error with test_mode in config file");
         agent_python_deinit(pi);
         exit(1);
     }
@@ -294,10 +279,9 @@ int main(int argc, char **argv)
 
     /* Continue */
 
-    err = agent_plugin_start_exchanges();
+    err = agent_plugin_run_threads();
     if (err < 0)
     {
-        agent_error("failed to start exchange plugins");
         agent_python_deinit(pi);
         exit(-err);
     }
@@ -305,12 +289,12 @@ int main(int argc, char **argv)
     if (!quiet)
         agent_info("Agent started");
 
-    pthread_join(thr_id, NULL);
+    _agent_signal_loop();
 
     if (!quiet)
         agent_info("Agent stopping");
 
-    agent_plugin_stop_exchanges();
+    agent_plugin_stop_threads();
 
     agent_plugin_deinit();
     agent_python_deinit(pi);

@@ -25,7 +25,8 @@ import shutil
 import subprocess
 import tarfile
 import urllib
-from plugins.jsonparser import jsonparser
+
+import commands
 
 TMP_PATH = "/var/run"
 DEST_PATH = "/usr/share/nova-agent"
@@ -57,10 +58,10 @@ class AgentUpdateError(Exception):
     __repr__ = __str__
 
 
-class update_command(jsonparser.command):
+class update_command(commands.CommandBase):
 
     def __init__(self, *args, **kwargs):
-        super(jsonparser.command, self).__init__(*args, **kwargs)
+        pass
 
     def _get_to_local_file(self, url, md5sum):
         try:
@@ -100,7 +101,7 @@ class update_command(jsonparser.command):
 
         return local_filename
 
-    @jsonparser.command_add('agentupdate')
+    @commands.command_add('agentupdate')
     def update_cmd(self, data):
 
         if isinstance(data, str):

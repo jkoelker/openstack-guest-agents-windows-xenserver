@@ -3,22 +3,25 @@ include $(top_srcdir)/Common.am
 
 ACLOCAL_MFLAGS = -I m4
 
-SUBDIRS = src plugins
+AM_CFLAGS += -DAGENT_VERSION=\"@PACKAGE_VERSION@\" -DPLUGINS_DIR=\"${pluginsdir}\" -DDATA_DIR=\"${datadir}\" -fvisibility=hidden
 
-noinst_HEADERS = include/logging.h include/nova-agent.h \
-				 include/plugin_int.h include/python.h
-include_HEADERS = include/plugin.h
+SUBDIRS = lib src plugins commands
 
 EXTRA_DIST = install_libs.py install_modules.py nova-agent.py
 
 data_DATA = nova-agent.py
 
+nodist_noinst_DATA = agentlib.so
+
+agentlib.so:
+	    ln -s lib/.libs/agentlib.so agentlib.so
+
 BINTARNAME = @PACKAGE@-`uname -m`-@PACKAGE_VERSION@.tar.gz
 
 install-exec-local:
-	@$(top_srcdir)/src/nova-agent -qS -l error -- $(top_srcdir)/install_libs.py $(top_srcdir)/src/nova-agent ${DESTDIR} $(libdir)
-	@$(top_srcdir)/src/nova-agent -qS -l error -- $(top_srcdir)/install_modules.py ${DESTDIR}/$(modulesdir)
-	@./patch_binary.py ${DESTDIR}${sbindir}/nova-agent ${DESTDIR} $(libdir)
+	@$(PYTHON_VER) $(top_srcdir)/install_libs.py ${DESTDIR}/$(sbindir)/nova-agent ${DESTDIR} $(libdir)
+	@$(PYTHON_VER) $(top_srcdir)/install_modules.py ${DESTDIR}/$(modulesdir)
+	@$(PYTHON_VER) $(top_srcdir)/patch_binary.py ${DESTDIR}${sbindir}/nova-agent ${DESTDIR} $(libdir)
 
 distclean-local:
 	rm -f $(top_srcdir)/{configure,configure.in}
@@ -30,6 +33,7 @@ distclean-local:
 	rm -rf $(top_srcdir)/autom4te.cache
 
 clean-local::
+	rm -f agentlib.so
 	find . -name '*.gcov' -delete -o -name '*.gcda' -delete -o -name '*.gcno' -delete
 	find . -name '*.pyc' -exec rm -f {} \;
 	rm -rf $(CURDIR)/fakeroot

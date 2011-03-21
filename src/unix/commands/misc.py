@@ -17,7 +17,24 @@
 #
 
 """
-JSON agent command parser
+JSON misc commands plugin
 """
 
-import jsonparser
+import commands
+import agentlib
+
+
+class misc_commands(commands.CommandBase):
+
+    def __init__(self, *args, **kwargs):
+        pass
+
+    @commands.command_add('features')
+    def features_cmd(self, data):
+        commands = ','.join(self.command_names())
+        return (0, commands)
+
+    @commands.command_add('version')
+    def version_cmd(self, data):
+        # Ignore the version arguments
+        return (0, agentlib.get_version())

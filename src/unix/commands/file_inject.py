@@ -17,11 +17,30 @@
 #
 
 """
-JSON command plugins
+JSON File injection plugin
 """
 
-import file_inject
-import misc
-import network
-import password
-import update
+import base64
+import commands
+
+
+class file_inject(commands.CommandBase):
+
+    def __init__(self, *args, **kwargs):
+        pass
+
+    @commands.command_add('injectfile')
+    def injectfile_cmd(self, data):
+
+        try:
+            b64_decoded = base64.b64decode(data)
+        except:
+            return (500, "Error doing base64 decoding of data")
+
+        (filename, data) = b64_decoded.split(',', 1)
+
+        f = open(filename, 'w')
+        f.write(data)
+        f.close()
+
+        return (0, "")
