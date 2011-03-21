@@ -17,7 +17,7 @@
  *    under the License.
  */
 
-#include "agentlib_int.h"
+#include "libagent_int.h"
 
 
 static PyObject *logging = NULL;
@@ -163,7 +163,7 @@ static void _log(char *level, char *p)
         fprintf(stderr, "%s\n", p);
 }
 
-int AGENTLIB_PUBLIC_API agent_open_log(char *filename, char *level)
+int LIBAGENT_PUBLIC_API agent_open_log(char *filename, char *level)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
 
@@ -203,7 +203,7 @@ err:
  * The logging calls below should be exported to modules
  */
 
-int AGENTLIB_PUBLIC_API agent_log_python_error(char *log_prefix)
+int LIBAGENT_PUBLIC_API agent_log_python_error(char *log_prefix)
 {
     PyObject *ptype;
     PyObject *pvalue;
@@ -364,7 +364,7 @@ int AGENTLIB_PUBLIC_API agent_log_python_error(char *log_prefix)
     return 0;
 }
 
-void AGENTLIB_PUBLIC_API agent_debug(char *fmt, ...)
+void LIBAGENT_PUBLIC_API agent_debug(char *fmt, ...)
 {
     char *p;
     VSMPRINTF(p, fmt);
@@ -373,7 +373,7 @@ void AGENTLIB_PUBLIC_API agent_debug(char *fmt, ...)
 }
 
 
-void AGENTLIB_PUBLIC_API agent_error(char *fmt, ...)
+void LIBAGENT_PUBLIC_API agent_error(char *fmt, ...)
 {
     char *p;
     VSMPRINTF(p, fmt);
@@ -381,7 +381,7 @@ void AGENTLIB_PUBLIC_API agent_error(char *fmt, ...)
     free(p);
 }
 
-void AGENTLIB_PUBLIC_API agent_info(char *fmt, ...)
+void LIBAGENT_PUBLIC_API agent_info(char *fmt, ...)
 {
     char *p;
     VSMPRINTF(p, fmt);
@@ -389,7 +389,7 @@ void AGENTLIB_PUBLIC_API agent_info(char *fmt, ...)
     free(p);
 }
 
-void AGENTLIB_PUBLIC_API agent_warn(char *fmt, ...)
+void LIBAGENT_PUBLIC_API agent_warn(char *fmt, ...)
 {
     char *p;
     VSMPRINTF(p, fmt);

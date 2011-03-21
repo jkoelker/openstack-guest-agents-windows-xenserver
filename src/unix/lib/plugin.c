@@ -26,7 +26,7 @@
 #include <pthread.h>
 #include <assert.h>
 #include <errno.h>
-#include "agentlib_int.h"
+#include "libagent_int.h"
 
 
 typedef struct agent_plugin_info agent_plugin_info_t;
@@ -185,7 +185,7 @@ static int _parser_plugin_check(agent_plugin_info_t *pi)
     return 0;
 }
 
-int agent_plugin_register(PyObject *exchange, PyObject *parser)
+int LIBAGENT_PUBLIC_API agent_plugin_register(PyObject *exchange, PyObject *parser)
 {
     agent_plugin_info_t pi;
 
@@ -228,14 +228,14 @@ int agent_plugin_register(PyObject *exchange, PyObject *parser)
     return 0;
 }
 
-int agent_plugin_init(void)
+int LIBAGENT_PUBLIC_API agent_plugin_init(void)
 {
     pthread_mutex_init(&_plugins_lock, NULL);
 
     return 0;
 }
 
-void agent_plugin_deinit(void)
+void LIBAGENT_PUBLIC_API agent_plugin_deinit(void)
 {
     int i;
 
@@ -251,7 +251,7 @@ void agent_plugin_deinit(void)
     pthread_mutex_destroy(&_plugins_lock);
 }
 
-int agent_plugin_run_threads(void)
+int LIBAGENT_PUBLIC_API agent_plugin_run_threads(void)
 {
     int i;
     int err;
@@ -301,7 +301,7 @@ int agent_plugin_run_threads(void)
     return 0;
 }
 
-int agent_plugin_stop_threads(void)
+int LIBAGENT_PUBLIC_API agent_plugin_stop_threads(void)
 {
     int i;
 

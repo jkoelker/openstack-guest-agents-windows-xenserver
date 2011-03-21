@@ -12,6 +12,9 @@ def install_libs_for_binary(binary, destdir, libdir):
     """
 
     installdir = destdir + libdir
+    # Strip extra leading slashses
+    while installdir.startswith('//'):
+        installdir = installdir[1:]
 
     def _find_libs(target):
         """
@@ -79,8 +82,8 @@ if len(sys.argv) != 4:
     sys.exit(1)
 
 binary = sys.argv[1]
-destdir = os.path.normpath(sys.argv[2])
-libdir = os.path.normpath(sys.argv[3])
+destdir = sys.argv[2]
+libdir = sys.argv[3]
 
 installdir = destdir + libdir
 

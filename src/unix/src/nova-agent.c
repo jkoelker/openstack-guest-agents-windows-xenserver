@@ -28,7 +28,7 @@
 #include <signal.h>
 #include <errno.h>
 #include "nova-agent_int.h"
-#include "agentlib_int.h"
+#include "libagent_int.h"
 
 
 static void _agent_signal_loop(void)
@@ -220,7 +220,7 @@ int main(int argc, char **argv)
     }
 
     /* init the plugin system */
-    err = agentlib_init();
+    err = agent_plugin_init();
     if (err < 0)
     {
         agent_error("couldn't init the plugin system: %d", err);
@@ -279,7 +279,7 @@ int main(int argc, char **argv)
 
     /* Continue */
 
-    err = agentlib_run_threads();
+    err = agent_plugin_run_threads();
     if (err < 0)
     {
         agent_python_deinit(pi);
@@ -294,9 +294,9 @@ int main(int argc, char **argv)
     if (!quiet)
         agent_info("Agent stopping");
 
-    agentlib_stop_threads();
+    agent_plugin_stop_threads();
 
-    agentlib_deinit();
+    agent_plugin_deinit();
     agent_python_deinit(pi);
 
     if (!quiet)

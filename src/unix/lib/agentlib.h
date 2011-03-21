@@ -36,6 +36,8 @@
 typedef ssize_t Py_ssize_t;
 #endif
 
+#define AGENTLIB_PUBLIC_API __attribute__ ((visibility("default")))
+
 #include "logging.h"
 
-#endif /* __NOVA_AGENT_PLUGIN_H__ */
+#endif /* __AGENTLIB_H__ */

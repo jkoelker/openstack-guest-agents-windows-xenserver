@@ -26,10 +26,10 @@
 #include <pthread.h>
 #include <assert.h>
 #include <errno.h>
-#include "agentlib_int.h"
+#include "libagent_int.h"
+#include "agentlib.h"
 
-#define AGENTLIB_MODULE_NAME "libagent"
-
+#define AGENTLIB_MODULE_NAME "agentlib"
 
 static PyObject *_agentlib_get_version(PyObject *self, PyObject *args)
 {
@@ -59,7 +59,7 @@ static PyObject *_agentlib_register(PyObject *self, PyObject *args)
     Py_RETURN_NONE;
 }
 
-int AGENTLIB_PUBLIC_API agentlib_init(void)
+PyMODINIT_FUNC AGENTLIB_PUBLIC_API initagentlib(void)
 {
     static PyMethodDef _agentlib_methods[] =
     {
@@ -79,10 +79,12 @@ int AGENTLIB_PUBLIC_API agentlib_init(void)
     err = agent_plugin_init();
     if (err < 0)
     {
+        PyErr_Format(PyExc_SystemError, "Couldn't init the plugin interface");
+
         /* Release GIL */
         PyGILState_Release(gstate);
 
-        return err;
+        return;
     }
 
     /* Create a new module */
@@ -95,7 +97,7 @@ int AGENTLIB_PUBLIC_API agentlib_init(void)
         /* Release GIL */
         PyGILState_Release(gstate);
 
-        return -1;
+        return;
     }
 
     PyObject *main_mod = PyImport_AddModule("__main__");
@@ -108,30 +110,5 @@ int AGENTLIB_PUBLIC_API agentlib_init(void)
     /* Release GIL */
     PyGILState_Release(gstate);
 
-    return 0;
+    return;
 }
-
-void AGENTLIB_PUBLIC_API agentlib_deinit(void)
-{
-    agent_plugin_deinit();
-}
-
-int AGENTLIB_PUBLIC_API agentlib_run_threads(void)
-{
-    return agent_plugin_run_threads();
-}
-
-int AGENTLIB_PUBLIC_API agentlib_stop_threads(void)
-{
-    return agent_plugin_stop_threads();
-}
-
-PyMODINIT_FUNC AGENTLIB_PUBLIC_API initlibagent(void)
-{
-    int err;
-
-    err = agentlib_init();
-    if (err < 0)
-        PyErr_Format(PyExc_SystemError, "Couldn't init agentlib module");
-}
-

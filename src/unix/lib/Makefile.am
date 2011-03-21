@@ -3,24 +3,15 @@ include $(top_srcdir)/Common.am
 
 AM_CFLAGS += -DAGENT_VERSION=\"@PACKAGE_VERSION@\" -DPLUGINS_DIR=\"${pluginsdir}\" -DDATA_DIR=\"${datadir}\" -fvisibility=hidden
 
-tmpdir = ${libdir}
-
-dist_tmp_SCRIPTS = __init__.py
-
-noinst_HEADERS = agentlib_int.h plugin_int.h logging_int.h
+noinst_HEADERS = libagent_int.h plugin_int.h logging_int.h
 include_HEADERS = agentlib.h plugin.h logging.h
 
 lib_LTLIBRARIES = libagent.la
+modules_LTLIBRARIES = agentlib.la
 
-libagent_la_SOURCES = agentlib.c plugin.c logging.c
-libagent_la_LDFLAGS = -avoid-version
+libagent_la_SOURCES = plugin.c logging.c
 
-nodist_noinst_DATA = libagent.so
-
-libagent.so:
-	ln -s .libs/libagent.so libagent.so
-
-clean-local:
-	    rm -f libagent.so
-
+agentlib_la_SOURCES = agentlib.c
+agentlib_la_LDFLAGS = -module -avoid-version
+agentlib_la_LIBADD = libagent.la
 

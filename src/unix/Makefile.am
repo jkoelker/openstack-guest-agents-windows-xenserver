@@ -11,6 +11,11 @@ EXTRA_DIST = install_libs.py install_modules.py nova-agent.py
 
 data_DATA = nova-agent.py
 
+nodist_noinst_DATA = agentlib.so
+
+agentlib.so:
+	    ln -s lib/.libs/agentlib.so agentlib.so
+
 BINTARNAME = @PACKAGE@-`uname -m`-@PACKAGE_VERSION@.tar.gz
 
 install-exec-local:
@@ -28,6 +33,7 @@ distclean-local:
 	rm -rf $(top_srcdir)/autom4te.cache
 
 clean-local::
+	rm -f agentlib.so
 	find . -name '*.gcov' -delete -o -name '*.gcda' -delete -o -name '*.gcno' -delete
 	find . -name '*.pyc' -exec rm -f {} \;
 	rm -rf $(CURDIR)/fakeroot

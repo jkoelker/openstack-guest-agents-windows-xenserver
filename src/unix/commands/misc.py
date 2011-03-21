@@ -21,7 +21,7 @@ JSON misc commands plugin
 """
 
 import commands
-import lib.libagent
+import agentlib
 
 
 class misc_commands(commands.CommandBase):
@@ -37,4 +37,4 @@ class misc_commands(commands.CommandBase):
     @commands.command_add('version')
     def version_cmd(self, data):
         # Ignore the version arguments
-        return (0, lib.libagent.get_version())
+        return (0, agentlib.get_version())

@@ -25,7 +25,7 @@
 #include <string.h>
 #include <errno.h>
 #include "nova-agent_int.h"
-#include "agentlib_int.h"
+#include "libagent_int.h"
 
 
 struct _agent_python_info

@@ -17,18 +17,13 @@
  *    under the License.
  */
 
-#ifndef __AGENTLIB_INT_H__
-#define __AGENTLIB_INT_H__
+#ifndef __LIBAGENT_INT_H__
+#define __LIBAGENT_INT_H__
 
-#define AGENTLIB_PUBLIC_API __attribute__ ((visibility("default")))
+#define LIBAGENT_PUBLIC_API __attribute__ ((visibility("default")))
 
 #include "agentlib.h"
 #include "plugin_int.h"
 #include "logging_int.h"
 
-int agentlib_init(void);
-void agentlib_deinit(void);
-int agentlib_run_threads(void);
-int agentlib_stop_threads(void);
-
-#endif /* __NOVA_AGENT_PLUGIN_H__ */
+#endif /* __LIBAGENT_INT_H__ */

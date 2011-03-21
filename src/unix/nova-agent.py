@@ -1,6 +1,6 @@
 
 import sys
-import lib.libagent
+import agentlib
 import plugins
 import commands.command_list
 
@@ -12,4 +12,4 @@ c = commands.init(**args)
 parser = plugins.jsonparser(c)
 xs = plugins.xenstore()
 
-lib.libagent.register(xs, parser)
+agentlib.register(xs, parser)

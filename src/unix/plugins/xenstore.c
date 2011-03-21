@@ -21,8 +21,7 @@
 #include <sys/types.h>
 #include <assert.h>
 #include <xs.h>
-#include "plugin.h"
-#include "logging.h"
+#include "agentlib.h"
 
 #define XENSTORE_MODULE_NAME "xenstore"
 #define XENSTORE_CLASS_NAME "xenstore"
