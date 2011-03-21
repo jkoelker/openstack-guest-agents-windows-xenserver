@@ -17,32 +17,15 @@
  *    under the License.
  */
 
-#ifndef __NOVA_AGENT_PYTHON_H__
-#define __NOVA_AGENT_PYTHON_H__
-
-#include <sys/types.h>
-/* Stupid hack.  Python.h redefines this */
-#undef _POSIX_C_SOURCE
-#include <Python.h>
-
-/* Support for older versions of Python */
-#ifndef PyVarObject_HEAD_INIT
-#define PyVarObject_HEAD_INIT(type, size)	\
-	_PyObject_EXTRA_INIT			\
-	1, type, size,
-#endif
-
-#ifndef PY_SSIZE_T_MAX
-typedef ssize_t Py_ssize_t;
-#endif
+#ifndef __INCLUDE_PYTHON_INT_H__
+#define __INCLUDE_PYTHON_INT_H__
 
 typedef struct _agent_python_info agent_python_info_t;
 
 agent_python_info_t *agent_python_init(int argc, char * const *argv, int syspython);
 void agent_python_deinit(agent_python_info_t *pi);
 int agent_python_run_file(agent_python_info_t *pi, const char *filename);
-int agent_python_handle_error(char *log_prefix);
 int agent_python_test_mode(agent_python_info_t *pi);
 int agent_python_start_interpreter(agent_python_info_t *pi);
 
-#endif /* __NOVA_AGENT_PYTHON_H__ */
+#endif /* __INCLUDE_PYTHON_INT_H__ */

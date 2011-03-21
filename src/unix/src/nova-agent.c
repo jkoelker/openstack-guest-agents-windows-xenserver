@@ -27,11 +27,11 @@
 #include <string.h>
 #include <signal.h>
 #include <errno.h>
-#include "nova-agent.h"
-#include "python.h"
+#include "nova-agent_int.h"
 #include "agentlib_int.h"
 
-static void *_signal_handler_thread(void *args)
+
+static void _agent_signal_loop(void)
 {
     sigset_t mask;
     int err;
@@ -51,12 +51,9 @@ static void *_signal_handler_thread(void *args)
         switch(sig)
         {
             case SIGINT:
-                agent_error("got SIGINT\n");
-                return NULL;
-
             case SIGTERM:
-                agent_error("got SIGTERM\n");
-                return NULL;
+                /* Shut down */
+                return;
 
             case SIGCHLD:
                 break;
@@ -67,7 +64,7 @@ static void *_signal_handler_thread(void *args)
         }
     }
 
-    return NULL;
+    return;
 }
 
 static void _usage(FILE *f, char *progname, int long_vers)
@@ -108,7 +105,6 @@ int main(int argc, char **argv)
 
     agent_python_info_t *pi;
     sigset_t mask;
-    pthread_t thr_id;
     int opt;
     int err;
     int do_fork = 1;
@@ -248,16 +244,6 @@ int main(int argc, char **argv)
         exit(err);
     }
 
-    /* block signals */
-
-    err = pthread_create(&thr_id, NULL, _signal_handler_thread, NULL);
-    if (err)
-    {
-        agent_error("couldn't create signal handler thread: %s",
-                strerror(err));
-        exit(err);
-    }
-
     sigemptyset(&mask);
     sigaddset(&mask, SIGINT);
     sigaddset(&mask, SIGTERM);
@@ -304,7 +290,7 @@ int main(int argc, char **argv)
     if (!quiet)
         agent_info("Agent started");
 
-    pthread_join(thr_id, NULL);
+    _agent_signal_loop();
 
     if (!quiet)
         agent_info("Agent stopping");

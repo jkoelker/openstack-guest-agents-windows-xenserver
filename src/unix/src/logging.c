@@ -17,7 +17,7 @@
  *    under the License.
  */
 
-#include "agentlib_int.h"
+#include "nova-agent_int.h"
 
 
 static PyObject *logging = NULL;
@@ -163,7 +163,47 @@ static void _log(char *level, char *p)
         fprintf(stderr, "%s\n", p);
 }
 
-int AGENTLIB_PUBLIC_API agent_log_python_error(char *log_prefix)
+int agent_open_log(char *filename, char *level)
+{
+    PyGILState_STATE gstate = PyGILState_Ensure();
+
+    logging = PyImport_ImportModule("logging");
+    if (!logging)
+    {
+        fprintf(stderr, "unable to import logging module\n");
+        goto err;
+    }
+
+    if (filename || level)
+    {
+        int ret = basic_config(filename, level);
+        if (ret < 0)
+        {
+            fprintf(stderr, "could not setup basic config\n");
+            goto err;
+        }
+    }
+
+    PyGILState_Release(gstate);
+
+    return 0;
+
+err:
+    Py_CLEAR(logging);
+
+    PyErr_Print();
+    PyErr_Clear();
+
+    PyGILState_Release(gstate);
+
+    return -1;
+}
+
+/*
+ * The logging calls below should be exported to modules
+ */
+
+int NOVA_AGENT_PUBLIC_API agent_log_python_error(char *log_prefix)
 {
     PyObject *ptype;
     PyObject *pvalue;
@@ -324,43 +364,7 @@ int AGENTLIB_PUBLIC_API agent_log_python_error(char *log_prefix)
     return 0;
 }
 
-int AGENTLIB_PUBLIC_API agent_open_log(char *filename, char *level)
-{
-    PyGILState_STATE gstate = PyGILState_Ensure();
-
-    logging = PyImport_ImportModule("logging");
-    if (!logging)
-    {
-        fprintf(stderr, "unable to import logging module\n");
-        goto err;
-    }
-
-    if (filename || level)
-    {
-        int ret = basic_config(filename, level);
-        if (ret < 0)
-        {
-            fprintf(stderr, "could not setup basic config\n");
-            goto err;
-        }
-    }
-
-    PyGILState_Release(gstate);
-
-    return 0;
-
-err:
-    Py_CLEAR(logging);
-
-    PyErr_Print();
-    PyErr_Clear();
-
-    PyGILState_Release(gstate);
-
-    return -1;
-}
-
-void AGENTLIB_PUBLIC_API agent_debug(char *fmt, ...)
+void NOVA_AGENT_PUBLIC_API agent_debug(char *fmt, ...)
 {
     char *p;
     VSMPRINTF(p, fmt);
@@ -369,7 +373,7 @@ void AGENTLIB_PUBLIC_API agent_debug(char *fmt, ...)
 }
 
 
-void AGENTLIB_PUBLIC_API agent_error(char *fmt, ...)
+void NOVA_AGENT_PUBLIC_API agent_error(char *fmt, ...)
 {
     char *p;
     VSMPRINTF(p, fmt);
@@ -377,7 +381,7 @@ void AGENTLIB_PUBLIC_API agent_error(char *fmt, ...)
     free(p);
 }
 
-void AGENTLIB_PUBLIC_API agent_info(char *fmt, ...)
+void NOVA_AGENT_PUBLIC_API agent_info(char *fmt, ...)
 {
     char *p;
     VSMPRINTF(p, fmt);
@@ -385,7 +389,7 @@ void AGENTLIB_PUBLIC_API agent_info(char *fmt, ...)
     free(p);
 }
 
-void AGENTLIB_PUBLIC_API agent_warn(char *fmt, ...)
+void NOVA_AGENT_PUBLIC_API agent_warn(char *fmt, ...)
 {
     char *p;
     VSMPRINTF(p, fmt);

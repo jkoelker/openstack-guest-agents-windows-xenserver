@@ -24,8 +24,8 @@
 #include <sys/types.h>
 #include <string.h>
 #include <errno.h>
-#include "python.h"
-#include "logging_int.h"
+#include "nova-agent_int.h"
+
 
 struct _agent_python_info
 {

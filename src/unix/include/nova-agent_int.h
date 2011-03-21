@@ -17,25 +17,13 @@
  *    under the License.
  */
 
-#ifndef __INCLUDE_NOVA_AGENT_H__
-#define __INCLUDE_NOVA_AGENT_H__
+#ifndef __INCLUDE_NOVA_AGENT_INT_H__
+#define __INCLUDE_NOVA_AGENT_INT_H__
 
-#include <sys/types.h>
-/* Stupid hack.  Python.h redefines this */
-#undef _POSIX_C_SOURCE
-#include <Python.h>
+#define NOVA_AGENT_PUBLIC_API __attribute__ ((visibility("default")))
 
-/* Support for older versions of Python */
-#ifndef PyVarObject_HEAD_INIT
-#define PyVarObject_HEAD_INIT(type, size)   \
-        _PyObject_EXTRA_INIT            \
-    1, type, size,
-#endif
+#include "nova-agent.h"
+#include "logging_int.h"
+#include "python_int.h"
 
-#ifndef PY_SSIZE_T_MAX
-typedef ssize_t Py_ssize_t;
-#endif
-
-#include "logging.h"
-
-#endif /* __INCLUDE_NOVA_AGENT_PYTHON_H__ */
+#endif /* __INCLUDE_NOVA_AGENT_PYTHON_INT_H__ */

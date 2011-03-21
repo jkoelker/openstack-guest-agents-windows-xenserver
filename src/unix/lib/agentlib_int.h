@@ -23,7 +23,6 @@
 #define AGENTLIB_PUBLIC_API __attribute__ ((visibility("default")))
 
 #include "agentlib.h"
-#include "logging_int.h"
 #include "plugin_int.h"
 
 int agentlib_init(void);

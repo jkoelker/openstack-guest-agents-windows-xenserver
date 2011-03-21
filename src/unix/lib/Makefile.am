@@ -5,7 +5,7 @@ AM_CFLAGS += -DAGENT_VERSION=\"@PACKAGE_VERSION@\" -DPLUGINS_DIR=\"${pluginsdir}
 
 pkglib_LTLIBRARIES=agentlib.la
 
-agentlib_la_SOURCES=agentlib.c plugin.c logging.c
+agentlib_la_SOURCES=agentlib.c plugin.c
 agentlib_la_LDFLAGS = -module -avoid-version
 
 nodist_noinst_DATA = agentlib.so

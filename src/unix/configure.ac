@@ -103,7 +103,6 @@ AC_SUBST([PYTHON_LIB])
 AC_SUBST([DESTDIR])
 
 AC_CONFIG_FILES([Makefile
-                 src/Makefile
                  lib/Makefile
                  plugins/Makefile
                  ])
