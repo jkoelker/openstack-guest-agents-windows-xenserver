@@ -103,6 +103,9 @@ int AGENTLIB_PUBLIC_API agentlib_init(void)
     /* Add the new module to the __main__ dictionary */
     PyModule_AddObject(main_mod, AGENTLIB_MODULE_NAME, pymod);
 
+    /* Release GIL */
+    PyGILState_Release(gstate);
+
     return 0;
 }
 
