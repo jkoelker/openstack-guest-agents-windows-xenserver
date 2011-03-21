@@ -25,6 +25,7 @@
 #include <string.h>
 #include <errno.h>
 #include "nova-agent_int.h"
+#include "agentlib_int.h"
 
 
 struct _agent_python_info
@@ -126,6 +127,8 @@ static PyObject *_agent_python_run_file(const char *filename, PyObject *dict)
             Py_XDECREF(ptype);
             Py_XDECREF(pvalue);
             Py_XDECREF(ptraceback);
+
+            Py_RETURN_NONE;
         }
     }
 

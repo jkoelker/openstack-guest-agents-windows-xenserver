@@ -1,21 +1,17 @@
+#!/usr/bin/env python
 
 import os
 import shutil
 import subprocess
 import sys
 
-# For nova_agent binary
-test_mode = True
-
 
 def install_plugins(destdir):
 
-    import plugins
+#    import plugins
+    import commands.command_list
 
-    instances = []
-
-    for x in nova_agent.parser_plugins():
-        instances.append(x())
+    c = commands.init({"testmode": True})
 
     to_install = set()
 

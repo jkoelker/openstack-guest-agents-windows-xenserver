@@ -23,7 +23,6 @@
 #define NOVA_AGENT_PUBLIC_API __attribute__ ((visibility("default")))
 
 #include "nova-agent.h"
-#include "logging_int.h"
 #include "python_int.h"
 
 #endif /* __INCLUDE_NOVA_AGENT_PYTHON_INT_H__ */

@@ -10,10 +10,8 @@ test_mode = False
 args = {"test": "test123"}
 c = commands.init(args)
 
-sys.exit(0)
-
-parser = plugins.jsonparser.jsonparser(c)
-xs = plugins.xenstore.xenstore()
+parser = plugins.jsonparser.jsonparser.command_parser(c)
+xs = plugins.xenstore.xenstore.xenstore()
 
 lib.agentlib.register(xs, parser)
 

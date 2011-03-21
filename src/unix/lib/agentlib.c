@@ -66,7 +66,7 @@ int AGENTLIB_PUBLIC_API agentlib_init(void)
         { "get_version", (PyCFunction)_agentlib_get_version,
                 METH_NOARGS, "Get the agent version string" },
         { "register", (PyCFunction)_agentlib_register,
-                METH_NOARGS, "Register an exchange plugin to run" },
+                METH_VARARGS, "Register an exchange plugin to run" },
         { NULL, NULL, METH_NOARGS, NULL }
     };
 
@@ -99,6 +99,8 @@ int AGENTLIB_PUBLIC_API agentlib_init(void)
     }
 
     PyObject *main_mod = PyImport_AddModule("__main__");
+
+    Py_INCREF(pymod);
 
     /* Add the new module to the __main__ dictionary */
     PyModule_AddObject(main_mod, AGENTLIB_MODULE_NAME, pymod);

@@ -1,11 +1,9 @@
+#!/usr/bin/env python
 
 import os
 import shutil
 import subprocess
 import sys
-
-# For nova_agent binary
-test_mode = True
 
 
 def install_libs_for_binary(binary, destdir, libdir):

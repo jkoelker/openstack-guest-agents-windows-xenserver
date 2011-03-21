@@ -104,8 +104,8 @@ static void *_plugin_exchange_thread(void *arg)
             break;
         }
 
-        req = PyObject_CallFunctionObjArgs(pi->get_request,
-                pi->exchange, NULL);
+        req = PyObject_CallFunctionObjArgs(pi->get_request, NULL);
+
         if ((req == NULL) || (req == Py_None))
         {
             if (PyErr_Occurred())
@@ -119,8 +119,7 @@ static void *_plugin_exchange_thread(void *arg)
             continue;
         }
 
-        resp = PyObject_CallFunctionObjArgs(pi->parse_request,
-                pi->parser, NULL);
+        resp = PyObject_CallFunctionObjArgs(pi->parse_request, req, NULL);
         if (resp == NULL)
         {
             agent_log_python_error("Error parsing request");
@@ -130,8 +129,7 @@ static void *_plugin_exchange_thread(void *arg)
             continue;
         }
 
-        PyObject_CallFunctionObjArgs(pi->put_response, pi->exchange,
-                req, resp, NULL);
+        PyObject_CallFunctionObjArgs(pi->put_response, req, resp, NULL);
         if (PyErr_Occurred())
         {
             agent_log_python_error("Error putting response");
@@ -220,6 +218,8 @@ int agent_plugin_register(PyObject *exchange, PyObject *parser)
         return -1;
     }
 
+    _plugins = vptr;
+
     memcpy(&(_plugins[_num_plugins]), &pi, sizeof(pi));
     _num_plugins++;
 
@@ -290,7 +290,7 @@ int agent_plugin_run_threads(void)
     if (num_started == 0)
     {
         pthread_mutex_unlock(&_plugins_lock);
-        agent_debug("no exchange plugins found with parsers set");
+        agent_debug("no exchange plugins found to run");
         return -1;
     }
 

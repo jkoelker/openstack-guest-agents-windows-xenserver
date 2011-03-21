@@ -10,7 +10,7 @@ nobase_dist_plugins_SCRIPTS = xenstore/__init__.py \
 nobase_pkglib_LTLIBRARIES=xenstore/xenstore.la
 
 xenstore_xenstore_la_SOURCES=xenstore/xenstore.c
-xenstore_xenstore_la_LIBADD = ../lib/agentlib.so -lxenstore
+xenstore_xenstore_la_LIBADD = ../lib/libagentlib.la -lxenstore
 xenstore_xenstore_la_LDFLAGS = -module -avoid-version
 
 nodist_noinst_DATA = xenstore/xenstore.so
@@ -22,5 +22,5 @@ clean-local:
 	rm -f xenstore/xenstore.so
 
 install-exec-local:
-	@$(top_srcdir)/src/nova-agent -qS -- $(top_srcdir)/install_libs.py xenstore/xenstore.so ${DESTDIR} $(libdir)
+	@$(top_srcdir)/install_libs.py xenstore/xenstore.so ${DESTDIR} $(libdir)
 

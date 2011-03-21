@@ -24,6 +24,7 @@
 
 #include "agentlib.h"
 #include "plugin_int.h"
+#include "logging_int.h"
 
 int agentlib_init(void);
 void agentlib_deinit(void);

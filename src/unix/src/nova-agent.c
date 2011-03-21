@@ -282,7 +282,6 @@ int main(int argc, char **argv)
     err = agentlib_run_threads();
     if (err < 0)
     {
-        agent_error("failed to start plugin threads");
         agent_python_deinit(pi);
         exit(-err);
     }

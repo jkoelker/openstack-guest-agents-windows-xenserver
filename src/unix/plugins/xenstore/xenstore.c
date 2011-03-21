@@ -353,11 +353,6 @@ static PyObject *_xenstore_get_request(xenstore_info_t *xsi, PyObject *args)
     static PyObject *zero_obj = NULL;
     int err;
 
-    if (PyTuple_Size(args) != 0)
-    {
-        return PyErr_Format(PyExc_SystemError, "%s", "No arguments expected to xenstore.get_request()");
-    }
-
     if (pop_name == NULL)
     {
         pop_name = PyString_FromString("pop");
@@ -467,7 +462,7 @@ static PyObject *_xenstore_put_response(xenstore_info_t *xsi,
 
 static PyMethodDef _xenstore_methods[] =
 {
-    { "get_request", (PyCFunction)_xenstore_get_request, METH_VARARGS,
+    { "get_request", (PyCFunction)_xenstore_get_request, METH_NOARGS,
             "xenstore plugin method that returns a new request" },
     { "put_response", (PyCFunction)_xenstore_put_response, METH_VARARGS,
             "xenstore plugin method that puts a response" },
@@ -487,6 +482,7 @@ PyMODINIT_FUNC initxenstore(void)
     _xenstore_type.tp_init = (initproc)_xenstore_init;
     _xenstore_type.tp_flags = Py_TPFLAGS_DEFAULT|Py_TPFLAGS_BASETYPE;
     _xenstore_type.tp_del = (destructor)_xenstore_del;
+    _xenstore_type.tp_base = &PyBaseObject_Type;
 
     PyObject *pymod = Py_InitModule(XENSTORE_MODULE_NAME, _mod_methods);
 
