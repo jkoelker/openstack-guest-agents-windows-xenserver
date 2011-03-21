@@ -58,10 +58,10 @@ class AgentUpdateError(Exception):
     __repr__ = __str__
 
 
-class update_command(commands.command):
+class update_command(commands.CommandBase):
 
     def __init__(self, *args, **kwargs):
-        super(commands.command, self).__init__(*args, **kwargs)
+        pass
 
     def _get_to_local_file(self, url, md5sum):
         try:

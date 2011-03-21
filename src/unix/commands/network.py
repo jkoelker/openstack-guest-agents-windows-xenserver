@@ -28,10 +28,10 @@ import debian.network
 import redhat.network
 
 
-class network_commands(commands.command):
+class network_commands(commands.CommandBase):
 
     def __init__(self, *args, **kwargs):
-        super(commands.command, self).__init__(*args, **kwargs)
+        pass
 
     @classmethod
     def detect_os(self):

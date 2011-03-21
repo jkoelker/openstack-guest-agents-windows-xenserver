@@ -43,10 +43,10 @@ except ImportError:
             return md5.new()
 
 
-class password_commands(commands.command):
+class password_commands(commands.CommandBase):
 
     def __init__(self, *args, **kwargs):
-        super(commands.command, self).__init__(*args, **kwargs)
+        pass
 
     def _mod_exp(self, num, exp, mod):
         result = 1

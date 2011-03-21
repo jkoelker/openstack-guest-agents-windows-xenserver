@@ -24,10 +24,10 @@ import base64
 import commands
 
 
-class file_inject(commands.command):
+class file_inject(commands.CommandBase):
 
     def __init__(self, *args, **kwargs):
-        super(commands.command, self).__init__(*args, **kwargs)
+        pass
 
     @commands.command_add('injectfile')
     def injectfile_cmd(self, data):

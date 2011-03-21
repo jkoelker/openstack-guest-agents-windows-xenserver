@@ -21,6 +21,7 @@ Main command module.  All command classes should subclass 'command'
 """
 
 import logging
+import sys
 
 try:
     import anyjson
@@ -48,24 +49,26 @@ class CommandNotFoundError(Exception):
         return "No such agent command '%s'" % self.cmd
 
 
-class command_metaclass(type):
+class CommandMetaClass(type):
 
     def __init__(cls, cls_name, bases, attrs):
         if not hasattr(cls, '_cmd_classes'):
             cls._cmd_classes = []
-            cls._cmd_instances = []
-            cls._cmds = {}
         else:
             cls._cmd_classes.append(cls)
 
 
-class command(object):
+class CommandBase(object):
     """
     The class that all command classes should inherit from
     """
 
     # Set the metaclass
-    __metaclass__ = command_metaclass
+    __metaclass__ = CommandMetaClass
+
+    _cmd_instances = []
+    _cmds = {}
+    _init_args = {}
 
     @classmethod
     def _get_commands(self, inst):
@@ -81,11 +84,14 @@ class command(object):
         return cmds
 
     @classmethod
-    def create_instances(self, *args, **kwargs):
+    def init(self, *args, **kwargs):
+        print kwargs
+        self._init_args.update(**kwargs)
         for cls in self._cmd_classes:
             inst = cls(*args, **kwargs)
             self._cmd_instances.append(inst)
             self._cmds.update(self._get_commands(inst))
+        return CommandBase
 
     @classmethod
     def command_names(self):
@@ -111,3 +117,21 @@ def command_add(cmd_name):
         f._cmd_name = cmd_name
         return f
     return wrap
+
+class CommandModuleWrapper(object):
+
+    def __init__(self, wrapped_module):
+        self.wrapped_module = wrapped_module
+
+    def __dir__(self):
+        return dir(self.wrapped_module)
+
+    def __getattr__(self, key):
+        try:
+            return getattr(self.wrapped_module, key)
+        except AttributeError:
+            return getattr(CommandBase, key)
+
+if __name__ != "__main__":
+    sys.modules[__name__] = CommandModuleWrapper(sys.modules[__name__])
+

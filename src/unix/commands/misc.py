@@ -21,12 +21,12 @@ JSON misc commands plugin
 """
 
 import commands
+import lib.agentlib
 
-
-class misc_commands(commands.command):
+class misc_commands(commands.CommandBase):
 
     def __init__(self, *args, **kwargs):
-        super(commands.command, self).__init__(*args, **kwargs)
+        pass
 
     @commands.command_add('features')
     def features_cmd(self, data):
@@ -35,6 +35,5 @@ class misc_commands(commands.command):
 
     @commands.command_add('version')
     def version_cmd(self, data):
-        return (0, "0.0.0.0")
         # Ignore the version arguments
-#        return (0, nova_agent.get_version())
+        return (0, lib.agentlib.get_version())

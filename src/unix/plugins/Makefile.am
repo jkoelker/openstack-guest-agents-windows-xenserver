@@ -10,7 +10,7 @@ nobase_dist_plugins_SCRIPTS = xenstore/__init__.py \
 nobase_pkglib_LTLIBRARIES=xenstore/xenstore.la
 
 xenstore_xenstore_la_SOURCES=xenstore/xenstore.c
-xenstore_xenstore_la_LIBADD = -lxenstore
+xenstore_xenstore_la_LIBADD = ../lib/agentlib.so -lxenstore
 xenstore_xenstore_la_LDFLAGS = -module -avoid-version
 
 nodist_noinst_DATA = xenstore/xenstore.so
