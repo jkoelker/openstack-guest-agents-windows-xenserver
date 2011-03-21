@@ -84,11 +84,10 @@ class CommandBase(object):
         return cmds
 
     @classmethod
-    def init(self, *args, **kwargs):
-        print kwargs
+    def init(self, **kwargs):
         self._init_args.update(**kwargs)
         for cls in self._cmd_classes:
-            inst = cls(*args, **kwargs)
+            inst = cls(**kwargs)
             self._cmd_instances.append(inst)
             self._cmds.update(self._get_commands(inst))
         return CommandBase
