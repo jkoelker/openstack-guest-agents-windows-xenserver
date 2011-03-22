@@ -26,6 +26,8 @@ import glob
 import subprocess
 import logging
 
+import commands.network
+
 HOSTNAME_FILE = "/etc/sysconfig/network"
 NETCONFIG_DIR = "/etc/sysconfig/network-scripts"
 INTERFACE_FILE = NETCONFIG_DIR + "/ifcfg-%s"
@@ -37,13 +39,14 @@ INTERFACE_LABELS = {"public": "eth0",
 
 def configure_network(network_config, *args, **kwargs):
 
+    interfaces = network_config.get('interfaces', [])
+
+    publicips = write_interfaces(interfaces, dont_rename=0)
+
     hostname = network_config.get('hostname')
 
     update_hostname(hostname, dont_rename=False)
-
-    interfaces = network_config.get('interfaces', [])
-
-    write_interfaces(interfaces, dont_rename=0)
+    commands.network.update_etc_hosts(publicips, hostname)
 
     # Set hostname
     logging.debug('executing /bin/hostname %s' % hostname)
@@ -53,7 +56,7 @@ def configure_network(network_config, *args, **kwargs):
     logging.debug('status = %d' % status)
 
     if status != 0:
-        return (500, "Couldn't restart network: %d" % status)
+        return (500, "Couldn't set hostname: %d" % status)
 
     # Restart network
     logging.debug('executing /etc/init.d/network restart')
@@ -117,6 +120,8 @@ def write_interfaces(interfaces, *args, **kwargs):
 
     dont_rename = kwargs.get('dont_rename', 0)
 
+    publicips = set()
+
     # Enumerate all of the existing ifcfg-* files
     old_files = set()
     for filename in glob.glob(NETCONFIG_DIR + "/ifcfg-*"):
@@ -149,10 +154,21 @@ def write_interfaces(interfaces, *args, **kwargs):
             if iface_file in old_files:
                 old_files.remove(iface_file)
 
+        if not publicips and interface['label'] == 'public':
+            ips = interface.get('ips')
+            if ips:
+                publicips.add(ips[0]['ip'])
+
+            ip6s = interface.get('ip6s')
+            if ip6s:
+                publicips.add(ip6s[0]['address'])
+
     for filename in old_files:
         logging.info("moving aside old file %s" % filename)
         if not dont_rename:
             os.rename(filename, filename + ".%d.bak" % time.time())
+
+    return publicips
 
 
 def _write_file(filename, data, dont_rename=0):

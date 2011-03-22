@@ -25,6 +25,8 @@ import os
 import subprocess
 import time
 
+import commands.network
+
 HOSTNAME_FILE = "/etc/hostname"
 INTERFACE_FILE = "/etc/network/interfaces"
 TMP_INTERFACE_FILE = "%s.tmp.%d" % (INTERFACE_FILE, os.getpid())
@@ -54,9 +56,10 @@ def configure_network(network_config, *args, **kwargs):
     except KeyError:
         interfaces = []
 
-    update_hostname(hostname, dont_rename=False)
+    publicips = write_interfaces(interfaces, dont_rename=0)
 
-    write_interfaces(interfaces, dont_rename=0)
+    update_hostname(hostname, dont_rename=False)
+    commands.network.update_etc_hosts(publicips, hostname)
 
     # Set hostname
     logging.debug('executing /bin/hostname %s' % hostname)
@@ -66,7 +69,7 @@ def configure_network(network_config, *args, **kwargs):
     logging.debug('status = %d' % status)
 
     if status != 0:
-        return (500, "Couldn't restart network: %d" % status)
+        return (500, "Couldn't set hostname: %d" % status)
 
     # Restart network
     logging.debug('executing /etc/init.d/networking restart')
@@ -126,7 +129,7 @@ def write_interfaces(interfaces, *args, **kwargs):
     bak_file = INTERFACE_FILE + '.' + str(int(time.time()))
     tmp_file = TMP_INTERFACE_FILE
 
-    data = _get_file_data(interfaces)
+    data, publicips = _get_file_data(interfaces)
 
     f = open(tmp_file, 'w')
     f.write(data)
@@ -149,6 +152,8 @@ def write_interfaces(interfaces, *args, **kwargs):
             os.rename(bak_file, INTERFACE_FILE)
             raise e
 
+    return publicips
+
 
 def _get_file_data(interfaces):
     """
@@ -156,6 +161,7 @@ def _get_file_data(interfaces):
     """
 
     file_data = INTERFACE_HEADER
+    publicips = set()
 
     for interface in interfaces:
         try:
@@ -265,4 +271,13 @@ def _get_file_data(interfaces):
             file_data += "down route del -net %s netmask %s gw %s\n" % (
                     network, netmask, gateway)
 
-    return file_data
+        if not publicips and interface['label'] == 'public':
+            ips = interface.get('ips')
+            if ips:
+                publicips.add(ips[0]['ip'])
+
+            ip6s = interface.get('ip6s')
+            if ip6s:
+                publicips.add(ip6s[0]['address'])
+
+    return file_data, publicips
