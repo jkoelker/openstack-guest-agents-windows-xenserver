@@ -20,8 +20,6 @@
 JSON misc commands plugin
 """
 
-import unittest
-
 import commands
 import agentlib
 
@@ -40,21 +38,3 @@ class MiscCommands(commands.CommandBase):
     def version_cmd(self, data):
         # Ignore the version arguments
         return (0, agentlib.get_version())
-
-
-class TestMiscCommands(unittest.TestCase):
-
-    def setUp(self):
-        import sys
-
-        sys.path.insert(0, "..")
-        self.command_list = __import__('commands.command_list')
-        self.command_inst = MiscCommands()
-
-    def test_features(self):
-
-        print self.command_inst.features_cmd('agent')
-
-
-if __name__ == "__main__":
-    unittest.main()
