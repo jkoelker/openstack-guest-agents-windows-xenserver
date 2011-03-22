@@ -90,7 +90,7 @@ def update_hostname(hostname, dont_rename=False):
     bak_file = filename + ".%d.bak" % time.time()
 
     output = open(tmp_file, "w")
-    print >>output, hostname
+    print >> output, hostname
     output.close()
 
     try:

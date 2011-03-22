@@ -23,6 +23,7 @@ Misc commands tester
 import agent_test
 import agentlib
 
+
 class TestMiscCommands(agent_test.TestCase):
 
     def test_features(self):

@@ -55,7 +55,7 @@ def install_plugins(destdir):
             # Turn /usr/lib/python2.6/Crypto/Cipher/AES into:
             # /usr/lib/python2.6/Crypto
             rest_dir = mod_fn[len(base_dir) + 1:]
-            if rest_dir.find('/') != -1:
+            if '/' in rest_dir:
                 rest_dir = rest_dir.split('/', 1)[0]
             to_install.add(os.path.join(base_dir, rest_dir))
 

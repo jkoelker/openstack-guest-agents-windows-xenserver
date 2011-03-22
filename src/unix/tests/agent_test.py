@@ -23,6 +23,7 @@ Nova agent unit test module
 import unittest
 import sys
 
+
 class TestCase(unittest.TestCase):
 
     def setUp(self):
@@ -48,4 +49,3 @@ def main(*args, **kwargs):
 if __name__ != "__main__":
     if not len(sys.path) or sys.path[0] != "..":
         sys.path.insert(0, "..")
-

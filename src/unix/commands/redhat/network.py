@@ -78,16 +78,16 @@ def update_hostname(hostname, dont_rename=False):
 
     output = open(tmp_file, "w")
     for line in open(HOSTNAME_FILE):
-      line = line.strip()
-      if '=' in line:
-        k, v = line.split('=', 1)
-        k = k.strip()
-        if k == "HOSTNAME":
-          print >>output, "HOSTNAME=%s" % hostname
+        line = line.strip()
+        if '=' in line:
+            k, v = line.split('=', 1)
+            k = k.strip()
+            if k == "HOSTNAME":
+                print >> output, "HOSTNAME=%s" % hostname
+            else:
+                print >> output, line
         else:
-          print >>output, line
-      else:
-        print >>output, line
+            print >> output, line
     output.close()
 
     try:

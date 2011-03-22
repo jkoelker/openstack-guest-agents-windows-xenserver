@@ -31,5 +31,3 @@ for mod in mod_names:
     modules.add("tests." + mod[:-3].split('/', 1)[1])
 
 tests.agent_test.run_tests(modules)
-
-
