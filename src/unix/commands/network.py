@@ -31,8 +31,6 @@ import redhat.network
 
 HOSTS_FILE = '/etc/hosts'
 
-hosts_line_re = re.compile(r'\s+')
-
 
 class network_commands(commands.CommandBase):
 
@@ -90,7 +88,7 @@ def update_etc_hosts(ips, hostname, dont_rename=False):
         else:
             config, comment = line, ''
 
-        parts = hosts_line_re.split(config)
+        parts = re.split('\s+', config)
         if parts:
             if parts[0] in ips:
                 confip = parts.pop(0)
