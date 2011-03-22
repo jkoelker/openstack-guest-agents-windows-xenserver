@@ -32,6 +32,10 @@ import commands
 
 class TestPasswordCommands(agent_test.TestCase):
 
+    def setUp(self):
+        super(TestPasswordCommands, self).setUp()
+        self.pw_inst = self.commands.command_instance("password")
+
     def _mod_exp(self, num, exp, mod):
         result = 1
         while exp > 0:
@@ -101,19 +105,18 @@ class TestPasswordCommands(agent_test.TestCase):
     def test_1_same_shared_key(self):
         """Test computing of correct shared key"""
 
-        pw_inst = self.commands.command_instance("password")
-        pw_inst._wipe_key()
+        self.pw_inst._wipe_key()
 
         our_private_key = self._make_private_key()
         our_public_key = self._dh_compute_public_key(our_private_key)
 
-        their_private_key = pw_inst._make_private_key()
-        their_public_key = pw_inst._dh_compute_public_key(
+        their_private_key = self.pw_inst._make_private_key()
+        their_public_key = self.pw_inst._dh_compute_public_key(
                 their_private_key)
 
         self.assertEqual(self._dh_compute_shared_key(
                             their_public_key, our_private_key),
-                        pw_inst._dh_compute_shared_key(
+                        self.pw_inst._dh_compute_shared_key(
                             our_public_key, their_private_key))
 
     def test_2_password_matches(self):
@@ -121,13 +124,12 @@ class TestPasswordCommands(agent_test.TestCase):
 
         test_passwd = "TeStPaSsWoRd"
 
-        pw_inst = self.commands.command_instance("password")
-        pw_inst._wipe_key()
+        self.pw_inst._wipe_key()
 
         our_private_key = self._make_private_key()
         our_public_key = self._dh_compute_public_key(our_private_key)
 
-        resp = pw_inst.keyinit_cmd(our_public_key)
+        resp = self.pw_inst.keyinit_cmd(our_public_key)
 
         self.assertEqual(resp[0], "D0")
 
@@ -138,15 +140,14 @@ class TestPasswordCommands(agent_test.TestCase):
 
         our_b64passwd = self._make_b64_password(shared_key, test_passwd)
 
-        their_passwd = pw_inst._decode_password(our_b64passwd)
+        their_passwd = self.pw_inst._decode_password(our_b64passwd)
 
         self.assertEqual(test_passwd, their_passwd)
 
     def test_3_password_without_keyinit(self):
         """Test the 'password' command without keyinit first"""
 
-        pw_inst = self.commands.command_instance("password")
-        pw_inst._wipe_key()
+        self.pw_inst._wipe_key()
 
         test_passwd = "PaSsWoRdTeSt"
         our_b64passwd = self._make_b64_password(123456789, test_passwd)
