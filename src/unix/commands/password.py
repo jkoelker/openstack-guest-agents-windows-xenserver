@@ -192,6 +192,16 @@ class PasswordCommands(commands.CommandBase):
                 raise PasswordError((500,
                     "Return code from passwd was %d" % ret))
 
+    def _wipe_key(self):
+        """
+        Remove key from a previous keyinit command
+        """
+
+        try:
+            del self.aes_key
+        except AttributeError:
+            pass
+
     @commands.command_add('keyinit')
     def keyinit_cmd(self, data):
 
@@ -217,5 +227,7 @@ class PasswordCommands(commands.CommandBase):
             self._change_password(passwd)
         except PasswordError, e:
             return e.get_response()
+
+        self._wipe_key()
 
         return (0, "")

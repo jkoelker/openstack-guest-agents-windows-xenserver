@@ -77,7 +77,7 @@ class CommandBase(object):
             obj = getattr(inst, objname)
             if getattr(obj, '_is_cmd', False):
                 try:
-                    cmds[obj._cmd_name] = obj
+                    cmds[obj._cmd_name] = (obj, inst)
                 except AttributeError:
                     # skip it if there's no _cmd_name
                     pass
@@ -97,9 +97,23 @@ class CommandBase(object):
         return [x for x in self._cmds]
 
     @classmethod
+    def command_instance(self, cmd_name):
+        try:
+            return self._cmds[cmd_name][1]
+        except KeyError:
+            raise CommandNotFoundError(cmd_name)
+
+    @classmethod
+    def command_function(self, cmd_name):
+        try:
+            return self._cmds[cmd_name][0]
+        except KeyError:
+            raise CommandNotFoundError(cmd_name)
+
+    @classmethod
     def run_command(self, cmd_name, arg):
         try:
-            result = self._cmds[cmd_name](arg)
+            result = self._cmds[cmd_name][0](arg)
         except KeyError:
             raise CommandNotFoundError(cmd_name)
 

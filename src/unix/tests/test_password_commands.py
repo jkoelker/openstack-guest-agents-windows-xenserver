@@ -101,7 +101,8 @@ class TestPasswordCommands(agent_test.TestCase):
     def test_1_same_shared_key(self):
         """Test computing of correct shared key"""
 
-        pw_inst = commands.password.PasswordCommands(testmode=True)
+        pw_inst = self.commands.command_instance("password")
+        pw_inst._wipe_key()
 
         our_private_key = self._make_private_key()
         our_public_key = self._dh_compute_public_key(our_private_key)
@@ -120,7 +121,8 @@ class TestPasswordCommands(agent_test.TestCase):
 
         test_passwd = "TeStPaSsWoRd"
 
-        pw_inst = commands.password.PasswordCommands(testmode=True)
+        pw_inst = self.commands.command_instance("password")
+        pw_inst._wipe_key()
 
         our_private_key = self._make_private_key()
         our_public_key = self._dh_compute_public_key(our_private_key)
@@ -142,6 +144,9 @@ class TestPasswordCommands(agent_test.TestCase):
 
     def test_3_password_without_keyinit(self):
         """Test the 'password' command without keyinit first"""
+
+        pw_inst = self.commands.command_instance("password")
+        pw_inst._wipe_key()
 
         test_passwd = "PaSsWoRdTeSt"
         our_b64passwd = self._make_b64_password(123456789, test_passwd)
