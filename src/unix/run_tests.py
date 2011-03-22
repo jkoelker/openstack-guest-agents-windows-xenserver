@@ -17,8 +17,17 @@
 #
 
 """
-Plugins to import
+Unit test runner
 """
 
-from jsonparser import JsonParser
-from xenstore import XenStore
+import glob
+import tests.agent_test
+
+mod_names = glob.glob('tests/test_*.py')
+
+modules = set()
+
+for mod in mod_names:
+    modules.add("tests." + mod[:-3].split('/', 1)[1])
+
+tests.agent_test.run_tests(modules)

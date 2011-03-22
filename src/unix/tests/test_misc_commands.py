@@ -17,8 +17,28 @@
 #
 
 """
-Plugins to import
+Misc commands tester
 """
 
-from jsonparser import JsonParser
-from xenstore import XenStore
+import agent_test
+import agentlib
+
+
+class TestMiscCommands(agent_test.TestCase):
+
+    def test_features(self):
+        """Test the 'features' command"""
+
+        resp = self.commands.run_command('features', 'agent')
+        expected = (0, ','.join(self.commands.command_names()))
+        self.assertEqual(resp, expected)
+
+    def test_version(self):
+        """Test the 'version' command"""
+
+        resp = self.commands.run_command('version', 'agent')
+        expected = (0, agentlib.get_version())
+        self.assertEqual(resp, expected)
+
+if __name__ == "__main__":
+    agent_test.main()

@@ -22,6 +22,7 @@ JSON password reset handling plugin
 
 import base64
 import binascii
+import logging
 import os
 import subprocess
 import time
@@ -43,10 +44,33 @@ except ImportError:
             return md5.new()
 
 
-class password_commands(commands.CommandBase):
+class PasswordError(Exception):
+    """
+    Class for password command exceptions
+    """
+
+    def __init__(self, response):
+        # Should be a (ResponseCode, ResponseMessage) tuple
+        self.response = response
+
+    def __str__(self):
+        return "%s: %s" % self.response
+
+    def get_response(self):
+        return self.response
+
+
+class PasswordCommands(commands.CommandBase):
+    """
+    Class for password related commands
+    """
 
     def __init__(self, *args, **kwargs):
-        pass
+        # prime to use
+        self.prime = 162259276829213363391578010288127
+        self.base = 5
+        self.kwargs = {}
+        self.kwargs.update(kwargs)
 
     def _mod_exp(self, num, exp, mod):
         result = 1
@@ -57,7 +81,86 @@ class password_commands(commands.CommandBase):
             num = (num * num) % mod
         return result
 
+    def _make_private_key(self):
+        """
+        Create a private key using /dev/urandom
+        """
+
+        return int(binascii.hexlify(os.urandom(16)), 16)
+
+    def _dh_compute_public_key(self, private_key):
+        """
+        Given a private key, compute a public key
+        """
+
+        return self._mod_exp(self.base, private_key, self.prime)
+
+    def _dh_compute_shared_key(self, public_key, private_key):
+        """
+        Given public and private keys, compute the shared key
+        """
+
+        return self._mod_exp(public_key, private_key, self.prime)
+
+    def _compute_aes_key(self, key):
+        """
+        Given a key, compute the corresponding key that can be used
+        with AES
+        """
+
+        m = hashlib.md5()
+        m.update(key)
+
+        aes_key = m.digest()
+
+        m = hashlib.md5()
+        m.update(aes_key)
+        m.update(key)
+
+        aes_iv = m.digest()
+
+        return (aes_key, aes_iv)
+
+    def _decrypt_password(self, aes_key, data):
+
+
+        aes = AES.new(aes_key[0], AES.MODE_CBC, aes_key[1])
+        passwd = aes.decrypt(data)
+
+        cut_off_sz = ord(passwd[len(passwd) - 1])
+        if cut_off_sz > 16 or len(passwd) < 16:
+            raise PasswordError((500, "Invalid password data received"))
+
+        passwd = passwd[: - cut_off_sz]
+
+        return passwd
+
+    def _decode_password(self, data):
+
+        try:
+            real_data = base64.b64decode(data)
+        except Exception:
+            raise PasswordError((500, "Couldn't decode base64 data"))
+
+        try:
+            aes_key = self.aes_key
+        except AttributeError:
+            raise PasswordError((500, "Password without key exchange"))
+
+        try:
+            passwd = self._decrypt_password(aes_key, real_data)
+        except PasswordError, e:
+            raise e
+        except Exception, e:
+            raise PasswordError((500, str(e)))
+
+        return passwd
+
     def _change_password(self, passwd):
+        """Actually change the password"""
+
+        if self.kwargs.get('testmode', False):
+            return None
 
         try:
             p = subprocess.Popen(["/usr/sbin/chpasswd"],
@@ -67,7 +170,8 @@ class password_commands(commands.CommandBase):
             p.communicate("root:%s\n" % passwd)
             ret = p.returncode
             if ret:
-                raise SystemError("Return code from chpasswd was %d" % ret)
+                raise PasswordError((500,
+                    "Return code from chpasswd was %d" % ret))
 
         except Exception, e:
             p = subprocess.Popen(["/usr/bin/passwd", "root"],
@@ -85,32 +189,22 @@ class password_commands(commands.CommandBase):
             p.communicate("%s\n" % passwd)
             ret = p.returncode
             if ret:
-                raise SystemError("Return code from passwd was %d" % ret)
+                raise PasswordError((500,
+                    "Return code from passwd was %d" % ret))
 
     @commands.command_add('keyinit')
     def keyinit_cmd(self, data):
 
         # Remote pubkey comes in as large number
         remote_public_key = data
-        # prime to use
-        prime = 162259276829213363391578010288127
 
-        my_private_key = int(binascii.hexlify(os.urandom(16)), 16)
-        my_public_key = self._mod_exp(5, my_private_key, prime)
+        my_private_key = self._make_private_key()
+        my_public_key = self._dh_compute_public_key(my_private_key)
 
-        shared_key = str(self._mod_exp(remote_public_key,
-                my_private_key, prime))
+        shared_key = str(self._dh_compute_shared_key(remote_public_key,
+                my_private_key))
 
-        m = hashlib.md5()
-        m.update(shared_key)
-
-        self.aes_key = m.digest()
-
-        m = hashlib.md5()
-        m.update(self.aes_key)
-        m.update(shared_key)
-
-        self.aes_iv = m.digest()
+        self.aes_key = self._compute_aes_key(shared_key)
 
         # The key needs to be a string response right now
         return ("D0", str(my_public_key))
@@ -119,22 +213,9 @@ class password_commands(commands.CommandBase):
     def password_cmd(self, data):
 
         try:
-            real_data = base64.b64decode(data)
-
-            a = AES.new(self.aes_key, AES.MODE_CBC, self.aes_iv)
-            passwd = a.decrypt(real_data)
-
-        except Exception, e:
-            return (500, "No keyinit")
-
-        cut_off_sz = ord(passwd[len(passwd) - 1])
-        if cut_off_sz > 16 or len(passwd) < 16:
-            return (500, "Invalid password data received")
-
-        passwd = passwd[: - cut_off_sz]
-
-        try:
+            passwd = self._decode_password(data)
             self._change_password(passwd)
-        except:
-            return(500, "Couldn't change password")
+        except PasswordError, e:
+            return e.get_response()
+
         return (0, "")

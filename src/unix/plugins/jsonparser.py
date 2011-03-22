@@ -39,7 +39,7 @@ except ImportError:
             return json.read(buf)
 
 
-class jsonparser(object):
+class JsonParser(object):
     """
     JSON command parser plugin for nova-agent
     """

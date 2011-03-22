@@ -5,9 +5,9 @@ ACLOCAL_MFLAGS = -I m4
 
 AM_CFLAGS += -DAGENT_VERSION=\"@PACKAGE_VERSION@\" -DPLUGINS_DIR=\"${pluginsdir}\" -DDATA_DIR=\"${datadir}\" -fvisibility=hidden
 
-SUBDIRS = lib src plugins commands
+SUBDIRS = lib src plugins commands tests
 
-EXTRA_DIST = install_libs.py install_modules.py nova-agent.py
+EXTRA_DIST = install_libs.py install_modules.py nova-agent.py run_tests.py
 
 data_DATA = nova-agent.py
 
@@ -17,6 +17,9 @@ agentlib.so:
 	    ln -s lib/.libs/agentlib.so agentlib.so
 
 BINTARNAME = @PACKAGE@-`uname -m`-@PACKAGE_VERSION@.tar.gz
+
+check-local:
+	@${PYTHON_VER} run_tests.py
 
 install-exec-local:
 	@$(PYTHON_VER) $(top_srcdir)/install_libs.py ${DESTDIR}/$(sbindir)/nova-agent ${DESTDIR} $(libdir)

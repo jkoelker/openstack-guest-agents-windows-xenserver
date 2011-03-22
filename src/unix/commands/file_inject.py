@@ -24,7 +24,7 @@ import base64
 import commands
 
 
-class file_inject(commands.CommandBase):
+class FileInject(commands.CommandBase):
 
     def __init__(self, *args, **kwargs):
         pass
