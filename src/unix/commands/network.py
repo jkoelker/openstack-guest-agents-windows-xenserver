@@ -96,12 +96,15 @@ def update_etc_hosts(ips, hostname, dont_rename=False):
                     # Single hostname that differs, we replace that one
                     print >> outfile, '# %s\t# Removed by nova-agent' % line
                     print >> outfile, '%s\t%s%s' % (confip, hostname, comment)
-                elif len(parts) == 2 and len(filter(lambda h: '.' in h, parts)) == 1:
+                elif len(parts) == 2 and len(
+                        filter(lambda h: '.' in h, parts)) == 1:
                     # Two hostnames, one a hostname, one a domain name. Replace
                     # the hostname
-                    hostnames = map(lambda h: ('.' in h) and h or hostname, parts)
+                    hostnames = map(
+                            lambda h: ('.' in h) and h or hostname, parts)
                     print >> outfile, '# %s\t# Removed by nova-agent' % line
-                    print >> outfile, '%s\t%s%s' % (confip, ' '.join(hostnames), comment)
+                    print >> outfile, '%s\t%s%s' % (confip,
+                            ' '.join(hostnames), comment)
                 else:
                     # Don't know how to handle this line, so skip it
                     print >> outfile, line
