@@ -58,7 +58,7 @@ class AgentUpdateError(Exception):
     __repr__ = __str__
 
 
-class update_command(commands.CommandBase):
+class UpdateCommand(commands.CommandBase):
 
     def __init__(self, *args, **kwargs):
         pass

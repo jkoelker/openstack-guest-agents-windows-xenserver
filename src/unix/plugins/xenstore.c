@@ -24,7 +24,7 @@
 #include "agentlib.h"
 
 #define XENSTORE_MODULE_NAME "xenstore"
-#define XENSTORE_CLASS_NAME "xenstore"
+#define XENSTORE_CLASS_NAME "XenStore"
 
 
 #define XENSTORE_REQUEST_PATH "data/host"
@@ -43,7 +43,7 @@ struct _xenstore_info
 static PyTypeObject _xenstore_type =
 {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "xenserver.na_xenstore", /*tp_name*/
+    "plugins." XENSTORE_CLASS_NAME, /*tp_name*/
     sizeof(xenstore_info_t),/*tp_basicsize*/
     0,/*tp_itemsize*/
 };

@@ -24,7 +24,7 @@ import commands
 import agentlib
 
 
-class misc_commands(commands.CommandBase):
+class MiscCommands(commands.CommandBase):
 
     def __init__(self, *args, **kwargs):
         pass
