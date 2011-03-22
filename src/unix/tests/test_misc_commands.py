@@ -17,44 +17,27 @@
 #
 
 """
-JSON misc commands plugin
+Misc commands tester
 """
 
-import unittest
-
-import commands
+import agent_test
 import agentlib
 
-
-class MiscCommands(commands.CommandBase):
-
-    def __init__(self, *args, **kwargs):
-        pass
-
-    @commands.command_add('features')
-    def features_cmd(self, data):
-        commands = ','.join(self.command_names())
-        return (0, commands)
-
-    @commands.command_add('version')
-    def version_cmd(self, data):
-        # Ignore the version arguments
-        return (0, agentlib.get_version())
-
-
-class TestMiscCommands(unittest.TestCase):
-
-    def setUp(self):
-        import sys
-
-        sys.path.insert(0, "..")
-        self.command_list = __import__('commands.command_list')
-        self.command_inst = MiscCommands()
+class TestMiscCommands(agent_test.TestCase):
 
     def test_features(self):
+        """Test the 'features' command"""
 
-        print self.command_inst.features_cmd('agent')
+        resp = self.commands.run_command('features', 'agent')
+        expected = (0, ','.join(self.commands.command_names()))
+        self.assertEqual(resp, expected)
 
+    def test_version(self):
+        """Test the 'version' command"""
+
+        resp = self.commands.run_command('version', 'agent')
+        expected = (0, agentlib.get_version())
+        self.assertEqual(resp, expected)
 
 if __name__ == "__main__":
-    unittest.main()
+    agent_test.main()
