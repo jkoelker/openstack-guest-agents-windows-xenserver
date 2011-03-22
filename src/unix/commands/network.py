@@ -78,10 +78,10 @@ def update_etc_hosts(ips, hostname, dont_rename=False):
     tmp_file = filename + ".%d~" % os.getpid()
     bak_file = filename + ".%d.bak" % time.time()
 
-    input = open(filename)
-    output = open(tmp_file, "w")
+    infile = open(filename)
+    outfile = open(tmp_file, "w")
 
-    for line in input:
+    for line in infile:
         line = line.strip()
 
         if '#' in line:
@@ -96,30 +96,30 @@ def update_etc_hosts(ips, hostname, dont_rename=False):
                 confip = parts.pop(0)
                 if len(parts) == 1 and parts[0] != hostname:
                     # Single hostname that differs, we replace that one
-                    print >> output, '# %s\t# Removed by nova-agent' % line
-                    print >> output, '%s\t%s%s' % (confip, hostname, comment)
+                    print >> outfile, '# %s\t# Removed by nova-agent' % line
+                    print >> outfile, '%s\t%s%s' % (confip, hostname, comment)
                 elif len(parts) == 2 and len(filter(lambda h: '.' in h, parts)) == 1:
                     # Two hostnames, one a hostname, one a domain name. Replace
                     # the hostname
                     hostnames = map(lambda h: ('.' in h) and h or hostname, parts)
-                    print >> output, '# %s\t# Removed by nova-agent' % line
-                    print >> output, '%s\t%s%s' % (confip, ' '.join(hostnames), comment)
+                    print >> outfile, '# %s\t# Removed by nova-agent' % line
+                    print >> outfile, '%s\t%s%s' % (confip, ' '.join(hostnames), comment)
                 else:
                     # Don't know how to handle this line, so skip it
-                    print >> output, line
+                    print >> outfile, line
 
                 ips.remove(confip)
             else:
-                print >> output, line
+                print >> outfile, line
         else:
-            print >> output, line
+            print >> outfile, line
 
     # Add public IPs we didn't manage to patch
     for ip in ips:
-        print >> output, '%s\t%s' % (ip, hostname)
+        print >> outfile, '%s\t%s' % (ip, hostname)
 
-    output.close()
-    input.close()
+    outfile.close()
+    infile.close()
 
     try:
         os.chown(tmp_file, 0, 0)
