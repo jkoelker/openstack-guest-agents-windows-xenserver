@@ -28,7 +28,7 @@ import debian.network
 import redhat.network
 
 
-class network_commands(commands.CommandBase):
+class NetworkCommands(commands.CommandBase):
 
     def __init__(self, *args, **kwargs):
         pass

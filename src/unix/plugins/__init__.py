@@ -20,5 +20,5 @@
 Plugins to import
 """
 
-from jsonparser import jsonparser
-from xenstore import xenstore
+from jsonparser import JsonParser
+from xenstore import XenStore
