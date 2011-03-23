@@ -24,6 +24,7 @@ import os
 import re
 import time
 import platform
+from cStringIO import StringIO
 
 import commands
 import debian.network
@@ -71,20 +72,16 @@ class NetworkCommands(commands.CommandBase):
         return os_mod.network.configure_network(data)
 
 
-def update_etc_hosts(ips, hostname, dont_rename=False):
-    filename = HOSTS_FILE
-    tmp_file = filename + ".%d~" % os.getpid()
-    bak_file = filename + ".%d.bak" % time.time()
-
-    infile = open(filename)
-    outfile = open(tmp_file, "w")
+def _update_etc_hosts(infile, ips, hostname):
+    outfile = StringIO()
 
     for line in infile:
         line = line.strip()
 
         if '#' in line:
             config, comment = line.split('#', 1)
-            comment = '#' + comment
+            config = config.strip()
+            comment = '\t#' + comment
         else:
             config, comment = line, ''
 
@@ -119,10 +116,22 @@ def update_etc_hosts(ips, hostname, dont_rename=False):
     for ip in ips:
         print >> outfile, '%s\t%s' % (ip, hostname)
 
-    outfile.close()
-    infile.close()
+    return outfile
 
+
+def update_etc_hosts(ips, hostname, dont_rename=False):
+    filename = HOSTS_FILE
+    tmp_file = filename + ".%d~" % os.getpid()
+    bak_file = filename + ".%d.bak" % time.time()
+
+    outfile = _update_etc_hosts(open(filename), ips, hostname)
+    outfile.seek(0)
+
+    f = open(tmp_file, 'w')
     try:
+        f.write(outfile.read())
+        f.close()
+
         os.chown(tmp_file, 0, 0)
         os.chmod(tmp_file, 0644)
         if not dont_rename and os.path.exists(filename):

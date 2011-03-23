@@ -24,6 +24,7 @@ import logging
 import os
 import subprocess
 import time
+from cStringIO import StringIO
 
 import commands.network
 
@@ -38,7 +39,7 @@ INTERFACE_HEADER = \
 # The loopback network interface
 auto lo
 iface lo inet loopback
-"""
+""".lstrip('\n')
 
 INTERFACE_LABELS = {"public": "eth0",
                     "private": "eth1"}
@@ -46,15 +47,9 @@ INTERFACE_LABELS = {"public": "eth0",
 
 def configure_network(network_config, *args, **kwargs):
 
-    try:
-        hostname = network_config['hostname']
-    except KeyError:
-        hostname = None
+    hostname = network_config.get('hostname')
 
-    try:
-        interfaces = network_config['interfaces']
-    except KeyError:
-        interfaces = []
+    interfaces = network_config.get('interfaces', [])
 
     publicips = write_interfaces(interfaces, dont_rename=0)
 
@@ -84,6 +79,10 @@ def configure_network(network_config, *args, **kwargs):
     return (0, "")
 
 
+def _update_hostname(hostname):
+    return StringIO(hostname + '\n')
+
+
 def update_hostname(hostname, dont_rename=False):
     """
     Update hostname on system
@@ -92,11 +91,14 @@ def update_hostname(hostname, dont_rename=False):
     tmp_file = filename + ".%d~" % os.getpid()
     bak_file = filename + ".%d.bak" % time.time()
 
-    output = open(tmp_file, "w")
-    print >> output, hostname
-    output.close()
+    outfile = _update_hostname(hostname)
+    outfile.seek(0)
 
+    f = open(tmp_file, 'w')
     try:
+        f.write(outfile.read())
+        f.close()
+
         os.chown(tmp_file, 0, 0)
         os.chmod(tmp_file, 0644)
         if not dont_rename and os.path.exists(filename):
@@ -114,6 +116,12 @@ def update_hostname(hostname, dont_rename=False):
             raise e
     else:
         os.rename(bak_file, filename)
+
+
+def _update_interfaces(interfaces):
+    data, publicips = _get_file_data(interfaces)
+
+    return {'interfaces': data}
 
 
 def write_interfaces(interfaces, *args, **kwargs):
@@ -192,9 +200,9 @@ def _get_file_data(interfaces):
             routes = []
 
         if label == "public":
-            try:
-                gateway = interface['gateway']
-            except KeyError:
+            gateway4 = interface.get('gateway')
+            gateway6 = interface.get('gateway6')
+            if not gateway4 and not gateway6:
                 raise SystemError("No gateway found for public interface")
 
             try:
@@ -223,6 +231,7 @@ def _get_file_data(interfaces):
             if not ip_info and not ip6_info:
                 continue
 
+            file_data += "\n"
             file_data += "auto %s\n" % ifname
 
             if ip_info and ip_info.get('enabled', '0') != '0':
@@ -237,10 +246,10 @@ def _get_file_data(interfaces):
                 file_data += "    address %s\n" % ip
                 file_data += "    netmask %s\n" % netmask
                 if label == "public":
-                    file_data += "    gateway %s\n" % gateway
-                    nameservers = ' '.join(dns)
-                    file_data += "    dns-nameservers %s\n" % nameservers
-                file_data += "\n"
+                    file_data += "    gateway %s\n" % gateway4
+                    if dns:
+                        file_data += "    dns-nameservers %s\n" % ' '.join(dns)
+                        dns = None
 
             if ip6_info and ip6_info.get('enabled', '0') != '0':
                 try:
@@ -250,14 +259,16 @@ def _get_file_data(interfaces):
                     raise SystemError(
                             "Missing IP or netmask in interface's IPv6 list")
 
-                gateway = ip6_info.get('gateway')
+                gateway = ip6_info.get('gateway', gateway6)
 
                 file_data += "iface %s inet6 static\n" % ifname
                 file_data += "    address %s\n" % ip
                 file_data += "    netmask %s\n" % netmask
                 if gateway:
                     file_data += "    gateway %s\n" % gateway
-                file_data += "\n"
+                    if dns:
+                        file_data += "    dns-nameservers %s\n" % ' '.join(dns)
+                        dns = None
 
             ifname_suffix_num += 1
 
