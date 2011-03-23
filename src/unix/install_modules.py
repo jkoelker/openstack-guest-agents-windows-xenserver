@@ -27,7 +27,6 @@ def install_plugins(destdir):
                     shutil.copy2(os.path.join(root, f),
                             os.path.join(destdir + root[len(srcdir):], f))
 
-
     for modname in sys.modules:
 
         if modname == "__main__":
