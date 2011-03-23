@@ -46,7 +46,7 @@ class InjectFileTests(agent_test.TestCase):
 
         self.assertTrue(os.path.exists(file_path))
 
-        f = open(file_path,  'rb')
+        f = open(file_path, 'rb')
         target_file_data = f.read()
         f.close()
 
@@ -70,7 +70,7 @@ class InjectFileTests(agent_test.TestCase):
 
         self.assertTrue(os.path.exists(file_path))
 
-        f = open(file_path,  'rb')
+        f = open(file_path, 'rb')
         target_file_data = f.read()
         f.close()
 

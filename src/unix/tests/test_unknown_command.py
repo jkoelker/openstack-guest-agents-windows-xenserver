@@ -24,7 +24,9 @@ import agent_test
 import agentlib
 import commands
 
+
 class TestUnknownCommand(agent_test.TestCase):
+    """Test unknown command"""
 
     def test_unknown_command(self):
         """Test an unknown command"""

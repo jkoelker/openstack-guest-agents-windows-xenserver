@@ -41,7 +41,8 @@ class TestJsonParser(agent_test.TestCase):
 
         resp = self.jsonparser.parse_request({'moo': 'ok'})
 
-        data = '{"message": "Internal error with request", "returncode": "500"}'
+        data = '{"message": "Internal error with request", ' + \
+                '"returncode": "500"}'
 
         self.assertEqual(resp, {"data": data})
 
@@ -70,7 +71,8 @@ class TestJsonParser(agent_test.TestCase):
         resp = self.jsonparser.parse_request({"data": \
                 '{"name": "<unknown_command>", "value": ""}'})
 
-        data = '{"message": "No such agent command \'<unknown_command>\'", "returncode": "404"}'
+        data = '{"message": "No such agent command ' + \
+                '\'<unknown_command>\'", "returncode": "404"}'
 
         self.assertEqual(resp, {"data": data})
 
