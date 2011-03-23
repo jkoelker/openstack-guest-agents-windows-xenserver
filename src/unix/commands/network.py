@@ -124,8 +124,7 @@ def update_etc_hosts(ips, hostname, dont_rename=False):
     tmp_file = filename + ".%d~" % os.getpid()
     bak_file = filename + ".%d.bak" % time.time()
 
-    outfile = _update_etc_hosts(infile, ips, hostname)
-    infile.close()
+    outfile = _update_etc_hosts(open(filename), ips, hostname)
     outfile.seek(0)
 
     f = open(tmp_file, 'w')
