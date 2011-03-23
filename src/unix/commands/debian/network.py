@@ -24,6 +24,7 @@ import logging
 import os
 import subprocess
 import time
+from cStringIO import StringIO
 
 import commands.network
 
@@ -84,6 +85,10 @@ def configure_network(network_config, *args, **kwargs):
     return (0, "")
 
 
+def _update_hostname(hostname):
+    return StringIO(hostname + '\n')
+
+
 def update_hostname(hostname, dont_rename=False):
     """
     Update hostname on system
@@ -92,11 +97,14 @@ def update_hostname(hostname, dont_rename=False):
     tmp_file = filename + ".%d~" % os.getpid()
     bak_file = filename + ".%d.bak" % time.time()
 
-    output = open(tmp_file, "w")
-    print >> output, hostname
-    output.close()
+    outfile = _update_hostname(hostname)
+    outfile.seek(0)
 
+    f = open(tmp_file, 'w')
     try:
+        f.write(outfile.read())
+        f.close()
+
         os.chown(tmp_file, 0, 0)
         os.chmod(tmp_file, 0644)
         if not dont_rename and os.path.exists(filename):

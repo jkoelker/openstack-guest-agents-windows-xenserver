@@ -25,6 +25,7 @@ import time
 import glob
 import subprocess
 import logging
+from cStringIO import StringIO
 
 import commands.network
 
@@ -71,6 +72,32 @@ def configure_network(network_config, *args, **kwargs):
     return (0, "")
 
 
+def _update_hostname(infile, hostname):
+    """
+    Update hostname on system
+    """
+    outfile = StringIO()
+
+    found = False
+    for line in infile:
+        line = line.strip()
+        if '=' in line:
+            k, v = line.split('=', 1)
+            k = k.strip()
+            if k == "HOSTNAME":
+                print >> outfile, "HOSTNAME=%s" % hostname
+                found = True
+            else:
+                print >> outfile, line
+        else:
+            print >> outfile, line
+
+    if not found:
+        print >> outfile, "HOSTNAME=%s" % hostname
+
+    return outfile
+
+
 def update_hostname(hostname, dont_rename=False):
     """
     Update hostname on system
@@ -79,21 +106,14 @@ def update_hostname(hostname, dont_rename=False):
     tmp_file = filename + ".%d~" % os.getpid()
     bak_file = filename + ".%d.bak" % time.time()
 
-    output = open(tmp_file, "w")
-    for line in open(HOSTNAME_FILE):
-        line = line.strip()
-        if '=' in line:
-            k, v = line.split('=', 1)
-            k = k.strip()
-            if k == "HOSTNAME":
-                print >> output, "HOSTNAME=%s" % hostname
-            else:
-                print >> output, line
-        else:
-            print >> output, line
-    output.close()
+    outfile = _update_hostname(open(filename), hostname)
+    outfile.seek(0)
 
+    f = open(tmp_file, 'w')
     try:
+        f.write(outfile.read())
+        f.close()
+
         os.chown(tmp_file, 0, 0)
         os.chmod(tmp_file, 0644)
         if not dont_rename and os.path.exists(filename):
