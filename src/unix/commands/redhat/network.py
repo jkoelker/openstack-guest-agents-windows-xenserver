@@ -31,8 +31,8 @@ import commands.network
 
 HOSTNAME_FILE = "/etc/sysconfig/network"
 NETCONFIG_DIR = "/etc/sysconfig/network-scripts"
-INTERFACE_FILE = NETCONFIG_DIR + "/ifcfg-%s"
-ROUTE_FILE = NETCONFIG_DIR + "/route-%s"
+INTERFACE_FILE = "ifcfg-%s"
+ROUTE_FILE = "route-%s"
 
 INTERFACE_LABELS = {"public": "eth0",
                     "private": "eth1"}
@@ -133,6 +133,21 @@ def update_hostname(hostname, dont_rename=False):
         os.rename(bak_file, filename)
 
 
+def _update_interfaces(interfaces):
+    results = {}
+
+    for interface in interfaces:
+        ifname, ifaces, route_data = _get_file_data(interface)
+
+        for ifname, data in ifaces:
+            results[INTERFACE_FILE % ifname] = data
+
+        if route_data:
+            results[ROUTE_FILE % ifname] = route_data
+
+    return results
+
+
 def write_interfaces(interfaces, *args, **kwargs):
     """
     Write out a new files for interfaces
@@ -155,25 +170,21 @@ def write_interfaces(interfaces, *args, **kwargs):
     if lo_file in old_files:
         old_files.remove(lo_file)
 
+    for filename, data in _update_interfaces(interfaces).iteritems():
+        filepath = os.path.join(NETCONFIG_DIR, filename)
+
+        logging.info("writing %s" % filepath)
+        _write_file(filepath, data, dont_rename=dont_rename)
+
+        if filename in old_files:
+            old_files.remove(filename)
+
+    for filename in old_files:
+        logging.info("moving aside old file %s" % filename)
+        if not dont_rename:
+            os.rename(filename, filename + ".%d.bak" % time.time())
+
     for interface in interfaces:
-        ifname, ifaces, route_data = _get_file_data(interface)
-
-        route_file = ROUTE_FILE % ifname
-        if route_data:
-            logging.info("writing %s" % route_file)
-            _write_file(route_file, route_data, dont_rename=dont_rename)
-
-            if route_file in old_files:
-                old_files.remove(route_file)
-
-        for ifname, data in ifaces:
-            iface_file = INTERFACE_FILE % ifname
-            logging.info("writing %s" % iface_file)
-            _write_file(iface_file, data, dont_rename=dont_rename)
-
-            if iface_file in old_files:
-                old_files.remove(iface_file)
-
         if not publicips and interface['label'] == 'public':
             ips = interface.get('ips')
             if ips:
@@ -182,11 +193,6 @@ def write_interfaces(interfaces, *args, **kwargs):
             ip6s = interface.get('ip6s')
             if ip6s:
                 publicips.add(ip6s[0]['address'])
-
-    for filename in old_files:
-        logging.info("moving aside old file %s" % filename)
-        if not dont_rename:
-            os.rename(filename, filename + ".%d.bak" % time.time())
 
     return publicips
 
@@ -198,10 +204,10 @@ def _write_file(filename, data, dont_rename=0):
     bak_file = filename + ".%d.bak" % time.time()
 
     f = open(tmp_file, 'w')
-    f.write(data)
-    f.close()
-
     try:
+        f.write(data)
+        f.close()
+
         os.chown(tmp_file, 0, 0)
         os.chmod(tmp_file, 0644)
         if not dont_rename and os.path.exists(filename):
@@ -236,12 +242,11 @@ def _get_file_data(interface):
     except KeyError:
         raise SystemError("Invalid label '%s'" % label)
 
-    try:
-        ips = interface['ips']
-    except KeyError:
-        raise SystemError("No IPs found for interface")
-
+    ip4s = interface.get('ips', [])
     ip6s = interface.get('ip6s', [])
+
+    if not ip4s and not ip6s:
+        raise SystemError("No IPs found for interface")
 
     try:
         mac = interface['mac']
@@ -249,9 +254,10 @@ def _get_file_data(interface):
         raise SystemError("No mac address found for interface")
 
     if label == "public":
-        try:
-            gateway = interface['gateway']
-        except KeyError:
+        gateway4 = interface.get('gateway')
+        gateway6 = interface.get('gateway6')
+
+        if not gateway4 and not gateway6:
             raise SystemError("No gateway found for public interface")
 
         try:
@@ -263,7 +269,7 @@ def _get_file_data(interface):
 
     ifname_suffix_num = 0
 
-    for i in xrange(max(len(ips), len(ip6s))):
+    for i in xrange(max(len(ip4s), len(ip6s))):
         if ifname_suffix_num:
             ifname = "%s:%d" % (ifname_prefix, ifname_suffix_num)
         else:
@@ -274,8 +280,8 @@ def _get_file_data(interface):
         iface_data += "BOOTPROTO=static\n"
         iface_data += "HWADDR=%s\n" % mac
 
-        if i < len(ips):
-            ip_info = ips[i]
+        if i < len(ip4s):
+            ip_info = ip4s[i]
 
             enabled = ip_info.get('enabled', '0')
             if enabled != '0':
@@ -288,11 +294,9 @@ def _get_file_data(interface):
 
                 iface_data += "IPADDR=%s\n" % ip
                 iface_data += "NETMASK=%s\n" % netmask
-                if label == "public":
+                if label == "public" and gateway4:
                     iface_data += "DEFROUTE=yes\n"
-                    iface_data += "GATEWAY=%s\n" % gateway
-                    for j, nameserver in enumerate(dns):
-                        iface_data += "DNS%d=%s\n" % (j + 1, nameserver)
+                    iface_data += "GATEWAY=%s\n" % gateway4
 
         if i < len(ip6s):
             ip_info = ip6s[i]
@@ -306,7 +310,7 @@ def _get_file_data(interface):
                     raise SystemError(
                             "Missing IP or netmask in interface's IP list")
 
-                gateway = ip_info.get('gateway')
+                gateway = ip_info.get('gateway', gateway6)
 
                 iface_data += "IPV6INIT=yes\n"
                 iface_data += "IPV6_AUTOCONF=no\n"
@@ -314,6 +318,10 @@ def _get_file_data(interface):
 
                 if gateway:
                     iface_data += "IPV6_DEFAULTGW=%s\n" % gateway
+
+        if gateway4 or gateway6:
+            for j, nameserver in enumerate(dns):
+                iface_data += "DNS%d=%s\n" % (j + 1, nameserver)
 
         iface_data += "ONBOOT=yes\n"
         iface_data += "NM_CONTROLLED=no\n"
