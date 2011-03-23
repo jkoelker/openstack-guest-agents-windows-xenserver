@@ -63,8 +63,11 @@ class JsonParser(object):
 
         try:
             request = anyjson.deserialize(request['data'])
-        except Exception, e:
+        except KeyError, e:
             logging.error("Request dictionary contains no 'data' key")
+            return self.encode_result((500, "Internal error with request"))
+        except Exception, e:
+            logging.error("Invalid JSON in 'data' key for request")
             return self.encode_result((500, "Request is malformed"))
 
         try:
