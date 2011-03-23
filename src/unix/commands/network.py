@@ -38,8 +38,8 @@ class NetworkCommands(commands.CommandBase):
     def __init__(self, *args, **kwargs):
         pass
 
-    @classmethod
-    def detect_os(self):
+    @staticmethod
+    def detect_os():
         """
         Return the Linux Distribution or other OS name
         """
