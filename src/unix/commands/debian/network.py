@@ -47,15 +47,9 @@ INTERFACE_LABELS = {"public": "eth0",
 
 def configure_network(network_config, *args, **kwargs):
 
-    try:
-        hostname = network_config['hostname']
-    except KeyError:
-        hostname = None
+    hostname = network_config.get('hostname')
 
-    try:
-        interfaces = network_config['interfaces']
-    except KeyError:
-        interfaces = []
+    interfaces = network_config.get('interfaces', [])
 
     publicips = write_interfaces(interfaces, dont_rename=0)
 
