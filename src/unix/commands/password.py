@@ -123,7 +123,6 @@ class PasswordCommands(commands.CommandBase):
 
     def _decrypt_password(self, aes_key, data):
 
-
         aes = AES.new(aes_key[0], AES.MODE_CBC, aes_key[1])
         passwd = aes.decrypt(data)
 
