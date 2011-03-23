@@ -79,9 +79,9 @@ class JsonParser(object):
 
         try:
             result = self._command_cls.run_command(cmd_name, cmd_string)
-#        except CommandNotFoundError, e:
-#            logging.warn(str(e))
-#            return self.encode_result((404, str(e)))
+        except self._command_cls.CommandNotFoundError, e:
+            logging.warn(str(e))
+            return self.encode_result((404, str(e)))
         except Exception, e:
             logging.error(str(e))
             return self.encode_result((500, str(e)))
