@@ -90,7 +90,7 @@ class CommandBase(object):
             inst = cls(**kwargs)
             cls._cmd_instances.append(inst)
             cls._cmds.update(cls._get_commands(inst))
-        return CommandBase
+        return sys.modules[__name__]
 
     @classmethod
     def command_names(cls):
