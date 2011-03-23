@@ -70,8 +70,8 @@ class CommandBase(object):
     _cmds = {}
     _init_args = {}
 
-    @classmethod
-    def _get_commands(self, inst):
+    @staticmethod
+    def _get_commands(inst):
         cmds = {}
         for objname in dir(inst):
             obj = getattr(inst, objname)
@@ -84,36 +84,36 @@ class CommandBase(object):
         return cmds
 
     @classmethod
-    def init(self, **kwargs):
-        self._init_args.update(**kwargs)
-        for cls in self._cmd_classes:
+    def init(cls, **kwargs):
+        cls._init_args.update(**kwargs)
+        for cls in cls._cmd_classes:
             inst = cls(**kwargs)
-            self._cmd_instances.append(inst)
-            self._cmds.update(self._get_commands(inst))
-        return CommandBase
+            cls._cmd_instances.append(inst)
+            cls._cmds.update(cls._get_commands(inst))
+        return sys.modules[__name__]
 
     @classmethod
-    def command_names(self):
-        return [x for x in self._cmds]
+    def command_names(cls):
+        return [x for x in cls._cmds]
 
     @classmethod
-    def command_instance(self, cmd_name):
+    def command_instance(cls, cmd_name):
         try:
-            return self._cmds[cmd_name][1]
+            return cls._cmds[cmd_name][1]
         except KeyError:
             raise CommandNotFoundError(cmd_name)
 
     @classmethod
-    def command_function(self, cmd_name):
+    def command_function(cls, cmd_name):
         try:
-            return self._cmds[cmd_name][0]
+            return cls._cmds[cmd_name][0]
         except KeyError:
             raise CommandNotFoundError(cmd_name)
 
     @classmethod
-    def run_command(self, cmd_name, arg):
+    def run_command(cls, cmd_name, arg):
         try:
-            result = self._cmds[cmd_name][0](arg)
+            result = cls._cmds[cmd_name][0](arg)
         except KeyError:
             raise CommandNotFoundError(cmd_name)
 
