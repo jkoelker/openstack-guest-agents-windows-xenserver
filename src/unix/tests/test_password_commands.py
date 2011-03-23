@@ -27,7 +27,6 @@ import subprocess
 
 import agent_test
 import agentlib
-import commands
 
 
 class TestPasswordCommands(agent_test.TestCase):
@@ -103,7 +102,7 @@ class TestPasswordCommands(agent_test.TestCase):
         return b64_pass
 
     def test_1_same_shared_key(self):
-        """Test computing of correct shared key"""
+        """Test 'password' command computes shared key correctly"""
 
         self.pw_inst._wipe_key()
 
@@ -120,7 +119,7 @@ class TestPasswordCommands(agent_test.TestCase):
                             our_public_key, their_private_key))
 
     def test_2_password_matches(self):
-        """Test password is decoded correctly"""
+        """Test 'password' comamnd decoding password correctly"""
 
         test_passwd = "TeStPaSsWoRd"
 
