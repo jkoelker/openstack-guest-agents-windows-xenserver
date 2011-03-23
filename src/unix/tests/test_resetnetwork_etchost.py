@@ -37,7 +37,8 @@ class TestEtcHostUpdates(unittest.TestCase):
         return infile
 
     def _run_test(self, infile, hostname, *args):
-        outfile = commands.network._update_etc_hosts(infile, set(args), hostname)
+        outfile = commands.network._update_etc_hosts(infile, set(args),
+            hostname)
         outfile.seek(0)
         return outfile
 
@@ -65,15 +66,18 @@ class TestEtcHostUpdates(unittest.TestCase):
 
     def test_update_two_hostnames(self):
         """Test update one-line /etc/hosts with two hostnames"""
-        infile = self._setup_input(('192.0.2.1', 'oldname', 'oldname.example.com'))
+        infile = self._setup_input(('192.0.2.1', 'oldname',
+            'oldname.example.com'))
         outfile = self._run_test(infile, 'example', '192.0.2.1')
         self.assertEqual(outfile.read(),
-            '# 192.0.2.1\toldname oldname.example.com\t# Removed by nova-agent\n' +
+            '# 192.0.2.1\toldname oldname.example.com\t' +
+                '# Removed by nova-agent\n' +
             '192.0.2.1\texample oldname.example.com\n')
 
     def test_update_two_entries(self):
         """Test update two-line /etc/hosts with one hostname"""
-        infile = self._setup_input(('192.0.2.1', 'oldname'), ('192.0.2.2', 'other'))
+        infile = self._setup_input(('192.0.2.1', 'oldname'),
+            ('192.0.2.2', 'other'))
         outfile = self._run_test(infile, 'example', '192.0.2.1')
         self.assertEqual(outfile.read(),
             '# 192.0.2.1\toldname\t# Removed by nova-agent\n' +
