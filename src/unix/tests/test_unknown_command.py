@@ -17,22 +17,21 @@
 #
 
 """
-Unit test runner
+Misc commands tester
 """
 
-import glob
-import logging
+import agent_test
+import agentlib
+import commands
 
-import tests.agent_test
+class TestUnknownCommand(agent_test.TestCase):
 
+    def test_unknown_command(self):
+        """Test an unknown command"""
 
-logging.basicConfig(level=logging.CRITICAL)
+        self.assertRaises(commands.CommandNotFoundError,
+                self.commands.run_command,
+                '<unknown_command>', '')
 
-mod_names = glob.glob('tests/test_*.py')
-
-modules = set()
-
-for mod in mod_names:
-    modules.add("tests." + mod[:-3].split('/', 1)[1])
-
-tests.agent_test.run_tests(modules)
+if __name__ == "__main__":
+    agent_test.main()
