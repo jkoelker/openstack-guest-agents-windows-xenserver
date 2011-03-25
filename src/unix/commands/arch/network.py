@@ -97,7 +97,7 @@ def _update_hostname(infile, hostname):
             print >> outfile, line
 
     if not found:
-        print >> outfile, "HOSTNAME=%s" % hostname
+        print >> outfile, 'HOSTNAME="%s"' % hostname
 
     return outfile
 
