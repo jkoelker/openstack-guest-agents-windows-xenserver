@@ -60,6 +60,9 @@ class NetworkCommands(commands.CommandBase):
                 # call
                 system = platform.dist(None)[0]
 
+        if not system:
+            return None
+
         return translations.get(system.lower())
 
     @commands.command_add('resetnetwork')
