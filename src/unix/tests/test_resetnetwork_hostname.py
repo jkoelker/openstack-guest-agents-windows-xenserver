@@ -26,6 +26,7 @@ from cStringIO import StringIO
 
 import commands.redhat.network
 import commands.debian.network
+import commands.arch.network
 
 
 class TestHostNameUpdates(unittest.TestCase):
@@ -37,6 +38,11 @@ class TestHostNameUpdates(unittest.TestCase):
 
     def _run_debian(self, hostname):
         outfile = commands.debian.network._update_hostname(hostname)
+        outfile.seek(0)
+        return outfile
+
+    def _run_arch(self, infile, hostname):
+        outfile = commands.arch.network._update_hostname(infile, hostname)
         outfile.seek(0)
         return outfile
 
@@ -63,6 +69,27 @@ class TestHostNameUpdates(unittest.TestCase):
         """Test updating hostname in /etc/hostname"""
         outfile = self._run_debian('example')
         self.assertEqual(outfile.read(), 'example\n')
+
+    def test_arch_add_entry(self):
+        """Test adding hostname to /etc/rc.conf"""
+        infile = StringIO('eth0="eth0 192.0.2.42 netmask 255.255.255.0"\n' +
+            'INTERFACES=(eth0)\n')
+        outfile = self._run_arch(infile, 'example')
+        self.assertEqual(outfile.read(),
+            'eth0="eth0 192.0.2.42 netmask 255.255.255.0"\n' +
+            'INTERFACES=(eth0)\n' +
+            'HOSTNAME="example"\n')
+
+    def test_arch_update_entry(self):
+        """Test updating hostname in /etc/rc.conf"""
+        infile = StringIO('eth0="eth0 192.0.2.42 netmask 255.255.255.0"\n' +
+            'INTERFACES=(eth0)\n' +
+            'HOSTNAME="other"\n')
+        outfile = self._run_arch(infile, 'example')
+        self.assertEqual(outfile.read(),
+            'eth0="eth0 192.0.2.42 netmask 255.255.255.0"\n' +
+            'INTERFACES=(eth0)\n' +
+            'HOSTNAME="example"\n')
 
 
 if __name__ == "__main__":
