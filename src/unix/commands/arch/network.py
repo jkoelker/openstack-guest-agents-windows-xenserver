@@ -39,7 +39,7 @@ def configure_network(network_config, *args, **kwargs):
 
     interfaces = network_config.get('interfaces', [])
 
-    outfile, publicips = _update_interfaces(open(CONF_FILE), interfaces)
+    outfile, publicips = _get_file_data(open(CONF_FILE), interfaces)
     outfile.seek(0)
 
     hostname = network_config.get('hostname')
@@ -142,6 +142,13 @@ def _parse_variable(line):
 
 
 def _update_interfaces(infile, interfaces):
+    outfile, publicips = _get_file_data(infile, interfaces)
+    outfile.seek(0)
+
+    return {'rc.conf': outfile.read()}
+
+
+def _get_file_data(infile, interfaces):
     """
     Return data for (sub-)interfaces and routes
     """

@@ -30,7 +30,7 @@ import commands.debian.network
 
 class TestInterfacesUpdates(unittest.TestCase):
 
-    def _run_test(self, dist, **config):
+    def _run_test(self, dist, input, **config):
         interfaces = []
         for label, options in config.iteritems():
             interface = {'label': label,'mac': options['hwaddr']}
@@ -56,7 +56,11 @@ class TestInterfacesUpdates(unittest.TestCase):
 
             interfaces.append(interface)
 
-        return getattr(commands, dist).network._update_interfaces(interfaces)
+        mod = getattr(commands, dist).network
+        if input:
+            return mod._update_interfaces(StringIO(input), interfaces)
+        else:
+            return mod._update_interfaces(interfaces)
 
     def test_redhat_ipv4(self):
         """Test setting public IPv4 for Red Hat networking"""
@@ -66,7 +70,7 @@ class TestInterfacesUpdates(unittest.TestCase):
             'gateway4': '192.0.2.1',
             'dns': ['192.0.2.2'],
         }
-        outfiles = self._run_test('redhat', public=interface)
+        outfiles = self._run_test('redhat', None, public=interface)
         self.assertTrue('ifcfg-eth0' in outfiles)
         self.assertEqual(outfiles['ifcfg-eth0'], '\n'.join([
             '# Automatically generated, do not edit',
@@ -89,7 +93,7 @@ class TestInterfacesUpdates(unittest.TestCase):
             'gateway6': '2001:db8::1',
             'dns': ['2001:db8::2'],
         }
-        outfiles = self._run_test('redhat', public=interface)
+        outfiles = self._run_test('redhat', None, public=interface)
         self.assertTrue('ifcfg-eth0' in outfiles)
         self.assertEqual(outfiles['ifcfg-eth0'], '\n'.join([
             '# Automatically generated, do not edit',
@@ -112,7 +116,7 @@ class TestInterfacesUpdates(unittest.TestCase):
             'gateway4': '192.0.2.1',
             'dns': ['192.0.2.2'],
         }
-        outfiles = self._run_test('debian', public=interface)
+        outfiles = self._run_test('debian', None, public=interface)
         self.assertTrue('interfaces' in outfiles)
         self.assertEqual(outfiles['interfaces'], '\n'.join([
             '# Used by ifup(8) and ifdown(8). See the interfaces(5) manpage or',
@@ -129,14 +133,14 @@ class TestInterfacesUpdates(unittest.TestCase):
             '    dns-nameservers 192.0.2.2']) + '\n')
 
     def test_debian_ipv6(self):
-        """Test setting public IPv4 for Debian networking"""
+        """Test setting public IPv6 for Debian networking"""
         interface = {
             'hwaddr': '00:11:22:33:44:55',
             'ipv6': [('2001:db8::42', 96)],
             'gateway6': '2001:db8::1',
             'dns': ['2001:db8::2'],
         }
-        outfiles = self._run_test('debian', public=interface)
+        outfiles = self._run_test('debian', None, public=interface)
         self.assertTrue('interfaces' in outfiles)
         self.assertEqual(outfiles['interfaces'], '\n'.join([
             '# Used by ifup(8) and ifdown(8). See the interfaces(5) manpage or',
@@ -151,6 +155,48 @@ class TestInterfacesUpdates(unittest.TestCase):
             '    netmask 96',
             '    gateway 2001:db8::1',
             '    dns-nameservers 2001:db8::2']) + '\n')
+
+    def test_arch_ipv4(self):
+        """Test setting public IPv4 for Arch networking"""
+        input = '\n'.join([
+            'eth0="eth0 192.0.2.250 netmask 255.255.255.0"',
+            'INTERFACES=(eth0)',
+            'gateway="default gw 192.0.2.254"',
+            'ROUTES=(gateway)']) + '\n'
+        interface = {
+            'hwaddr': '00:11:22:33:44:55',
+            'ipv4': [('192.0.2.42', '255.255.255.0')],
+            'gateway4': '192.0.2.1',
+            'dns': ['192.0.2.2'],
+        }
+        outfiles = self._run_test('arch', input, public=interface)
+        self.assertTrue('rc.conf' in outfiles)
+        self.assertEqual(outfiles['rc.conf'], '\n'.join([
+            'eth0="eth0 192.0.2.42 netmask 255.255.255.0"',
+            'INTERFACES=(eth0)',
+            'gateway="default gw 192.0.2.1"',
+            'ROUTES=(gateway)']) + '\n')
+
+    def test_arch_ipv6(self):
+        """Test setting public IPv6 for Arch networking"""
+        input = '\n'.join([
+            'eth0="eth0 add 2001:db8::fff0/96"',
+            'INTERFACES=(eth0)',
+            'gateway6="default gw 2001:db8::fffe"',
+            'ROUTES=(gateway6)']) + '\n'
+        interface = {
+            'hwaddr': '00:11:22:33:44:55',
+            'ipv6': [('2001:db8::42', 96)],
+            'gateway6': '2001:db8::1',
+            'dns': ['2001:db8::2'],
+        }
+        outfiles = self._run_test('arch', input, public=interface)
+        self.assertTrue('rc.conf' in outfiles)
+        self.assertEqual(outfiles['rc.conf'], '\n'.join([
+            'eth0="eth0 add 2001:db8::42/96"',
+            'INTERFACES=(eth0)',
+            'gateway6="default gw 2001:db8::1"',
+            'ROUTES=(gateway6)']) + '\n')
 
 
 if __name__ == "__main__":
