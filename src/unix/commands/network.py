@@ -29,6 +29,7 @@ from cStringIO import StringIO
 import commands
 import debian.network
 import redhat.network
+import arch.network
 
 HOSTS_FILE = '/etc/hosts'
 
@@ -49,7 +50,8 @@ class NetworkCommands(commands.CommandBase):
                         "redhat": redhat,
                         "centos": redhat,
                         "fedora": redhat,
-                        "oracle": redhat}
+                        "oracle": redhat,
+                        "arch": arch}
 
         system = os.uname()[0]
         if system == "Linux":
@@ -59,6 +61,9 @@ class NetworkCommands(commands.CommandBase):
                 # linux_distribution doesn't exist... try the older
                 # call
                 system = platform.dist(None)[0]
+
+            if not system and os.path.exists('/etc/arch-release'):
+                system = 'arch'
 
         if not system:
             return None
