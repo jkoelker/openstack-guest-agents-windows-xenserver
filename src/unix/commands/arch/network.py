@@ -50,9 +50,6 @@ def configure_network(network_config, *args, **kwargs):
 
     _write_file(CONF_FILE, outfile.read())
 
-    if 1:
-        return (0, "")
-
     # Set hostname
     logging.debug('executing /bin/hostname %s' % hostname)
     p = subprocess.Popen(["/bin/hostname", hostname])
