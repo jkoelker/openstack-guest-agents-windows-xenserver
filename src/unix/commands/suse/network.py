@@ -50,9 +50,6 @@ def configure_network(network_config, *args, **kwargs):
     update_hostname(hostname, dont_rename=False)
     commands.network.update_etc_hosts(publicips, hostname)
 
-    if 1:
-        return (0, "")
-
     # Set hostname
     logging.debug('executing /bin/hostname %s' % hostname)
     p = subprocess.Popen(["/bin/hostname", hostname])
