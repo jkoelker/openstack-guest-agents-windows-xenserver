@@ -30,6 +30,8 @@ import commands
 import debian.network
 import redhat.network
 import arch.network
+import suse.network
+import gentoo.network
 
 HOSTS_FILE = '/etc/hosts'
 
@@ -51,7 +53,9 @@ class NetworkCommands(commands.CommandBase):
                         "centos": redhat,
                         "fedora": redhat,
                         "oracle": redhat,
-                        "arch": arch}
+                        "arch": arch,
+                        "opensuse": suse,
+                        "gentoo": gentoo}
 
         system = os.uname()[0]
         if system == "Linux":
@@ -62,13 +66,19 @@ class NetworkCommands(commands.CommandBase):
                 # call
                 system = platform.dist(None)[0]
 
+            # Gentoo returns 'Gentoo Base System', so let's make that
+            # something easier to use
+            if system:
+                system = system.lower().split(' ')[0]
+
+            # Arch Linux returns None for platform.linux_distribution()
             if not system and os.path.exists('/etc/arch-release'):
                 system = 'arch'
 
         if not system:
             return None
 
-        return translations.get(system.lower())
+        return translations.get(system)
 
     @commands.command_add('resetnetwork')
     def resetnetwork_cmd(self, data):
