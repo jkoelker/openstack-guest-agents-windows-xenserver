@@ -159,14 +159,14 @@ def write_interfaces(interfaces, *args, **kwargs):
 
     # Enumerate all of the existing ifcfg-* files
     old_files = set()
-    for filename in glob.glob(NETCONFIG_DIR + "/ifcfg-*"):
-        if '.' not in filename:
-            old_files.add(filename)
+    for filepath in glob.glob(NETCONFIG_DIR + "/ifcfg-*"):
+        if '.' not in filepath:
+            old_files.add(filepath)
     for filename in glob.glob(NETCONFIG_DIR + "/route-*"):
-        if '.' not in filename:
-            old_files.add(filename)
+        if '.' not in filepath:
+            old_files.add(filepath)
 
-    lo_file = INTERFACE_FILE % 'lo'
+    lo_file = os.path.join(NETCONFIG_DIR, INTERFACE_FILE % 'lo')
     if lo_file in old_files:
         old_files.remove(lo_file)
 
@@ -176,13 +176,13 @@ def write_interfaces(interfaces, *args, **kwargs):
         logging.info("writing %s" % filepath)
         _write_file(filepath, data, dont_rename=dont_rename)
 
-        if filename in old_files:
-            old_files.remove(filename)
+        if filepath in old_files:
+            old_files.remove(filepath)
 
-    for filename in old_files:
-        logging.info("moving aside old file %s" % filename)
+    for filepath in old_files:
+        logging.info("moving aside old file %s" % filepath)
         if not dont_rename:
-            os.rename(filename, filename + ".%d.bak" % time.time())
+            os.rename(filepath, filepath + ".%d.bak" % time.time())
 
     for interface in interfaces:
         if not publicips and interface['label'] == 'public':
