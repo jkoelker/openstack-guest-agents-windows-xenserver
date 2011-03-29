@@ -27,6 +27,8 @@ from cStringIO import StringIO
 import commands.redhat.network
 import commands.debian.network
 import commands.arch.network
+import commands.gentoo.network
+import commands.suse.network
 
 
 class TestHostNameUpdates(unittest.TestCase):
@@ -43,6 +45,11 @@ class TestHostNameUpdates(unittest.TestCase):
 
     def _run_arch(self, infile, hostname):
         outfile = commands.arch.network._update_hostname(infile, hostname)
+        outfile.seek(0)
+        return outfile
+
+    def _run_suse(self, hostname):
+        outfile = commands.suse.network._update_hostname(hostname)
         outfile.seek(0)
         return outfile
 
@@ -90,6 +97,11 @@ class TestHostNameUpdates(unittest.TestCase):
             'eth0="eth0 192.0.2.42 netmask 255.255.255.0"\n' +
             'INTERFACES=(eth0)\n' +
             'HOSTNAME="example"\n')
+
+    def test_suse(self):
+        """Test updating hostname in /etc/HOSTNAME"""
+        outfile = self._run_suse('example')
+        self.assertEqual(outfile.read(), 'example\n')
 
 
 if __name__ == "__main__":
