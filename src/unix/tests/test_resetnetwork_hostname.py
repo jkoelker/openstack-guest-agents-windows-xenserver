@@ -48,6 +48,9 @@ class TestHostNameUpdates(unittest.TestCase):
         outfile.seek(0)
         return outfile
 
+    def _run_gentoo(self, hostname):
+        return commands.gentoo.network._update_hostname(hostname)
+
     def _run_suse(self, hostname):
         outfile = commands.suse.network._update_hostname(hostname)
         outfile.seek(0)
@@ -96,6 +99,13 @@ class TestHostNameUpdates(unittest.TestCase):
         self.assertEqual(outfile.read(),
             'eth0="eth0 192.0.2.42 netmask 255.255.255.0"\n' +
             'INTERFACES=(eth0)\n' +
+            'HOSTNAME="example"\n')
+
+    def test_gentoo(self):
+        """Test updating hostname in /etc/conf.d/hostname"""
+        data = self._run_gentoo('example')
+        self.assertEqual(data,
+            '# Automatically generated, do not edit\n' +
             'HOSTNAME="example"\n')
 
     def test_suse(self):
