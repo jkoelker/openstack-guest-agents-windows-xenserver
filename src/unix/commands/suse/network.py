@@ -75,30 +75,11 @@ def configure_network(network_config, *args, **kwargs):
     return (0, "")
 
 
-def _update_hostname(infile, hostname):
+def _update_hostname(hostname):
     """
     Update hostname on system
     """
-    outfile = StringIO()
-
-    found = False
-    for line in infile:
-        line = line.strip()
-        if '=' in line:
-            k, v = line.split('=', 1)
-            k = k.strip()
-            if k == "HOSTNAME":
-                print >> outfile, "HOSTNAME=%s" % hostname
-                found = True
-            else:
-                print >> outfile, line
-        else:
-            print >> outfile, line
-
-    if not found:
-        print >> outfile, "HOSTNAME=%s" % hostname
-
-    return outfile
+    return StringIO(hostname + '\n')
 
 
 def update_hostname(hostname, dont_rename=False):
@@ -109,7 +90,7 @@ def update_hostname(hostname, dont_rename=False):
     tmp_file = filename + ".%d~" % os.getpid()
     bak_file = filename + ".%d.bak" % time.time()
 
-    outfile = _update_hostname(open(filename), hostname)
+    outfile = _update_hostname(hostname)
     outfile.seek(0)
 
     f = open(tmp_file, 'w')
