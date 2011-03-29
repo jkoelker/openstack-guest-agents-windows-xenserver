@@ -45,6 +45,8 @@ def configure_network(network_config, *args, **kwargs):
 
     publicips = write_interfaces(interfaces, dont_rename=0)
 
+    update_nameservers(interfaces)
+
     hostname = network_config.get('hostname')
 
     update_hostname(hostname, dont_rename=False)
@@ -132,6 +134,46 @@ def update_hostname(hostname, dont_rename=False):
             raise e
     else:
         os.rename(bak_file, filename)
+
+
+def _update_nameservers(infile, interfaces):
+    outfile = StringIO()
+
+    dns = []
+    for interface in interfaces:
+        if interface['label'] != 'public':
+            continue
+
+        dns = interface.get('dns', [])
+
+    if not dns:
+        return outfile
+
+    found = False
+    for line in infile:
+        line = line.strip()
+        if '=' not in line:
+            print >> outfile, line
+            continue
+
+        k, v = line.split('=', 1)
+        k = k.strip()
+        if k == 'NETCONFIG_DNS_STATIC_SERVERS':
+            print >> outfile, 'NETCONFIG_DNS_STATIC_SERVERS="%s"' % ' '.join(dns)
+            found = True
+        else:
+            print >> outfile, line
+
+    if not found:
+        print >> outfile, 'NETCONFIG_DNS_STATIC_SERVERS="%s"' % ' '.join(dns)
+
+    return outfile
+
+
+def update_nameservers(interfaces, dont_rename=False):
+    outfile = _update_nameservers(open(DNS_CONFIG_FILE), interfaces)
+    outfile.seek(0)
+    _write_file(DNS_CONFIG_FILE, outfile.read(), dont_rename=dont_rename)
 
 
 def _update_interfaces(interfaces):
