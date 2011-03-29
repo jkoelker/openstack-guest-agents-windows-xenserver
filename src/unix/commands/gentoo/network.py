@@ -49,8 +49,8 @@ def configure_network(network_config, *args, **kwargs):
 
     hostname = network_config.get('hostname')
 
-    hostname_data = _update_hostname(hostname)
-    _write_file(HOSTNAME_FILE, hostname_data)
+    outfile = _update_hostname(hostname)
+    _write_file(HOSTNAME_FILE, outfile.read())
 
     commands.network.update_etc_hosts(publicips, hostname)
 
@@ -82,7 +82,8 @@ def _update_hostname(hostname):
     """
     Update hostname on system
     """
-    return '# Automatically generated, do not edit\nHOSTNAME="%s"\n' % hostname
+    return StringIO('# Automatically generated, do not edit\n' + 
+        'HOSTNAME="%s"\n' % hostname)
 
 
 def _write_file(filename, data, dont_rename=0):
