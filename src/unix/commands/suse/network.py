@@ -41,16 +41,32 @@ INTERFACE_LABELS = {"public": "eth0",
 
 def configure_network(network_config, *args, **kwargs):
 
+    # Generate new interface files
     interfaces = network_config.get('interfaces', [])
 
-    publicips = write_interfaces(interfaces, dont_rename=0)
+    update_files, remove_files = process_interface_files(interfaces)
 
-    update_nameservers(interfaces)
+    # Update nameservers
+    if os.path.exists(DNS_CONFIG_FILE):
+        infile = open(DNS_CONFIG_FILE)
+    else:
+        infile = StringIO()
 
+    data = get_nameservers_file(infile, interfaces)
+    update_files[DNS_CONFIG_FILE] = data
+
+    # Generate new hostname file
     hostname = network_config.get('hostname')
 
-    update_hostname(hostname, dont_rename=False)
-    commands.network.update_etc_hosts(publicips, hostname)
+    data = get_hostname_file(hostname)
+    update_files[HOSTNAME_FILE] = data
+
+    # Generate new /etc/hosts file
+    filepath, data = commands.network.get_etc_hosts(interfaces, hostname)
+    update_files[filepath] = data
+
+    # Write out new files
+    commands.network.update_files(update_files, remove_files)
 
     # Set hostname
     logging.debug('executing /bin/hostname %s' % hostname)
@@ -75,24 +91,14 @@ def configure_network(network_config, *args, **kwargs):
     return (0, "")
 
 
-def _update_hostname(hostname):
+def get_hostname_file(hostname):
     """
     Update hostname on system
     """
-    return StringIO(hostname + '\n')
+    return hostname + '\n'
 
 
-def update_hostname(hostname, dont_rename=False):
-    """
-    Update hostname on system
-    """
-    outfile = _update_hostname(hostname)
-    outfile.seek(0)
-
-    _write_file(HOSTNAME_FILE, outfile.read())
-
-
-def _update_nameservers(infile, interfaces):
+def get_nameservers_file(infile, interfaces):
     outfile = StringIO()
 
     dns = []
@@ -123,111 +129,8 @@ def _update_nameservers(infile, interfaces):
     if not found:
         print >> outfile, 'NETCONFIG_DNS_STATIC_SERVERS="%s"' % ' '.join(dns)
 
-    return outfile
-
-
-def update_nameservers(interfaces, dont_rename=False):
-    outfile = _update_nameservers(open(DNS_CONFIG_FILE), interfaces)
     outfile.seek(0)
-    _write_file(DNS_CONFIG_FILE, outfile.read(), dont_rename=dont_rename)
-
-
-def _update_interfaces(interfaces):
-    results = {}
-
-    for interface in interfaces:
-        ifname, iface_data, route_data = _get_file_data(interface)
-
-        results[INTERFACE_FILE % ifname] = iface_data
-
-        if route_data:
-            results[ROUTE_FILE % ifname] = route_data
-
-    return results
-
-
-def write_interfaces(interfaces, *args, **kwargs):
-    """
-    Write out a new files for interfaces
-    """
-
-    dont_rename = kwargs.get('dont_rename', 0)
-
-    publicips = set()
-
-    # Enumerate all of the existing ifcfg-* files
-    old_files = set()
-    for filename in glob.glob(NETCONFIG_DIR + "/ifcfg-*"):
-        if '.' not in filename:
-            old_files.add(filename)
-    for filename in glob.glob(NETCONFIG_DIR + "/route-*"):
-        if '.' not in filename:
-            old_files.add(filename)
-
-    route_file = os.path.join(NETCONFIG_DIR, 'routes')
-    if os.path.exists(route_file):
-        old_files.add(route_file)
-
-    # We never write config for lo interface, but it should stay
-    lo_file = os.path.join(NETCONFIG_DIR, INTERFACE_FILE % 'lo')
-    if lo_file in old_files:
-        old_files.remove(lo_file)
-
-    for filename, data in _update_interfaces(interfaces).iteritems():
-        filepath = os.path.join(NETCONFIG_DIR, filename)
-
-        logging.info("writing %s" % filepath)
-        _write_file(filepath, data, dont_rename=dont_rename)
-
-        if filepath in old_files:
-            old_files.remove(filepath)
-
-    for filepath in old_files:
-        logging.info("moving aside old file %s" % filepath)
-        if not dont_rename:
-            os.rename(filepath, filepath + ".%d.bak" % time.time())
-
-    for interface in interfaces:
-        if not publicips and interface['label'] == 'public':
-            ips = interface.get('ips')
-            if ips:
-                publicips.add(ips[0]['ip'])
-
-            ip6s = interface.get('ip6s')
-            if ip6s:
-                publicips.add(ip6s[0]['address'])
-
-    return publicips
-
-
-def _write_file(filename, data, dont_rename=0):
-    # Make sure we don't pick filenames that the init script will confuse
-    # as real configuration files
-    tmp_file = filename + ".%d~" % os.getpid()
-    bak_file = filename + ".%d.bak" % time.time()
-
-    f = open(tmp_file, 'w')
-    try:
-        f.write(data)
-        f.close()
-
-        os.chown(tmp_file, 0, 0)
-        os.chmod(tmp_file, 0644)
-        if not dont_rename and os.path.exists(filename):
-            os.rename(filename, bak_file)
-    except Exception, e:
-        os.unlink(tmp_file)
-        raise e
-
-    if not dont_rename:
-        try:
-            os.rename(tmp_file, filename)
-            pass
-        except Exception, e:
-            os.rename(bak_file, filename)
-            raise e
-    else:
-        os.rename(bak_file, filename)
+    return outfile.read()
 
 
 def _get_file_data(interface):
@@ -332,3 +235,52 @@ def _get_file_data(interface):
         route_data += 'default %s - -\n' % gateway6
 
     return (ifname, iface_data, route_data)
+
+
+def get_interface_files(interfaces):
+    results = {}
+
+    for interface in interfaces:
+        ifname, iface_data, route_data = _get_file_data(interface)
+
+        results[INTERFACE_FILE % ifname] = iface_data
+
+        if route_data:
+            results[ROUTE_FILE % ifname] = route_data
+
+    return results
+
+
+def process_interface_files(interfaces):
+    """
+    Write out a new files for interfaces
+    """
+
+    # Enumerate all of the existing ifcfg-* files
+    remove_files = set()
+    for filepath in glob.glob(NETCONFIG_DIR + "/ifcfg-*"):
+        if '.' not in filepath:
+            remove_files.add(filepath)
+    for filepath in glob.glob(NETCONFIG_DIR + "/route-*"):
+        if '.' not in filepath:
+            remove_files.add(filepath)
+
+    route_file = os.path.join(NETCONFIG_DIR, 'routes')
+    if os.path.exists(route_file):
+        remove_files.add(route_file)
+
+    # We never write config for lo interface, but it should stay
+    lo_file = os.path.join(NETCONFIG_DIR, INTERFACE_FILE % 'lo')
+    if lo_file in remove_files:
+        remove_files.remove(lo_file)
+
+    update_files = {}
+    for filename, data in get_interface_files(interfaces).iteritems():
+        filepath = os.path.join(NETCONFIG_DIR, filename)
+
+        update_files[filepath] = data
+
+        if filepath in remove_files:
+            remove_files.remove(filepath)
+
+    return update_files, remove_files

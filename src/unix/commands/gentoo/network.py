@@ -39,20 +39,28 @@ INTERFACE_LABELS = {"public": "eth0",
 
 def configure_network(network_config, *args, **kwargs):
 
+    # Generate new interface files
     interfaces = network_config.get('interfaces', [])
 
-    network_data, ifaces, publicips = _get_file_data(interfaces)
-    _write_file(NETWORK_FILE, network_data)
+    data, ifaces = _get_file_data(interfaces)
+    update_files = {NETWORK_FILE: data}
 
-    resolv_data = _get_resolv_conf(interfaces)
-    _write_file(RESOLV_FILE, resolv_data)
+    # Generate new /etc/resolv.conf file
+    data = _get_resolv_conf(interfaces)
+    update_files[RESOLV_FILE] = data
 
+    # Generate new hostname file
     hostname = network_config.get('hostname')
 
-    outfile = _update_hostname(hostname)
-    _write_file(HOSTNAME_FILE, outfile.read())
+    data = get_hostname_file(hostname)
+    update_files[HOSTNAME_FILE] = data
 
-    commands.network.update_etc_hosts(publicips, hostname)
+    # Generate new /etc/hosts file
+    filepath, data = commands.network.get_etc_hosts(interfaces, hostname)
+    update_files[filepath] = data
+
+    # Write out new files
+    commands.network.update_files(update_files)
 
     # Set hostname
     logging.debug('executing /bin/hostname %s' % hostname)
@@ -78,42 +86,11 @@ def configure_network(network_config, *args, **kwargs):
     return (0, "")
 
 
-def _update_hostname(hostname):
+def get_hostname_file(hostname):
     """
     Update hostname on system
     """
-    return StringIO('# Automatically generated, do not edit\n' + 
-        'HOSTNAME="%s"\n' % hostname)
-
-
-def _write_file(filename, data, dont_rename=0):
-    # Make sure we don't pick filenames that the init script will confuse
-    # as real configuration files
-    tmp_file = filename + ".%d~" % os.getpid()
-    bak_file = filename + ".%d.bak" % time.time()
-
-    f = open(tmp_file, 'w')
-    try:
-        f.write(data)
-        f.close()
-
-        os.chown(tmp_file, 0, 0)
-        os.chmod(tmp_file, 0644)
-        if not dont_rename and os.path.exists(filename):
-            os.rename(filename, bak_file)
-    except Exception, e:
-        os.unlink(tmp_file)
-        raise e
-
-    if not dont_rename:
-        try:
-            os.rename(tmp_file, filename)
-            pass
-        except Exception, e:
-            os.rename(bak_file, filename)
-            raise e
-    else:
-        os.rename(bak_file, filename)
+    return '# Automatically generated, do not edit\nHOSTNAME="%s"\n' % hostname
 
 
 def _parse_variable(line):
@@ -140,19 +117,12 @@ def _get_resolv_conf(interfaces):
     return '# Automatically generated, do not edit\n' + resolv_data
 
 
-def _update_interfaces(interfaces):
-    data, ifaces, publicips = _get_file_data(interfaces)
-
-    return {'net': data}
-
-
 def _get_file_data(interfaces):
     """
     Return data for (sub-)interfaces and routes
     """
 
     ifaces = set()
-    publicips = set()
 
     network_data = '# Automatically generated, do not edit\n'
     network_data += 'modules=( "ifconfig" )\n\n'
@@ -249,13 +219,10 @@ def _get_file_data(interfaces):
 
         ifaces.add(ifname)
 
-        if not publicips and interface['label'] == 'public':
-            ips = interface.get('ips')
-            if ips:
-                publicips.add(ips[0]['ip'])
+    return network_data, ifaces
 
-            ip6s = interface.get('ip6s')
-            if ip6s:
-                publicips.add(ip6s[0]['address'])
 
-    return (network_data, ifaces, publicips)
+def get_interface_files(interfaces):
+    data, ifaces = _get_file_data(interfaces)
+
+    return {'net': data}

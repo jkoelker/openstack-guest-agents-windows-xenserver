@@ -40,14 +40,27 @@ INTERFACE_LABELS = {"public": "eth0",
 
 def configure_network(network_config, *args, **kwargs):
 
+    # Generate new interface files
     interfaces = network_config.get('interfaces', [])
 
-    publicips = write_interfaces(interfaces, dont_rename=0)
+    update_files, remove_files = process_interface_files(interfaces)
 
+    # Generate new hostname file
     hostname = network_config.get('hostname')
 
-    update_hostname(hostname, dont_rename=False)
-    commands.network.update_etc_hosts(publicips, hostname)
+    if os.path.exists(HOSTNAME_FILE):
+        infile = open(HOSTNAME_FILE)
+    else:
+        infile = StringIO()
+    data = get_hostname_file(infile, hostname)
+    update_files[HOSTNAME_FILE] = data
+
+    # Generate new /etc/hosts file
+    filepath, data = commands.network.get_etc_hosts(interfaces, hostname)
+    update_files[filepath] = data
+
+    # Write out new files
+    commands.network.update_files(update_files, remove_files)
 
     # Set hostname
     logging.debug('executing /bin/hostname %s' % hostname)
@@ -72,7 +85,7 @@ def configure_network(network_config, *args, **kwargs):
     return (0, "")
 
 
-def _update_hostname(infile, hostname):
+def get_hostname_file(infile, hostname):
     """
     Update hostname on system
     """
@@ -95,111 +108,8 @@ def _update_hostname(infile, hostname):
     if not found:
         print >> outfile, "HOSTNAME=%s" % hostname
 
-    return outfile
-
-
-def update_hostname(hostname, dont_rename=False):
-    """
-    Update hostname on system
-    """
-    outfile = _update_hostname(open(HOSTNAME_FILE), hostname)
     outfile.seek(0)
-
-    _write_file(HOSTNAME_FILE, outfile.read(), dont_rename)
-
-
-def _update_interfaces(interfaces):
-    results = {}
-
-    for interface in interfaces:
-        ifname, ifaces, route_data = _get_file_data(interface)
-
-        for ifname, data in ifaces:
-            results[INTERFACE_FILE % ifname] = data
-
-        if route_data:
-            results[ROUTE_FILE % ifname] = route_data
-
-    return results
-
-
-def write_interfaces(interfaces, *args, **kwargs):
-    """
-    Write out a new files for interfaces
-    """
-
-    dont_rename = kwargs.get('dont_rename', 0)
-
-    publicips = set()
-
-    # Enumerate all of the existing ifcfg-* files
-    old_files = set()
-    for filepath in glob.glob(NETCONFIG_DIR + "/ifcfg-*"):
-        if '.' not in filepath:
-            old_files.add(filepath)
-    for filename in glob.glob(NETCONFIG_DIR + "/route-*"):
-        if '.' not in filepath:
-            old_files.add(filepath)
-
-    lo_file = os.path.join(NETCONFIG_DIR, INTERFACE_FILE % 'lo')
-    if lo_file in old_files:
-        old_files.remove(lo_file)
-
-    for filename, data in _update_interfaces(interfaces).iteritems():
-        filepath = os.path.join(NETCONFIG_DIR, filename)
-
-        logging.info("writing %s" % filepath)
-        _write_file(filepath, data, dont_rename=dont_rename)
-
-        if filepath in old_files:
-            old_files.remove(filepath)
-
-    for filepath in old_files:
-        logging.info("moving aside old file %s" % filepath)
-        if not dont_rename:
-            os.rename(filepath, filepath + ".%d.bak" % time.time())
-
-    for interface in interfaces:
-        if not publicips and interface['label'] == 'public':
-            ips = interface.get('ips')
-            if ips:
-                publicips.add(ips[0]['ip'])
-
-            ip6s = interface.get('ip6s')
-            if ip6s:
-                publicips.add(ip6s[0]['address'])
-
-    return publicips
-
-
-def _write_file(filename, data, dont_rename=0):
-    # Make sure we don't pick filenames that the init script will confuse
-    # as real configuration files
-    tmp_file = filename + ".%d~" % os.getpid()
-    bak_file = filename + ".%d.bak" % time.time()
-
-    f = open(tmp_file, 'w')
-    try:
-        f.write(data)
-        f.close()
-
-        os.chown(tmp_file, 0, 0)
-        os.chmod(tmp_file, 0644)
-        if not dont_rename and os.path.exists(filename):
-            os.rename(filename, bak_file)
-    except Exception, e:
-        os.unlink(tmp_file)
-        raise e
-
-    if not dont_rename:
-        try:
-            os.rename(tmp_file, filename)
-            pass
-        except Exception, e:
-            os.rename(bak_file, filename)
-            raise e
-    else:
-        os.rename(bak_file, filename)
+    return outfile.read()
 
 
 def _get_file_data(interface):
@@ -314,3 +224,56 @@ def _get_file_data(interface):
                 network, netmask, gateway)
 
     return (ifname_prefix, ifaces, route_data)
+
+
+def get_interface_files(interfaces):
+    update_files = {}
+
+    for interface in interfaces:
+        ifname, ifaces, route_data = _get_file_data(interface)
+
+        for ifname, data in ifaces:
+            update_files[INTERFACE_FILE % ifname] = data
+
+        if route_data:
+            update_files[ROUTE_FILE % ifname] = route_data
+
+    return update_files
+
+
+def process_interface_files(interfaces):
+    """
+    Write out a new files for interfaces
+    """
+
+    # Enumerate all of the existing ifcfg-* files
+    remove_files = set()
+    for filepath in glob.glob(NETCONFIG_DIR + "/ifcfg-*"):
+        if '.' not in filepath:
+            remove_files.add(filepath)
+    for filename in glob.glob(NETCONFIG_DIR + "/route-*"):
+        if '.' not in filepath:
+            remove_files.add(filepath)
+
+    lo_file = os.path.join(NETCONFIG_DIR, INTERFACE_FILE % 'lo')
+    if lo_file in remove_files:
+        remove_files.remove(lo_file)
+
+    update_files = {}
+
+    for interface in interfaces:
+        ifname, ifaces, route_data = _get_file_data(interface)
+
+        for ifname, data in ifaces:
+            filepath = os.path.join(NETCONFIG_DIR, INTERFACE_FILE % ifname)
+            update_files[filepath] = data
+            if filepath in remove_files:
+                remove_files.remove(filepath)
+
+        if route_data:
+            filepath = os.path.join(NETCONFIG_DIR, ROUTE_FILE % ifname)
+            update_files[filepath] = route_data
+            if filepath in remove_files:
+                remove_files.remove(filepath)
+
+    return update_files, remove_files

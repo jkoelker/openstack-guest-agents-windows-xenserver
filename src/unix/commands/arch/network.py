@@ -37,18 +37,27 @@ INTERFACE_LABELS = {"public": "eth0",
 
 def configure_network(network_config, *args, **kwargs):
 
+    # Update config file with new interface configuration
     interfaces = network_config.get('interfaces', [])
 
-    outfile, publicips = _get_file_data(open(CONF_FILE), interfaces)
-    outfile.seek(0)
+    if os.path.exists(CONF_FILE):
+        infile = open(CONF_FILE)
+    else:
+        infile = StringIO()
+    data = _get_interface_file(infile, interfaces)
 
+    # Update config file with new hostname
     hostname = network_config.get('hostname')
 
-    outfile = _update_hostname(outfile, hostname)
-    outfile.seek(0)
-    commands.network.update_etc_hosts(publicips, hostname)
+    data = get_hostname_file(StringIO(data), hostname)
+    update_files = {CONF_FILE: data}
 
-    _write_file(CONF_FILE, outfile.read())
+    # Generate new /etc/hosts file
+    filepath, data = commands.network.get_etc_hosts(interfaces, hostname)
+    update_files[filepath] = data
+
+    # Write out new files
+    commands.network.update_files(update_files)
 
     # Set hostname
     logging.debug('executing /bin/hostname %s' % hostname)
@@ -73,7 +82,7 @@ def configure_network(network_config, *args, **kwargs):
     return (0, "")
 
 
-def _update_hostname(infile, hostname):
+def get_hostname_file(infile, hostname):
     """
     Update hostname on system
     """
@@ -96,37 +105,8 @@ def _update_hostname(infile, hostname):
     if not found:
         print >> outfile, 'HOSTNAME="%s"' % hostname
 
-    return outfile
-
-
-def _write_file(filename, data, dont_rename=0):
-    # Make sure we don't pick filenames that the init script will confuse
-    # as real configuration files
-    tmp_file = filename + ".%d~" % os.getpid()
-    bak_file = filename + ".%d.bak" % time.time()
-
-    f = open(tmp_file, 'w')
-    try:
-        f.write(data)
-        f.close()
-
-        os.chown(tmp_file, 0, 0)
-        os.chmod(tmp_file, 0644)
-        if not dont_rename and os.path.exists(filename):
-            os.rename(filename, bak_file)
-    except Exception, e:
-        os.unlink(tmp_file)
-        raise e
-
-    if not dont_rename:
-        try:
-            os.rename(tmp_file, filename)
-            pass
-        except Exception, e:
-            os.rename(bak_file, filename)
-            raise e
-    else:
-        os.rename(bak_file, filename)
+    outfile.seek(0)
+    return outfile.read()
 
 
 def _parse_variable(line):
@@ -138,19 +118,10 @@ def _parse_variable(line):
     return [name.lstrip('!') for name in re.split('\s+', v.strip())]
 
 
-def _update_interfaces(infile, interfaces):
-    outfile, publicips = _get_file_data(infile, interfaces)
-    outfile.seek(0)
-
-    return {'rc.conf': outfile.read()}
-
-
-def _get_file_data(infile, interfaces):
+def _get_interface_file(infile, interfaces):
     """
     Return data for (sub-)interfaces and routes
     """
-
-    publicips = set()
 
     # Updating this file happens in two phases since it's non-trivial to
     # update. The INTERFACES and ROUTES variables the key lines, but they
@@ -252,15 +223,6 @@ def _get_file_data(infile, interfaces):
 
             routes.append(('%s_route%d' % (ifname_prefix, i), line))
 
-        if not publicips and interface['label'] == 'public':
-            ips = interface.get('ips')
-            if ips:
-                publicips.add(ips[0]['ip'])
-
-            ip6s = interface.get('ip6s')
-            if ip6s:
-                publicips.add(ip6s[0]['address'])
-
     if gateway4:
         routes.append(('gateway', 'default gw %s' % gateway4))
     if gateway6:
@@ -331,4 +293,9 @@ def _get_file_data(infile, interfaces):
     for line in lines:
         print >> outfile, line
 
-    return (outfile, publicips)
+    outfile.seek(0)
+    return outfile.read()
+
+
+def get_interface_files(infile, interfaces):
+    return {'rc.conf': _get_interface_file(infile, interfaces)}

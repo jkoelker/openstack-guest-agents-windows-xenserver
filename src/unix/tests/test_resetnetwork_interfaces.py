@@ -61,9 +61,9 @@ class TestInterfacesUpdates(unittest.TestCase):
 
         mod = getattr(commands, dist).network
         if input:
-            return mod._update_interfaces(StringIO(input), interfaces)
+            return mod.get_interface_files(StringIO(input), interfaces)
         else:
-            return mod._update_interfaces(interfaces)
+            return mod.get_interface_files(interfaces)
 
     def test_redhat_ipv4(self):
         """Test setting public IPv4 for Red Hat networking"""

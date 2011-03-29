@@ -36,11 +36,9 @@ class TestHostNameUpdates(unittest.TestCase):
     def _run_test(self, dist, hostname, infile = None):
         mod = getattr(commands, dist).network
         if infile:
-            outfile = mod._update_hostname(infile, hostname)
+            return mod.get_hostname_file(infile, hostname)
         else:
-            outfile = mod._update_hostname(hostname)
-        outfile.seek(0)
-        return outfile.read()
+            return mod.get_hostname_file(hostname)
 
     def test_redhat_add_entry(self):
         """Test adding hostname to Red Hat /etc/sysconfig/network"""
