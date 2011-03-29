@@ -243,6 +243,42 @@ class TestInterfacesUpdates(unittest.TestCase):
             '    "default via 2001:db8::1"',
             ')']) + '\n')
 
+    def test_suse_ipv4(self):
+        """Test setting public IPv4 for SuSE networking"""
+        interface = {
+            'hwaddr': '00:11:22:33:44:55',
+            'ipv4': [('192.0.2.42', '255.255.255.0')],
+            'gateway4': '192.0.2.1',
+            'dns': ['192.0.2.2'],
+        }
+        outfiles = self._run_test('suse', None, public=interface)
+        self.assertTrue('ifcfg-eth0' in outfiles)
+        self.assertEqual(outfiles['ifcfg-eth0'], '\n'.join([
+            "# Automatically generated, do not edit",
+            "BOOTPROTO='static'",
+            "IPADDR='192.0.2.42'",
+            "NETMASK='255.255.255.0'",
+            "STARTMODE='auto'",
+            "USERCONTROL='no'"]) + '\n')
+
+    def test_suse_ipv6(self):
+        """Test setting public IPv6 for SuSE networking"""
+        interface = {
+            'hwaddr': '00:11:22:33:44:55',
+            'ipv6': [('2001:db8::42', 96)],
+            'gateway6': '2001:db8::1',
+            'dns': ['2001:db8::2'],
+        }
+        outfiles = self._run_test('suse', None, public=interface)
+        self.assertTrue('ifcfg-eth0' in outfiles)
+        self.assertEqual(outfiles['ifcfg-eth0'], '\n'.join([
+            "# Automatically generated, do not edit",
+            "BOOTPROTO='static'",
+            "IPADDR='2001:db8::42'",
+            "PREFIXLEN='96'",
+            "STARTMODE='auto'",
+            "USERCONTROL='no'"]) + '\n')
+
 
 if __name__ == "__main__":
     agent_test.main()
