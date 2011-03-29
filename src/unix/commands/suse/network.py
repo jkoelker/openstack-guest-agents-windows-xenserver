@@ -86,35 +86,10 @@ def update_hostname(hostname, dont_rename=False):
     """
     Update hostname on system
     """
-    filename = HOSTNAME_FILE
-    tmp_file = filename + ".%d~" % os.getpid()
-    bak_file = filename + ".%d.bak" % time.time()
-
     outfile = _update_hostname(hostname)
     outfile.seek(0)
 
-    f = open(tmp_file, 'w')
-    try:
-        f.write(outfile.read())
-        f.close()
-
-        os.chown(tmp_file, 0, 0)
-        os.chmod(tmp_file, 0644)
-        if not dont_rename and os.path.exists(filename):
-            os.rename(filename, bak_file)
-    except Exception, e:
-        os.unlink(tmp_file)
-        raise e
-
-    if not dont_rename:
-        try:
-            os.rename(tmp_file, filename)
-            pass
-        except Exception, e:
-            os.rename(bak_file, filename)
-            raise e
-    else:
-        os.rename(bak_file, filename)
+    _write_file(HOSTNAME_FILE, outfile.read())
 
 
 def _update_nameservers(infile, interfaces):
