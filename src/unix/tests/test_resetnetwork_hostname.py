@@ -40,14 +40,14 @@ class TestHostNameUpdates(unittest.TestCase):
         else:
             outfile = mod._update_hostname(hostname)
         outfile.seek(0)
-        return outfile
+        return outfile.read()
 
     def test_redhat_add_entry(self):
         """Test adding hostname to Red Hat /etc/sysconfig/network"""
         infile = StringIO('NETWORKING=yes\n' +
             'NETWORKING_IPV6=yes\n')
-        outfile = self._run_test('redhat', 'example', infile)
-        self.assertEqual(outfile.read(), 'NETWORKING=yes\n' +
+        data = self._run_test('redhat', 'example', infile)
+        self.assertEqual(data, 'NETWORKING=yes\n' +
             'NETWORKING_IPV6=yes\n' +
             'HOSTNAME=example\n')
 
@@ -56,22 +56,22 @@ class TestHostNameUpdates(unittest.TestCase):
         infile = StringIO('NETWORKING=yes\n' +
             'NETWORKING_IPV6=yes\n' +
             'HOSTNAME=other\n')
-        outfile = self._run_test('redhat', 'example', infile)
-        self.assertEqual(outfile.read(), 'NETWORKING=yes\n' +
+        data = self._run_test('redhat', 'example', infile)
+        self.assertEqual(data, 'NETWORKING=yes\n' +
             'NETWORKING_IPV6=yes\n' +
             'HOSTNAME=example\n')
 
     def test_debian(self):
         """Test updating hostname in Debian /etc/hostname"""
-        outfile = self._run_test('debian', 'example')
-        self.assertEqual(outfile.read(), 'example\n')
+        data = self._run_test('debian', 'example')
+        self.assertEqual(data, 'example\n')
 
     def test_arch_add_entry(self):
         """Test adding hostname to Arch Linux /etc/rc.conf"""
         infile = StringIO('eth0="eth0 192.0.2.42 netmask 255.255.255.0"\n' +
             'INTERFACES=(eth0)\n')
-        outfile = self._run_test('arch', 'example', infile)
-        self.assertEqual(outfile.read(),
+        data = self._run_test('arch', 'example', infile)
+        self.assertEqual(data,
             'eth0="eth0 192.0.2.42 netmask 255.255.255.0"\n' +
             'INTERFACES=(eth0)\n' +
             'HOSTNAME="example"\n')
@@ -81,23 +81,23 @@ class TestHostNameUpdates(unittest.TestCase):
         infile = StringIO('eth0="eth0 192.0.2.42 netmask 255.255.255.0"\n' +
             'INTERFACES=(eth0)\n' +
             'HOSTNAME="other"\n')
-        outfile = self._run_test('arch', 'example', infile)
-        self.assertEqual(outfile.read(),
+        data = self._run_test('arch', 'example', infile)
+        self.assertEqual(data,
             'eth0="eth0 192.0.2.42 netmask 255.255.255.0"\n' +
             'INTERFACES=(eth0)\n' +
             'HOSTNAME="example"\n')
 
     def test_gentoo(self):
         """Test updating hostname in Gentoo /etc/conf.d/hostname"""
-        outfile = self._run_test('gentoo', 'example')
-        self.assertEqual(outfile.read(),
+        data = self._run_test('gentoo', 'example')
+        self.assertEqual(data,
             '# Automatically generated, do not edit\n' +
             'HOSTNAME="example"\n')
 
     def test_suse(self):
         """Test updating hostname in SuSE /etc/HOSTNAME"""
-        outfile = self._run_test('suse', 'example')
-        self.assertEqual(outfile.read(), 'example\n')
+        data = self._run_test('suse', 'example')
+        self.assertEqual(data, 'example\n')
 
 
 if __name__ == "__main__":
