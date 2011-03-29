@@ -26,6 +26,9 @@ from cStringIO import StringIO
 
 import commands.redhat.network
 import commands.debian.network
+import commands.arch.network
+import commands.gentoo.network
+import commands.suse.network
 
 
 class TestInterfacesUpdates(unittest.TestCase):
@@ -197,6 +200,48 @@ class TestInterfacesUpdates(unittest.TestCase):
             'INTERFACES=(eth0)',
             'gateway6="default gw 2001:db8::1"',
             'ROUTES=(gateway6)']) + '\n')
+
+    def test_gentoo_ipv4(self):
+        """Test setting public IPv4 for Gentoo networking"""
+        interface = {
+            'hwaddr': '00:11:22:33:44:55',
+            'ipv4': [('192.0.2.42', '255.255.255.0')],
+            'gateway4': '192.0.2.1',
+            'dns': ['192.0.2.2'],
+        }
+        outfiles = self._run_test('gentoo', None, public=interface)
+        self.assertTrue('net' in outfiles)
+        self.assertEqual(outfiles['net'], '\n'.join([
+            '# Automatically generated, do not edit',
+            'modules=( "ifconfig" )',
+            '',
+            'config_eth0=(',
+            '    "192.0.2.42 netmask 255.255.255.0"',
+            ')',
+            'routes_eth0=(',
+            '    "default via 192.0.2.1"',
+            ')']) + '\n')
+
+    def test_gentoo_ipv6(self):
+        """Test setting public IPv6 for Gentoo networking"""
+        interface = {
+            'hwaddr': '00:11:22:33:44:55',
+            'ipv6': [('2001:db8::42', 96)],
+            'gateway6': '2001:db8::1',
+            'dns': ['2001:db8::2'],
+        }
+        outfiles = self._run_test('gentoo', None, public=interface)
+        self.assertTrue('net' in outfiles)
+        self.assertEqual(outfiles['net'], '\n'.join([
+            '# Automatically generated, do not edit',
+            'modules=( "ifconfig" )',
+            '',
+            'config_eth0=(',
+            '    "2001:db8::42/96"',
+            ')',
+            'routes_eth0=(',
+            '    "default via 2001:db8::1"',
+            ')']) + '\n')
 
 
 if __name__ == "__main__":
