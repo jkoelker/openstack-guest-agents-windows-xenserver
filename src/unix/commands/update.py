@@ -61,14 +61,14 @@ class AgentUpdateError(Exception):
 class UpdateCommand(commands.CommandBase):
 
     def __init__(self, *args, **kwargs):
-        pass
+        self.tmp_path = kwargs.get("tmpdir", TMP_PATH)
 
     def _get_to_local_file(self, url, md5sum):
         try:
             filename = url[url.rindex('/') + 1:]
             ext_pos = filename.index('.')
             local_filename = "%s/%s-%d%s" % (
-                    TMP_PATH,
+                    self.tmp_path,
                     filename[:ext_pos],
                     os.getpid(),
                     filename[ext_pos:])
@@ -92,6 +92,8 @@ class UpdateCommand(commands.CommandBase):
             if not file_data:
                 break
             m.update(file_data)
+
+        f.close()
 
         digest = m.hexdigest()
         if digest != md5sum:
@@ -178,7 +180,9 @@ class UpdateCommand(commands.CommandBase):
 
         t.close()
 
-        os.rename(local_filename, dest_filename)
+        # Using shutil.move instead of os.rename() because we might be
+        # moving across filesystems.
+        shutil.move(local_filename, dest_filename)
 
         try:
             p = subprocess.Popen("sh %s restart" % INIT_SCRIPT,

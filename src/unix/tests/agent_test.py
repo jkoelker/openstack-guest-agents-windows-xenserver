@@ -30,7 +30,7 @@ class TestCase(unittest.TestCase):
 
         self.commands_cls = __import__("commands.command_list")
         kwargs = getattr(self, 'command_kwargs', {})
-        self.commands = self.commands_cls.init(testmode=True, **kwargs)
+        self.commands = self.commands_cls.init(testmode=True, tmpdir="/tmp", **kwargs)
 
 
 def run_tests(modules):
