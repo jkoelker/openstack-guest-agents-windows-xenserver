@@ -7,7 +7,8 @@ AM_CFLAGS += -DAGENT_VERSION=\"@PACKAGE_VERSION@\" -DPLUGINS_DIR=\"${pluginsdir}
 
 SUBDIRS = lib src plugins commands tests
 
-EXTRA_DIST = install_libs.py install_modules.py nova-agent.py run_tests.py
+EXTRA_DIST = install_libs.py install_modules.py nova-agent.py \
+			 run_tests.py patch_binary.py
 
 data_DATA = nova-agent.py
 
