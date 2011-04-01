@@ -159,7 +159,9 @@ def get_etc_hosts(interfaces, hostname):
     return HOSTS_FILE, _get_etc_hosts(infile, interfaces, hostname)
 
 
-def update_files(update_files, remove_files = set(), dont_rename = False):
+def update_files(update_files, remove_files = None, dont_rename = False):
+    if not remove_files:
+        remove_files = set()
     for filepath, data in update_files.iteritems():
         if os.path.exists(filepath):
             # If the data is the same, skip it, nothing to do
