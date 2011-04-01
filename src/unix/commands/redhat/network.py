@@ -46,7 +46,8 @@ def configure_network(network_config, *args, **kwargs):
     update_files, remove_files = process_interface_files(interfaces)
 
     # Generate new hostname file
-    hostname = network_config.get('hostname')
+    hostname = network_config.get('hostname',
+            commands.network.DEFAULT_HOSTNAME)
 
     if os.path.exists(HOSTNAME_FILE):
         infile = open(HOSTNAME_FILE)

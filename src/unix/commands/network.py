@@ -34,6 +34,7 @@ import arch.network
 import suse.network
 import gentoo.network
 
+DEFAULT_HOSTNAME = 'linux'
 HOSTS_FILE = '/etc/hosts'
 
 
@@ -159,7 +160,7 @@ def get_etc_hosts(interfaces, hostname):
     return HOSTS_FILE, _get_etc_hosts(infile, interfaces, hostname)
 
 
-def update_files(update_files, remove_files = None, dont_rename = False):
+def update_files(update_files, remove_files=None, dont_rename=False):
     if not remove_files:
         remove_files = set()
     for filepath, data in update_files.iteritems():
@@ -200,4 +201,3 @@ def update_files(update_files, remove_files = None, dont_rename = False):
         logging.info("moving aside old file %s" % filepath)
         if not dont_rename:
             os.rename(filepath, filepath + ".%d.bak" % time.time())
-

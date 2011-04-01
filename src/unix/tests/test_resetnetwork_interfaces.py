@@ -36,7 +36,7 @@ class TestInterfacesUpdates(unittest.TestCase):
     def _run_test(self, dist, input, **config):
         interfaces = []
         for label, options in config.iteritems():
-            interface = {'label': label,'mac': options['hwaddr']}
+            interface = {'label': label, 'mac': options['hwaddr']}
 
             ip4s = []
             for ip, netmask in options.get('ipv4', []):
@@ -48,7 +48,9 @@ class TestInterfacesUpdates(unittest.TestCase):
 
             ip6s = []
             for ip, netmask in options.get('ipv6', []):
-                ip6s.append({'enabled': '1', 'address': ip, 'netmask': netmask})
+                ip6s.append({'enabled': '1',
+                    'address': ip,
+                    'netmask': netmask})
             interface['ip6s'] = ip6s
 
             if options.get('gateway6'):
@@ -122,7 +124,8 @@ class TestInterfacesUpdates(unittest.TestCase):
         outfiles = self._run_test('debian', None, public=interface)
         self.assertTrue('interfaces' in outfiles)
         self.assertEqual(outfiles['interfaces'], '\n'.join([
-            '# Used by ifup(8) and ifdown(8). See the interfaces(5) manpage or',
+            '# Used by ifup(8) and ifdown(8). See the interfaces(5) '
+                'manpage or',
             '# /usr/share/doc/ifupdown/examples for more information.',
             '# The loopback network interface',
             'auto lo',
@@ -146,7 +149,8 @@ class TestInterfacesUpdates(unittest.TestCase):
         outfiles = self._run_test('debian', None, public=interface)
         self.assertTrue('interfaces' in outfiles)
         self.assertEqual(outfiles['interfaces'], '\n'.join([
-            '# Used by ifup(8) and ifdown(8). See the interfaces(5) manpage or',
+            '# Used by ifup(8) and ifdown(8). See the interfaces(5) '
+                'manpage or',
             '# /usr/share/doc/ifupdown/examples for more information.',
             '# The loopback network interface',
             'auto lo',

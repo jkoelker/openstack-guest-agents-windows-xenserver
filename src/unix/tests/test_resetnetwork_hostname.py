@@ -33,7 +33,7 @@ import commands.suse.network
 
 class TestHostNameUpdates(unittest.TestCase):
 
-    def _run_test(self, dist, hostname, infile = None):
+    def _run_test(self, dist, hostname, infile=None):
         mod = getattr(commands, dist).network
         if infile:
             return mod.get_hostname_file(infile, hostname)

@@ -56,7 +56,8 @@ def configure_network(network_config, *args, **kwargs):
     update_files[DNS_CONFIG_FILE] = data
 
     # Generate new hostname file
-    hostname = network_config.get('hostname')
+    hostname = network_config.get('hostname',
+            commands.network.DEFAULT_HOSTNAME)
 
     data = get_hostname_file(hostname)
     update_files[HOSTNAME_FILE] = data
@@ -121,7 +122,8 @@ def get_nameservers_file(infile, interfaces):
         k, v = line.split('=', 1)
         k = k.strip()
         if k == 'NETCONFIG_DNS_STATIC_SERVERS':
-            print >> outfile, 'NETCONFIG_DNS_STATIC_SERVERS="%s"' % ' '.join(dns)
+            print >> outfile, \
+                    'NETCONFIG_DNS_STATIC_SERVERS="%s"' % ' '.join(dns)
             found = True
         else:
             print >> outfile, line

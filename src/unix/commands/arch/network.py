@@ -47,7 +47,8 @@ def configure_network(network_config, *args, **kwargs):
     data = _get_interface_file(infile, interfaces)
 
     # Update config file with new hostname
-    hostname = network_config.get('hostname')
+    hostname = network_config.get('hostname',
+            commands.network.DEFAULT_HOSTNAME)
 
     data = get_hostname_file(StringIO(data), hostname)
     update_files = {CONF_FILE: data}
@@ -192,7 +193,7 @@ def _get_interface_file(infile, interfaces):
                                 "Missing IP or netmask in interface's IP list")
 
                     line.append('%s netmask %s' % (ip, netmask))
-    
+
             if i < len(ip6s):
                 ip_info = ip6s[i]
 

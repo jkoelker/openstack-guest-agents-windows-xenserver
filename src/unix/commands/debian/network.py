@@ -53,7 +53,8 @@ def configure_network(network_config):
     update_files = {INTERFACE_FILE: data}
 
     # Generate new hostname file
-    hostname = network_config.get('hostname')
+    hostname = network_config.get('hostname',
+            commands.network.DEFAULT_HOSTNAME)
 
     data = get_hostname_file(hostname)
     update_files[HOSTNAME_FILE] = data
@@ -180,7 +181,6 @@ def _get_file_data(interfaces):
                         dns = None
 
             if ip6_info and ip6_info.get('enabled', '0') != '0':
-                print repr(ip6_info)
                 try:
                     ip = ip6_info['address']
                     netmask = ip6_info['netmask']
