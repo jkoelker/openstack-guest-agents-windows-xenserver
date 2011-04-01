@@ -24,12 +24,17 @@ import os
 import re
 import time
 import platform
+import logging
 from cStringIO import StringIO
 
 import commands
 import debian.network
 import redhat.network
+import arch.network
+import suse.network
+import gentoo.network
 
+DEFAULT_HOSTNAME = 'linux'
 HOSTS_FILE = '/etc/hosts'
 
 
@@ -49,7 +54,10 @@ class NetworkCommands(commands.CommandBase):
                         "redhat": redhat,
                         "centos": redhat,
                         "fedora": redhat,
-                        "oracle": redhat}
+                        "oracle": redhat,
+                        "arch": arch,
+                        "opensuse": suse,
+                        "gentoo": gentoo}
 
         system = os.uname()[0]
         if system == "Linux":
@@ -60,7 +68,19 @@ class NetworkCommands(commands.CommandBase):
                 # call
                 system = platform.dist(None)[0]
 
-        return translations.get(system.lower())
+            # Gentoo returns 'Gentoo Base System', so let's make that
+            # something easier to use
+            if system:
+                system = system.lower().split(' ')[0]
+
+            # Arch Linux returns None for platform.linux_distribution()
+            if not system and os.path.exists('/etc/arch-release'):
+                system = 'arch'
+
+        if not system:
+            return None
+
+        return translations.get(system)
 
     @commands.command_add('resetnetwork')
     def resetnetwork_cmd(self, data):
@@ -72,7 +92,18 @@ class NetworkCommands(commands.CommandBase):
         return os_mod.network.configure_network(data)
 
 
-def _update_etc_hosts(infile, ips, hostname):
+def _get_etc_hosts(infile, interfaces, hostname):
+    ips = set()
+    for interface in interfaces:
+        if not ips and interface['label'] == 'public':
+            ip4s = interface.get('ips')
+            if ip4s:
+                ips.add(ip4s[0]['ip'])
+
+            ip6s = interface.get('ip6s')
+            if ip6s:
+                ips.add(ip6s[0]['address'])
+
     outfile = StringIO()
 
     for line in infile:
@@ -116,36 +147,57 @@ def _update_etc_hosts(infile, ips, hostname):
     for ip in ips:
         print >> outfile, '%s\t%s' % (ip, hostname)
 
-    return outfile
-
-
-def update_etc_hosts(ips, hostname, dont_rename=False):
-    filename = HOSTS_FILE
-    tmp_file = filename + ".%d~" % os.getpid()
-    bak_file = filename + ".%d.bak" % time.time()
-
-    outfile = _update_etc_hosts(open(filename), ips, hostname)
     outfile.seek(0)
+    return outfile.read()
 
-    f = open(tmp_file, 'w')
-    try:
-        f.write(outfile.read())
-        f.close()
 
-        os.chown(tmp_file, 0, 0)
-        os.chmod(tmp_file, 0644)
-        if not dont_rename and os.path.exists(filename):
-            os.rename(filename, bak_file)
-    except Exception, e:
-        os.unlink(tmp_file)
-        raise e
-
-    if not dont_rename:
-        try:
-            os.rename(tmp_file, filename)
-            pass
-        except Exception, e:
-            os.rename(bak_file, filename)
-            raise e
+def get_etc_hosts(interfaces, hostname):
+    if os.path.exists(HOSTS_FILE):
+        infile = open(HOSTS_FILE)
     else:
-        os.rename(bak_file, filename)
+        infile = StringIO()
+
+    return HOSTS_FILE, _get_etc_hosts(infile, interfaces, hostname)
+
+
+def update_files(update_files, remove_files=None, dont_rename=False):
+    if not remove_files:
+        remove_files = set()
+    for filepath, data in update_files.iteritems():
+        if os.path.exists(filepath):
+            # If the data is the same, skip it, nothing to do
+            if data == open(filepath).read():
+                logging.info("skipping %s (no changes)" % filepath)
+                continue
+
+        tmp_file = filepath + ".%d~" % os.getpid()
+        bak_file = filepath + ".%d.bak" % time.time()
+
+        logging.info("writing %s" % filepath)
+
+        f = open(tmp_file, 'w')
+        try:
+            f.write(data)
+            f.close()
+
+            os.chown(tmp_file, 0, 0)
+            os.chmod(tmp_file, 0644)
+            if not dont_rename and os.path.exists(filepath):
+                os.rename(filepath, bak_file)
+        except Exception, e:
+            os.unlink(tmp_file)
+            raise e
+
+        if not dont_rename:
+            try:
+                os.rename(tmp_file, filepath)
+            except Exception, e:
+                os.rename(bak_file, filepath)
+                raise e
+        else:
+            os.rename(bak_file, filepath)
+
+    for filepath in remove_files:
+        logging.info("moving aside old file %s" % filepath)
+        if not dont_rename:
+            os.rename(filepath, filepath + ".%d.bak" % time.time())

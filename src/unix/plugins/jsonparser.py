@@ -86,7 +86,8 @@ class JsonParser(object):
             logging.warn(str(e))
             return self.encode_result((404, str(e)))
         except Exception, e:
-            logging.error(str(e))
+            logging.exception('Exception while trying to process '
+                    'command %r' % cmd_name)
             return self.encode_result((500, str(e)))
 
         logging.info("'%s' completed with code '%s', message '%s'" % \

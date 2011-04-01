@@ -26,11 +26,14 @@ from cStringIO import StringIO
 
 import commands.redhat.network
 import commands.debian.network
+import commands.arch.network
+import commands.gentoo.network
+import commands.suse.network
 
 
 class TestInterfacesUpdates(unittest.TestCase):
 
-    def _run_test(self, dist, **config):
+    def _run_test(self, dist, input, **config):
         interfaces = []
         for label, options in config.iteritems():
             interface = {'label': label, 'mac': options['hwaddr']}
@@ -45,7 +48,8 @@ class TestInterfacesUpdates(unittest.TestCase):
 
             ip6s = []
             for ip, netmask in options.get('ipv6', []):
-                ip6s.append({'enabled': '1', 'address': ip,
+                ip6s.append({'enabled': '1',
+                    'address': ip,
                     'netmask': netmask})
             interface['ip6s'] = ip6s
 
@@ -57,7 +61,11 @@ class TestInterfacesUpdates(unittest.TestCase):
 
             interfaces.append(interface)
 
-        return getattr(commands, dist).network._update_interfaces(interfaces)
+        mod = getattr(commands, dist).network
+        if input:
+            return mod.get_interface_files(StringIO(input), interfaces)
+        else:
+            return mod.get_interface_files(interfaces)
 
     def test_redhat_ipv4(self):
         """Test setting public IPv4 for Red Hat networking"""
@@ -67,7 +75,7 @@ class TestInterfacesUpdates(unittest.TestCase):
             'gateway4': '192.0.2.1',
             'dns': ['192.0.2.2'],
         }
-        outfiles = self._run_test('redhat', public=interface)
+        outfiles = self._run_test('redhat', None, public=interface)
         self.assertTrue('ifcfg-eth0' in outfiles)
         self.assertEqual(outfiles['ifcfg-eth0'], '\n'.join([
             '# Automatically generated, do not edit',
@@ -90,7 +98,7 @@ class TestInterfacesUpdates(unittest.TestCase):
             'gateway6': '2001:db8::1',
             'dns': ['2001:db8::2'],
         }
-        outfiles = self._run_test('redhat', public=interface)
+        outfiles = self._run_test('redhat', None, public=interface)
         self.assertTrue('ifcfg-eth0' in outfiles)
         self.assertEqual(outfiles['ifcfg-eth0'], '\n'.join([
             '# Automatically generated, do not edit',
@@ -113,7 +121,7 @@ class TestInterfacesUpdates(unittest.TestCase):
             'gateway4': '192.0.2.1',
             'dns': ['192.0.2.2'],
         }
-        outfiles = self._run_test('debian', public=interface)
+        outfiles = self._run_test('debian', None, public=interface)
         self.assertTrue('interfaces' in outfiles)
         self.assertEqual(outfiles['interfaces'], '\n'.join([
             '# Used by ifup(8) and ifdown(8). See the interfaces(5) '
@@ -131,14 +139,14 @@ class TestInterfacesUpdates(unittest.TestCase):
             '    dns-nameservers 192.0.2.2']) + '\n')
 
     def test_debian_ipv6(self):
-        """Test setting public IPv4 for Debian networking"""
+        """Test setting public IPv6 for Debian networking"""
         interface = {
             'hwaddr': '00:11:22:33:44:55',
             'ipv6': [('2001:db8::42', 96)],
             'gateway6': '2001:db8::1',
             'dns': ['2001:db8::2'],
         }
-        outfiles = self._run_test('debian', public=interface)
+        outfiles = self._run_test('debian', None, public=interface)
         self.assertTrue('interfaces' in outfiles)
         self.assertEqual(outfiles['interfaces'], '\n'.join([
             '# Used by ifup(8) and ifdown(8). See the interfaces(5) '
@@ -154,6 +162,126 @@ class TestInterfacesUpdates(unittest.TestCase):
             '    netmask 96',
             '    gateway 2001:db8::1',
             '    dns-nameservers 2001:db8::2']) + '\n')
+
+    def test_arch_ipv4(self):
+        """Test setting public IPv4 for Arch networking"""
+        input = '\n'.join([
+            'eth0="eth0 192.0.2.250 netmask 255.255.255.0"',
+            'INTERFACES=(eth0)',
+            'gateway="default gw 192.0.2.254"',
+            'ROUTES=(gateway)']) + '\n'
+        interface = {
+            'hwaddr': '00:11:22:33:44:55',
+            'ipv4': [('192.0.2.42', '255.255.255.0')],
+            'gateway4': '192.0.2.1',
+            'dns': ['192.0.2.2'],
+        }
+        outfiles = self._run_test('arch', input, public=interface)
+        self.assertTrue('rc.conf' in outfiles)
+        self.assertEqual(outfiles['rc.conf'], '\n'.join([
+            'eth0="eth0 192.0.2.42 netmask 255.255.255.0"',
+            'INTERFACES=(eth0)',
+            'gateway="default gw 192.0.2.1"',
+            'ROUTES=(gateway)']) + '\n')
+
+    def test_arch_ipv6(self):
+        """Test setting public IPv6 for Arch networking"""
+        input = '\n'.join([
+            'eth0="eth0 add 2001:db8::fff0/96"',
+            'INTERFACES=(eth0)',
+            'gateway6="default gw 2001:db8::fffe"',
+            'ROUTES=(gateway6)']) + '\n'
+        interface = {
+            'hwaddr': '00:11:22:33:44:55',
+            'ipv6': [('2001:db8::42', 96)],
+            'gateway6': '2001:db8::1',
+            'dns': ['2001:db8::2'],
+        }
+        outfiles = self._run_test('arch', input, public=interface)
+        self.assertTrue('rc.conf' in outfiles)
+        self.assertEqual(outfiles['rc.conf'], '\n'.join([
+            'eth0="eth0 add 2001:db8::42/96"',
+            'INTERFACES=(eth0)',
+            'gateway6="default gw 2001:db8::1"',
+            'ROUTES=(gateway6)']) + '\n')
+
+    def test_gentoo_ipv4(self):
+        """Test setting public IPv4 for Gentoo networking"""
+        interface = {
+            'hwaddr': '00:11:22:33:44:55',
+            'ipv4': [('192.0.2.42', '255.255.255.0')],
+            'gateway4': '192.0.2.1',
+            'dns': ['192.0.2.2'],
+        }
+        outfiles = self._run_test('gentoo', None, public=interface)
+        self.assertTrue('net' in outfiles)
+        self.assertEqual(outfiles['net'], '\n'.join([
+            '# Automatically generated, do not edit',
+            'modules=( "ifconfig" )',
+            '',
+            'config_eth0=(',
+            '    "192.0.2.42 netmask 255.255.255.0"',
+            ')',
+            'routes_eth0=(',
+            '    "default via 192.0.2.1"',
+            ')']) + '\n')
+
+    def test_gentoo_ipv6(self):
+        """Test setting public IPv6 for Gentoo networking"""
+        interface = {
+            'hwaddr': '00:11:22:33:44:55',
+            'ipv6': [('2001:db8::42', 96)],
+            'gateway6': '2001:db8::1',
+            'dns': ['2001:db8::2'],
+        }
+        outfiles = self._run_test('gentoo', None, public=interface)
+        self.assertTrue('net' in outfiles)
+        self.assertEqual(outfiles['net'], '\n'.join([
+            '# Automatically generated, do not edit',
+            'modules=( "ifconfig" )',
+            '',
+            'config_eth0=(',
+            '    "2001:db8::42/96"',
+            ')',
+            'routes_eth0=(',
+            '    "default via 2001:db8::1"',
+            ')']) + '\n')
+
+    def test_suse_ipv4(self):
+        """Test setting public IPv4 for SuSE networking"""
+        interface = {
+            'hwaddr': '00:11:22:33:44:55',
+            'ipv4': [('192.0.2.42', '255.255.255.0')],
+            'gateway4': '192.0.2.1',
+            'dns': ['192.0.2.2'],
+        }
+        outfiles = self._run_test('suse', None, public=interface)
+        self.assertTrue('ifcfg-eth0' in outfiles)
+        self.assertEqual(outfiles['ifcfg-eth0'], '\n'.join([
+            "# Automatically generated, do not edit",
+            "BOOTPROTO='static'",
+            "IPADDR='192.0.2.42'",
+            "NETMASK='255.255.255.0'",
+            "STARTMODE='auto'",
+            "USERCONTROL='no'"]) + '\n')
+
+    def test_suse_ipv6(self):
+        """Test setting public IPv6 for SuSE networking"""
+        interface = {
+            'hwaddr': '00:11:22:33:44:55',
+            'ipv6': [('2001:db8::42', 96)],
+            'gateway6': '2001:db8::1',
+            'dns': ['2001:db8::2'],
+        }
+        outfiles = self._run_test('suse', None, public=interface)
+        self.assertTrue('ifcfg-eth0' in outfiles)
+        self.assertEqual(outfiles['ifcfg-eth0'], '\n'.join([
+            "# Automatically generated, do not edit",
+            "BOOTPROTO='static'",
+            "IPADDR='2001:db8::42'",
+            "PREFIXLEN='96'",
+            "STARTMODE='auto'",
+            "USERCONTROL='no'"]) + '\n')
 
 
 if __name__ == "__main__":
