@@ -158,9 +158,8 @@ class UpdateCommand(commands.CommandBase):
 
             os.unlink(local_filename)
 
-            p = subprocess.Popen("%s/installer.sh %s" % \
-                    (dest_path, dest_path),
-                    shell=True,
+            p = subprocess.Popen(["%s/installer.sh" % dest_path,
+                        dest_path],
                     stdin=subprocess.PIPE,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE)
@@ -185,8 +184,7 @@ class UpdateCommand(commands.CommandBase):
         shutil.move(local_filename, dest_filename)
 
         try:
-            p = subprocess.Popen("sh %s restart" % INIT_SCRIPT,
-                    shell=True,
+            p = subprocess.Popen(["sh", INIT_SCRIPT, "restart"],
                     stdin=subprocess.PIPE,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE)
