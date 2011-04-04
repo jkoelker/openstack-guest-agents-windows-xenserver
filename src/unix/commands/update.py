@@ -30,8 +30,8 @@ import commands
 
 TMP_PATH = "/var/run"
 DEST_PATH = "/usr/share/nova-agent"
-DEST_FILE = "/var/run/agent-smith.tar"
-INIT_SCRIPT = "/etc/init.d/agent-smith"
+DEST_FILE = "/var/run/nova-agent.tar"
+INIT_SCRIPT = "/etc/init.d/nova-agent"
 
 # This is to support older python versions that don't have hashlib
 try:
