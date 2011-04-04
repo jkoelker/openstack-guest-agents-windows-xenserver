@@ -64,7 +64,11 @@ static int basic_config(char *filename, char *level)
     if (!args)
         goto err_kwargs;
 
-    if (filename)
+    /*
+     * "-" means stdout, so don't set filename in the dictionary
+     * in this case
+     */
+    if (filename && strcmp(filename, "-"))
     {
         PyObject *value = PyString_FromString(filename);
         if (!value)

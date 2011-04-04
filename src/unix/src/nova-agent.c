@@ -30,6 +30,9 @@
 #include "nova-agent_int.h"
 #include "libagent_int.h"
 
+#define AGENT_DEFAULT_LOG_LEVEL "info"
+#define AGENT_DEFAULT_LOG_FILE "/var/log/nova-agent.log"
+
 
 static void _agent_signal_loop(void)
 {
@@ -112,8 +115,8 @@ int main(int argc, char **argv)
     int quiet = 0;
     int syspython = 0;
     char *progname = argv[0];
-    char *logfile = NULL;
-    char *level = NULL;
+    char *logfile = AGENT_DEFAULT_LOG_FILE;
+    char *level = AGENT_DEFAULT_LOG_LEVEL;
     char *config_file = NULL;
 
     /* Don't let getopt_long() output to stderr directly */
@@ -128,7 +131,7 @@ int main(int argc, char **argv)
 
             case 'n':
                 do_fork = 0;
-                return 0;
+                break;
 
             case 'o':
                 logfile = optarg;
@@ -203,7 +206,7 @@ int main(int argc, char **argv)
      * it wants the script name as argv[0]...
      */
 
-    if (!quiet)
+    if (!quiet && !do_fork)
         printf("Agent starting.\n");
 
     pi = agent_python_init(argc, argv, syspython);
@@ -277,6 +280,22 @@ int main(int argc, char **argv)
         exit(0);
     }
 
+    /*
+     * Fork into the background if set.  We need to do this before
+     * we create any threads... as fork() only duplicates 1 thread.
+     */
+    if (do_fork)
+    {
+        /* Fork into the background */
+
+        if (fork())
+        {
+            exit(0);
+        }
+
+        /* Child */
+    }
+
     /* Continue */
 
     err = agent_plugin_run_threads();
@@ -286,20 +305,18 @@ int main(int argc, char **argv)
         exit(-err);
     }
 
-    if (!quiet)
-        agent_info("Agent started");
+    agent_info("Agent started");
 
     _agent_signal_loop();
 
-    if (!quiet)
-        agent_info("Agent stopping");
+    agent_info("Agent stopping");
 
     agent_plugin_stop_threads();
 
     agent_plugin_deinit();
     agent_python_deinit(pi);
 
-    if (!quiet)
+    if (!quiet && !do_fork)
         printf("Agent stopping.\n");
 
     return 0;
