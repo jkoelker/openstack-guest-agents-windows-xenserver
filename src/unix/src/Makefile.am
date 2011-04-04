@@ -3,8 +3,8 @@ include $(top_srcdir)/Common.am
 
 AM_CFLAGS += -DAGENT_VERSION=\"@PACKAGE_VERSION@\" -DPLUGINS_DIR=\"${pluginsdir}\" -DDATA_DIR=\"${datadir}\" -fvisibility=hidden
 
-noinst_HEADERS = ../include/nova-agent_int.h ../include/python_int.h
-include_HEADERS = ../include/nova-agent.h
+noinst_HEADERS = ../include/nova-agent_int.h ../include/python_int.h \
+                 ../include/nova-agent.h
 
 sbin_PROGRAMS = nova-agent
 

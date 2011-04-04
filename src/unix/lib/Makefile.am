@@ -3,8 +3,8 @@ include $(top_srcdir)/Common.am
 
 AM_CFLAGS += -DAGENT_VERSION=\"@PACKAGE_VERSION@\" -DPLUGINS_DIR=\"${pluginsdir}\" -DDATA_DIR=\"${datadir}\" -fvisibility=hidden
 
-noinst_HEADERS = libagent_int.h plugin_int.h logging_int.h
-include_HEADERS = agentlib.h plugin.h logging.h
+noinst_HEADERS = libagent_int.h plugin_int.h logging_int.h \
+                 agentlib.h plugin.h logging.h
 
 lib_LTLIBRARIES = libagent.la
 modules_LTLIBRARIES = agentlib.la
