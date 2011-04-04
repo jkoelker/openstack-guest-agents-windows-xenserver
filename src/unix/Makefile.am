@@ -49,6 +49,9 @@ bintar: all
 	@rm -rf fakeroot; mkdir -p fakeroot
 	@$(MAKE) install DESTDIR=$(CURDIR)/fakeroot
 	@find fakeroot -type f | sed -e 's@^fakeroot@@g' > filelist ; mv filelist $(datadir)
+	@cp -p $(top_srcdir)/scripts/agent-smith ${DESTDIR}/$(sbindir)/.
+	@mkdir ${DESTDIR}/${datadir}/etc
+	@cp -p $(top_srcdir)/scripts/agent-smith* ${DESTDIR}/${datadir}/etc/.
 	@tar -czC fakeroot -f $(BINTARNAME) .
 	@echo ""
 	@echo "Created $(BINTARNAME)"

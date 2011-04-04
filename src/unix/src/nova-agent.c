@@ -72,7 +72,7 @@ static void _agent_signal_loop(void)
 
 static void _usage(FILE *f, char *progname, int long_vers)
 {
-    fprintf(f, "Usage: %s [-h] [-n] [-o <filename>] [-l <level>] [-t] [--] config.py [optional arguments to config.py]\n", progname);
+    fprintf(f, "Usage: %s [-h] [-n] [-p <file>] [-o <filename>] [-l <level>] [-t] [--] config.py [optional arguments to config.py]\n", progname);
     if (long_vers)
     {
         fprintf(f, "\n");
@@ -80,6 +80,7 @@ static void _usage(FILE *f, char *progname, int long_vers)
         fprintf(f, "Options:\n");
         fprintf(f, "  -h, --help     Output this help information\n");
         fprintf(f, "  -n, --nofork   Don't fork into the background\n");
+        fprintf(f, "  -p, --pidfile  Write out a pid to <file>\n");
         fprintf(f, "  -o, --logfile  Call logging.basicConfig with filename\n");
         fprintf(f, "  -l, --level    Call logging.basicConfig with level\n");
         fprintf(f, "  -t, --testmode Treat self like 'python' binary\n");
@@ -97,12 +98,13 @@ int main(int argc, char **argv)
     struct option longopts[] =
     {
         { "help", no_argument, NULL, 'h' },
-        { "nofork", no_argument, NULL, 'n' },
-        { "logfile", required_argument, NULL, 'o' },
         { "level", required_argument, NULL, 'l' },
-        { "testmode", no_argument, NULL, 't' },
+        { "logfile", required_argument, NULL, 'o' },
+        { "nofork", no_argument, NULL, 'n' },
+        { "pidfile", required_argument, NULL, 'p' },
         { "quiet", no_argument, NULL, 'q' },
         { "syspython", no_argument, NULL, 'S' },
+        { "testmode", no_argument, NULL, 't' },
         { NULL, 0, NULL, 0 }
     };
 
@@ -118,10 +120,11 @@ int main(int argc, char **argv)
     char *logfile = AGENT_DEFAULT_LOG_FILE;
     char *level = AGENT_DEFAULT_LOG_LEVEL;
     char *config_file = NULL;
+    char *pid_file = NULL;
 
     /* Don't let getopt_long() output to stderr directly */
     opterr = 0;
-    while((opt = getopt_long(argc, argv, ":hno:l:tqS", longopts, NULL)) != -1)
+    while((opt = getopt_long(argc, argv, ":hl:no:p:qSt", longopts, NULL)) != -1)
     {
         switch(opt)
         {
@@ -131,6 +134,10 @@ int main(int argc, char **argv)
 
             case 'n':
                 do_fork = 0;
+                break;
+
+            case 'p':
+                pid_file = optarg;
                 break;
 
             case 'o':
@@ -305,6 +312,31 @@ int main(int argc, char **argv)
         exit(-err);
     }
 
+    if (pid_file != NULL)
+    {
+        int fd = open(pid_file, O_CREAT|O_TRUNC|O_WRONLY, 0600);
+
+        if (fd > 0)
+        {
+            char buf[20];
+
+            snprintf(buf, sizeof(buf), "%d\n", getpid());
+
+            if (write(fd, buf, strlen(buf)) < 0)
+            {
+                agent_warn("Couldn't write pid to %s", pid_file);
+            }
+
+            close(fd);
+        }
+        else
+        {
+            agent_warn("Couldn't open pidfile '%s': %s",
+                    pid_file,
+                    strerror(errno));
+        }
+    }
+
     agent_info("Agent started");
 
     _agent_signal_loop();
@@ -318,6 +350,11 @@ int main(int argc, char **argv)
 
     if (!quiet && !do_fork)
         printf("Agent stopping.\n");
+
+    if (pid_file != NULL)
+    {
+        unlink(pid_file);
+    }
 
     return 0;
 }
