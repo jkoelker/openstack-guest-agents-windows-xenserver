@@ -1,7 +1,7 @@
 
 include $(top_srcdir)/Common.am
 
-AM_CFLAGS += -DAGENT_VERSION=\"@PACKAGE_VERSION@\" -DPLUGINS_DIR=\"${pluginsdir}\" -DDATA_DIR=\"${datadir}\" -fvisibility=hidden
+AM_CFLAGS += -DAGENT_VERSION=\"@PACKAGE_VERSION@\" -fvisibility=hidden
 
 noinst_HEADERS = libagent_int.h plugin_int.h logging_int.h \
                  agentlib.h plugin.h logging.h
