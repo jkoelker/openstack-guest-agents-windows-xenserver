@@ -59,7 +59,7 @@ class XSComm(object):
 
         self.xs_handle.transaction_start()
 
-        entries = self.xs_handle.dir(XENSTORE_REQUEST_PATH)
+        entries = self.xs_handle.entries(XENSTORE_REQUEST_PATH)
 
         for entry in entries:
             path = XENSTORE_REQUEST_PATH + '/' + entry
