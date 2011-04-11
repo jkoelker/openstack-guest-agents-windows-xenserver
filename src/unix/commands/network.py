@@ -20,12 +20,29 @@
 JSON misc commands plugin
 """
 
+try:
+    import anyjson
+except ImportError:
+    import json
+
+    class anyjson(object):
+        """Fake anyjson module as a class"""
+
+        @staticmethod
+        def serialize(buf):
+            return json.write(buf)
+
+        @staticmethod
+        def deserialize(buf):
+            return json.read(buf)
+
+from cStringIO import StringIO
+import logging
 import os
+import platform
+import pyxenstore
 import re
 import time
-import platform
-import logging
-from cStringIO import StringIO
 
 import commands
 import debian.network
@@ -34,6 +51,9 @@ import arch.network
 import suse.network
 import gentoo.network
 
+
+XENSTORE_INTERFACE_PATH = "vm-data/networking"
+XENSTORE_HOSTNAME_PATH = "vm-data/hostname"
 DEFAULT_HOSTNAME = 'linux'
 HOSTS_FILE = '/etc/hosts'
 
@@ -84,6 +104,23 @@ class NetworkCommands(commands.CommandBase):
 
     @commands.command_add('resetnetwork')
     def resetnetwork_cmd(self, data):
+
+        xs_handle = pyxenstore.Handle()
+
+        try:
+            hostname = xs_handle.read(XENSTORE_HOSTNAME_PATH)
+        except Exception:
+            hostname = DEFAULT_HOSTNAME
+
+        interfaces = []
+        entries = xs_handle.dir(XENSTORE_INTERFACE_PATH)
+        for entry in entries:
+            data = xs_handle.read(XENSTORE_INTERFACE_PATH + '/' + entry)
+            interfaces.append(anyjson.deserialize(data))
+
+        del xs_handle
+
+        data = {"hostname": hostname, "interfaces": interfaces}
 
         os_mod = self.detect_os()
         if not os_mod:

@@ -21,4 +21,4 @@ Plugins to import
 """
 
 from jsonparser import JsonParser
-from xenstore import XenStore
+from xscomm import XSComm
