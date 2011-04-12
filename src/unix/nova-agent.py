@@ -1,6 +1,5 @@
 
 import sys
-print sys.path
 import agentlib
 import plugins
 import commands.command_list
