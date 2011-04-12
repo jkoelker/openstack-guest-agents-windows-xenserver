@@ -23,6 +23,8 @@ check-local:
 	@${PYTHON_VER} run_tests.py
 
 install-exec-local:
+	rm -f ${DESTDIR}${datadir}/../nova-agent.py
+	ln -s ${datadir}/nova-agent.py ${DESTDIR}${datadir}/../nova-agent.py
 	@$(PYTHON_VER) $(top_srcdir)/install_libs.py ${DESTDIR}$(sbindir)/nova-agent ${DESTDIR}/$(libdir)
 	@$(PYTHON_VER) $(top_srcdir)/install_modules.py ${DESTDIR}$(modulesdir)
 	@$(PYTHON_VER) $(top_srcdir)/patch_binary.py ${DESTDIR}${sbindir}/nova-agent ${DESTDIR} $(libdir)
