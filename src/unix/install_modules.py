@@ -2,13 +2,12 @@
 
 import os
 import shutil
-import subprocess
 import sys
 
 import commands.command_list
 
 
-def install_plugins(destdir):
+def install_modules(system_paths, installdir):
 
     c = commands.init(testmode=True)
 
@@ -24,8 +23,16 @@ def install_plugins(destdir):
             for f in files:
                 # Only install .pyc or .sos, etc
                 if not f.endswith('.py'):
-                    shutil.copy2(os.path.join(root, f),
-                            os.path.join(destdir + root[len(srcdir):], f))
+                    fname = os.path.join(destdir + root[len(srcdir):], f)
+                    shutil.copy2(os.path.join(root, f), fname)
+
+    def _do_install(src, destdir):
+        print "Installing %s" % src
+        if os.path.isdir(src):
+            subdir = src.rsplit('/', 1)[1]
+            copy_tree(src, os.path.join(destdir, subdir))
+        else:
+            shutil.copy2(src, destdir)
 
     for modname in sys.modules:
 
@@ -41,52 +48,42 @@ def install_plugins(destdir):
 
         base_dir = ''
 
-        for p in sys.path:
+        for p in system_paths:
             p_len = len(p)
 
             if mod_fn.startswith(p) and p > len(base_dir):
                 base_dir = p
 
-        # Skip modules that are not in sys.patH, as they must be
-        # our modules and we install those separately.
-
+        # Only install modules that are in the system paths.  We install
+        # our command modules separately.
         if base_dir:
             # Turn /usr/lib/python2.6/Crypto/Cipher/AES into:
             # /usr/lib/python2.6/Crypto
             rest_dir = mod_fn[len(base_dir) + 1:]
             if '/' in rest_dir:
                 rest_dir = rest_dir.split('/', 1)[0]
-            to_install.add(os.path.join(base_dir, rest_dir))
+            _do_install(os.path.join(base_dir, rest_dir),
+                    installdir)
 
-    try:
-        os.mkdir(destdir)
-    except:
-        pass
+if __name__ == "__main__":
+    prog_name = sys.argv[0]
 
-    for i in to_install:
-        print "Installing %s" % i
-        if os.path.isdir(i):
-            subdir = i.rsplit('/', 1)[1]
-            copy_tree(i, os.path.join(destdir, subdir))
-        else:
-            shutil.copy2(i, destdir)
+    if len(sys.argv) != 2:
+        print "Usage: %s <install_dir>" % prog_name
+        sys.exit(1)
 
+    installdir = sys.argv[1]
 
-if len(sys.argv) != 2:
-    print "Usage: install_modules.py <dest_dir>"
-    sys.exit(1)
+    sys_paths = sys.path
+    # Pop off the first directory, which is the directory of this script.
+    # We do this so we can ignore *our* modules, which are installed
+    # separately
+    sys_paths.pop(0)
 
-# Pop the first directory off that python uses
-# It adds this directory (the one this script is in)
-# We do this in order to skip our modules
-sys.path.pop(0)
+    if not os.path.exists(installdir):
+        os.makedirs(installdir)
+    elif not os.path.isdir(installdir):
+        print "Error: '%s' exists and is not a directory" % installdir
+        sys.exit(1)
 
-destdir = os.path.normpath(sys.argv[1])
-
-if not os.path.exists(destdir):
-    os.makedirs(destdir)
-elif not os.path.isdir(destdir):
-    print "Error: '%s' exists and is not a directory" % destdir
-    sys.exit(1)
-
-install_plugins(destdir)
+    install_modules(sys_paths, installdir) 

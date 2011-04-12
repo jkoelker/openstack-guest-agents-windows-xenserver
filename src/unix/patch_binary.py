@@ -14,9 +14,10 @@ def execute(*args):
                 "failed to execute %s: status %d" % ' '.join(args), status)
 
 
-def patch_binary(binary, libdir, interpreter):
-    execute('patchelf', '--set-interpreter',
-            os.path.join(libdir, interpreter), binary)
+def patch_binary(binary, libdir, interpreter=None):
+    if interpreter:
+        execute('patchelf', '--set-interpreter',
+                os.path.join(libdir, interpreter), binary)
     execute('patchelf', '--set-rpath', libdir, binary)
 
 if __name__ == "__main__":

@@ -6,12 +6,10 @@ import subprocess
 import sys
 
 
-def install_libs_for_binary(binary, destdir, libdir):
+def install_libs(binary, installdir):
     """
     Install all dynamic library dependencies for a binary
     """
-
-    installdir = destdir + libdir
     # Strip extra leading slashses
     while installdir.startswith('//'):
         installdir = installdir[1:]
@@ -65,32 +63,18 @@ def install_libs_for_binary(binary, destdir, libdir):
         print "Installing %s" % lib
         shutil.copy2(lib, installdir)
 
-        filename = os.path.basename(lib)
-        if not filename.startswith('ld-'):
-            args = ['patchelf', '--set-rpath', libdir,
-                    os.path.join(installdir, filename)]
-            p = subprocess.Popen(args)
-            status = os.waitpid(p.pid, 0)[1]
+if __name__ == "__main__":
+    if len(sys.argv) != 3:
+        print "Usage: install_libs.py <binary_name> <install_dir>"
+        sys.exit(1)
 
-            if status:
-                raise Exception(
-                        "failed to execute %s: status %d" % ' '.join(args),
-                        status)
+    binary = sys.argv[1]
+    installdir = sys.argv[2]
 
-if len(sys.argv) != 4:
-    print "Usage: install_libs.py <binary_name> <dest_dir> <lib_dir>"
-    sys.exit(1)
+    if not os.path.exists(installdir):
+        os.makedirs(installdir)
+    elif not os.path.isdir(installdir):
+        print "Error: '%s' exists and is not a directory" % installdir
+        sys.exit(1)
 
-binary = sys.argv[1]
-destdir = sys.argv[2]
-libdir = sys.argv[3]
-
-installdir = destdir + libdir
-
-if not os.path.exists(installdir):
-    os.makedirs(installdir)
-elif not os.path.isdir(installdir):
-    print "Error: '%s' exists and is not a directory" % installdir
-    sys.exit(1)
-
-install_libs_for_binary(binary, destdir, libdir)
+    install_libs(binary, installdir)
