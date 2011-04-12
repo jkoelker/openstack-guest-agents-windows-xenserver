@@ -44,8 +44,6 @@ class JsonParser(object):
     JSON command parser plugin for nova-agent
     """
 
-    type = "parser"
-
     def __init__(self, command_cls, *args, **kwargs):
         if not getattr(command_cls, "run_command", None):
             raise TypeError("Command class has no 'run_command' method")

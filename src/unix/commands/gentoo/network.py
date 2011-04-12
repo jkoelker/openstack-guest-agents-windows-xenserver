@@ -50,8 +50,7 @@ def configure_network(network_config, *args, **kwargs):
     update_files[RESOLV_FILE] = data
 
     # Generate new hostname file
-    hostname = network_config.get('hostname',
-            commands.network.DEFAULT_HOSTNAME)
+    hostname = network_config.get('hostname')
 
     data = get_hostname_file(hostname)
     update_files[HOSTNAME_FILE] = data
