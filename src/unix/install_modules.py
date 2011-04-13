@@ -86,4 +86,4 @@ if __name__ == "__main__":
         print "Error: '%s' exists and is not a directory" % installdir
         sys.exit(1)
 
-    install_modules(sys_paths, installdir) 
+    install_modules(sys_paths, installdir)

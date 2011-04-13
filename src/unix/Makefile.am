@@ -17,7 +17,9 @@ nodist_noinst_DATA = agentlib.so
 agentlib.so:
 	    ln -s lib/.libs/agentlib.so agentlib.so
 
-BINTARNAME = @PACKAGE@-`uname -m`-@PACKAGE_VERSION@.tar.gz
+BINTARDIR = @PACKAGE@-`uname -m`-@PACKAGE_VERSION@
+BINTARNAME = ${BINTARDIR}.tar.gz
+FULLBINTARDIR = $(top_srcdir)/${BINTARDIR}
 
 check-local:
 	@${PYTHON_VER} run_tests.py
@@ -43,18 +45,20 @@ clean-local::
 	rm -f agentlib.so
 	find . -name '*.gcov' -delete -o -name '*.gcda' -delete -o -name '*.gcno' -delete
 	find . -name '*.pyc' -exec rm -f {} \;
-	rm -rf $(CURDIR)/fakeroot
+	rm -rf $(top_srcdir)/${BINTARDIR}
 
 coverage:: check
 	for d in $(SUBDIRS) ; do cd $$d ; for f in *.c ; do gcov $$f; done ; cd ..; done
 
 bintar: all
-	@rm -rf fakeroot; mkdir -p fakeroot
-	@$(MAKE) install DESTDIR=$(CURDIR)/fakeroot
-	@cp -p $(top_srcdir)/scripts/agent-smith ${CURDIR}/fakeroot/$(sbindir)/.
-	@mkdir ${CURDIR}/fakeroot/${datadir}/etc
-	@cp -p $(top_srcdir)/scripts/nova-agent* ${CURDIR}/fakeroot/${datadir}/etc/.
-	@tar -czC fakeroot -f $(BINTARNAME) .
+	@rm -rf ${FULLBINTARDIR}; mkdir ${FULLBINTARDIR}
+	@$(MAKE) install DESTDIR=$(CURDIR)/${BINTARDIR}
+	@cp -p $(top_srcdir)/scripts/agent-smith ${FULLBINTARDIR}/$(sbindir)/.
+	@mkdir ${FULLBINTARDIR}/${datadir}/etc
+	@cp -p $(top_srcdir)/scripts/nova-agent* ${FULLBINTARDIR}/${datadir}/etc/.
+	@cp -p $(top_srcdir)/scripts/installer.sh ${FULLBINTARDIR}/.
+	@tar -czf $(top_srcdir)/${BINTARNAME} -C $(CURDIR) ${BINTARDIR}
+	@rm -rf ${FULLBINTARDIR}
 	@echo ""
 	@echo "Created $(BINTARNAME)"
 	@echo ""
