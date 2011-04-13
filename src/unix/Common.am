@@ -1,5 +1,6 @@
 
-datadir=${prefix}/share/${PACKAGE}
+datadir=${prefix}/share/${PACKAGE}/${PACKAGE_VERSION}
+sbindir=${datadir}/sbin
 pluginsdir=${datadir}/plugins
 commandsdir=${datadir}/commands
 pkglibdir=${pluginsdir}

@@ -19,3 +19,8 @@ nova_agent_LDFLAGS = -export-dynamic
 
 $(top_srcdir)/lib/libagent.la:
 	cd $(top_srcdir)/lib && make
+
+install-exec-local:
+	rm -f ${DESTDIR}${prefix}/sbin/nova-agent
+	@if [ ! -d ${DESTDIR}${prefix}/sbin ]; then mkdir -m 0775 ${DESTDIR}${prefix}/sbin > /dev/null 2>&1 ; fi
+	ln -s ${sbindir}/nova-agent ${DESTDIR}${prefix}/sbin/nova-agent

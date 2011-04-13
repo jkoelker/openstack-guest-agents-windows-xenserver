@@ -108,6 +108,7 @@ AC_CONFIG_FILES([Makefile
                  plugins/Makefile
                  commands/Makefile
                  tests/Makefile
+                 scripts/installer.sh
                  ])
 
 AC_OUTPUT

@@ -138,13 +138,18 @@ class UpdateCommand(commands.CommandBase):
             os.unlink(local_filename)
             return (500, str(e))
 
-        found_installer = False
+        found_installer = None
         for tarinfo in t.getmembers():
             name = tarinfo.name
-            while name.startswith('./') or name.startswith('/'):
+            while name.startswith('../') or name.startswith('./') \
+                    or name.startswith('/'):
                 name = name[1:]
-            if name == "installer.sh":
-                found_installer = True
+            # Check for 'installer.sh' in root of the tar or in a
+            # subdirectory off of the root
+            if name == "installer.sh" or (name.count('/') == 1 and
+                    name.split('/')[1] == "installer.sh"):
+                found_installer = name
+                break
 
         if found_installer:
             dest_path = "%s.%d" % (DEST_PATH, os.getpid())
@@ -158,8 +163,7 @@ class UpdateCommand(commands.CommandBase):
 
             os.unlink(local_filename)
 
-            p = subprocess.Popen(["%s/installer.sh" % dest_path,
-                        dest_path],
+            p = subprocess.Popen(["%s/%s" % (dest_path, found_installer)],
                     stdin=subprocess.PIPE,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE)
