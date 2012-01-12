@@ -13,6 +13,7 @@
 //    License for the specific language governing permissions and limitations
 //    under the License.
 
+using System;
 using System.Collections.Generic;
 using Rackspace.Cloud.Server.Agent.Configuration;
 using Rackspace.Cloud.Server.Agent.Interfaces;
@@ -35,15 +36,17 @@ namespace Rackspace.Cloud.Server.Agent {
             IList<Command> commands = new List<Command>();
 
             foreach (var messageKey in messageKeysAsUuids) {
-                var command = new Json<Command>().Deserialize(ReadKey(messageKey));
+                var result = ReadKey(messageKey);
+                if (result.Contains("The system cannot find the file specified.")) continue;
+                var command = new Json<Command>().Deserialize(result);
                 command.key = messageKey;
                 commands.Add(command);
             }
-
             return commands;
         }
 
-        public string ReadKey(string key) {
+        public string ReadKey(string key)
+        {
             var result = _executableProcess.Run(Constants.XenClientPath, "read " + Constants.Combine(Constants.WritableDataHostBase, key));
             return result.Output.First();
         }
