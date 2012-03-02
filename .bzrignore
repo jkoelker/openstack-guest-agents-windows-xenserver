@@ -42,6 +42,6 @@ unix/src/nova-agent
 unix/tests/Makefile
 unix/tests/Makefile.in
 unix/scripts/installer.sh
-unix/scripts/nova-agent.init
-unix/scripts/nova-agent.gentoo.init
-unix/scripts/nova-agent.freebsd.init
+unix/scripts/generic/nova-agent
+unix/scripts/gentoo/nova-agent
+unix/scripts/freebsd/nova-agent
