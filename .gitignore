@@ -13,3 +13,6 @@ WindowsConfigurationAgent.5.1.ReSharper.user
 .deps
 *.la
 *.lo
+*.resources
+*.pidb
+
