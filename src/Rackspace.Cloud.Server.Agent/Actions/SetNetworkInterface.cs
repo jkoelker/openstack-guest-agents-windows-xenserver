@@ -21,7 +21,6 @@ using Rackspace.Cloud.Server.Agent.Interfaces;
 using Rackspace.Cloud.Server.Agent.Utilities;
 using Rackspace.Cloud.Server.Agent.WMI;
 using Rackspace.Cloud.Server.Common.Logging;
-using System.Linq;
 
 namespace Rackspace.Cloud.Server.Agent.Actions
 {
@@ -64,9 +63,9 @@ namespace Rackspace.Cloud.Server.Agent.Actions
 
         private string[] ReverseSortWithKey(IDictionary<string, string> keyValuePair)
         {
-            var allKeys = keyValuePair.Keys.ToArray();
-            Array.Sort(allKeys);Array.Reverse(allKeys);
-            return allKeys;
+            var allKeys = (List<string>)keyValuePair.Keys;
+            allKeys.Sort();allKeys.Reverse();
+            return allKeys.ToArray();
         }
 
         private void SetNetworkInterfaceValues(NetworkInterface networkInterface, string interfaceName)

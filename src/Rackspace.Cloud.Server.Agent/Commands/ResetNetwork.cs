@@ -13,10 +13,10 @@
 //    License for the specific language governing permissions and limitations
 //    under the License.
 
+using System.Collections.Generic;
 using Rackspace.Cloud.Server.Agent.Actions;
 using Rackspace.Cloud.Server.Agent.Configuration;
 using Rackspace.Cloud.Server.Agent.Interfaces;
-using System.Linq;
 
 namespace Rackspace.Cloud.Server.Agent.Commands {
     /// <summary>
@@ -36,7 +36,7 @@ namespace Rackspace.Cloud.Server.Agent.Commands {
         public ExecutableResult Execute(string keyValue) {
             var network = _xenNetworkInformation.Get();
 
-            _setNetworkInterface.Execute(network.Interfaces.Values.ToList());
+            _setNetworkInterface.Execute((List<NetworkInterface>)network.Interfaces.Values);
             _setNetworkRoutes.Execute(network);
 
             return new ExecutableResult();

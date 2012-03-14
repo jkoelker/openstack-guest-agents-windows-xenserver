@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using NUnit.Framework;
 using NUnit.Framework.SyntaxHelpers;
 using Rackspace.Cloud.Server.Agent.Configuration;
@@ -20,9 +19,9 @@ namespace Rackspace.Cloud.Server.Agent.Specs {
             guids.Add(guid2);
             guids.Add("C");
 
-            var validGuids = guids.ValidateAndClean();
+            var validGuids = (List<string>)guids.ValidateAndClean();
 
-            Assert.AreEqual(2, validGuids.ToArray().Count());
+            Assert.AreEqual(2, validGuids.ToArray().Length);
             Assert.AreEqual(guid1 + "\r\n" + guid2 + "\r\n", validGuids.Value());
         }
 
@@ -31,9 +30,9 @@ namespace Rackspace.Cloud.Server.Agent.Specs {
         {
             IList<string> guids = new List<string> {"00ACDDF1-C646-4BE8-B3EA-9CD3C265B52E"};
 
-            var validGuids = guids.ValidateAndClean();
+            var validGuids = (List<string>)guids.ValidateAndClean();
 
-            Assert.AreEqual(1, validGuids.ToArray().Count());
+            Assert.AreEqual(1, validGuids.ToArray().Length);
         }
 
         [Test]
@@ -68,7 +67,7 @@ namespace Rackspace.Cloud.Server.Agent.Specs {
                              {
                                  ExitCode = "1",
                                  Output = "Command Executed Successfully\nPlease consult your administrator".SplitOnNewLine(),
-                                 Error = "Stuff happened, do something\nwell what!".SplitOnNewLine().ToList()
+                                 Error = (List<string>)"Stuff happened, do something\nwell what!".SplitOnNewLine()
                              };
 
             Assert.AreEqual("ExitCode=1\r\nOutput=Command Executed Successfully\r\nPlease consult your administrator\r\n\r\nError=Stuff happened, do something\r\nwell what!\r\n", result.ToString());

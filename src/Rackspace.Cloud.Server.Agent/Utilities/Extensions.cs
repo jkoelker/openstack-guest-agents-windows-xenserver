@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -26,7 +25,7 @@ namespace Rackspace.Cloud.Server.Agent.Utilities {
         }
 
         public static string First(this IEnumerable<string> listOfStrings) {
-            return listOfStrings.ToArray()[0];
+            return listOfStrings.First();
         }
 
         public static bool IsValidFilePath(this string path)
@@ -36,7 +35,7 @@ namespace Rackspace.Cloud.Server.Agent.Utilities {
         }
 
         public static string Value(this IEnumerable<string> listOfStrings) {
-            var builder = new StringBuilder(listOfStrings.Count());
+            var builder = new StringBuilder();
 
             foreach (var message in listOfStrings) {
                 builder.AppendLine(message);

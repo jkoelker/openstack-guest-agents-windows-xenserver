@@ -14,7 +14,6 @@
 //    under the License.
 
 using System.Collections.Generic;
-using System.Linq;
 using Rackspace.Cloud.Server.Agent.Interfaces;
 using Rackspace.Cloud.Server.Common.Logging;
 
@@ -51,8 +50,10 @@ namespace Rackspace.Cloud.Server.Agent {
                 var operation = _processQueue.Dequeue();
                 var executableResult = new ExecutableProcess(_logger, _commandPatternCommandPatternSubsitution).Run(operation.Command, operation.Arguments);
 
-                if (!operation.AcceptableReturnCodes.ToList().Contains(executableResult.ExitCode)) {
-                    throw new UnsuccessfulCommandExecutionException("Command Failed. ", executableResult);
+                foreach (var acceptableReturnCode in operation.AcceptableReturnCodes) {
+                    if (acceptableReturnCode.Contains(executableResult.ExitCode)) {
+                        throw new UnsuccessfulCommandExecutionException("Command Failed. ", executableResult);
+                    }
                 }
             }
         }

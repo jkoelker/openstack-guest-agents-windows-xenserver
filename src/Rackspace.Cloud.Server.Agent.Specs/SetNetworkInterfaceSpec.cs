@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using NUnit.Framework;
 using Rackspace.Cloud.Server.Agent.Actions;
 using Rackspace.Cloud.Server.Agent.Configuration;
@@ -58,7 +57,8 @@ namespace Rackspace.Cloud.Server.Agent.Specs {
         private NetworkInterface GetMeANetworkInterfaceWithAPrimaryAndSecondaryIp(string macAddress) {
             var networkInterface = GetMeANetworkInterface(macAddress);
 
-            var ipList = networkInterface.ips.ToList();
+            var ipList = new List<IpTuple>(networkInterface.ips.Length);
+            ipList.AddRange(networkInterface.ips);
             ipList.Add(new IpTuple {ip = "1.2.2.2", netmask = "255.255.0.0"});
 
             networkInterface.ips = ipList.ToArray();
