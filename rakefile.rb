@@ -71,14 +71,14 @@ desc "Run agent unit tests"
 nunit :agent_specs => :compile do |nunit|
   nunit.command = NUNIT_CMD_EXE
   nunit.assemblies AGENT_UNIT_TEST_DLL
-  nunit.options '/xml=agent-unit-tests-results.xml'
+  nunit.options NUNIT_OPTION_FLAG + 'xml=agent-unit-tests-results.xml'
 end
 
 desc "Run diffiehellman unit tests"
 nunit :diffiehellman_specs => :compile do |nunit|
   nunit.command = NUNIT_CMD_EXE
   nunit.assemblies DIFFIEHELLMAN_UNIT_TEST_DLL
-  nunit.options '/xml=diffiehellman-unit-tests-results.xml'
+  nunit.options NUNIT_OPTION_FLAG + 'xml=diffiehellman-unit-tests-results.xml'
 end
 
 desc "Packaging"
