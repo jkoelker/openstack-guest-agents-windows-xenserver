@@ -16,3 +16,4 @@ WindowsConfigurationAgent.5.1.ReSharper.user
 *.resources
 *.pidb
 *.userprefs
+*/AssemblyInfo.cs
