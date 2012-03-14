@@ -15,4 +15,4 @@ WindowsConfigurationAgent.5.1.ReSharper.user
 *.lo
 *.resources
 *.pidb
-
+*.userprefs
