@@ -1,6 +1,6 @@
 ABSOLUTE_PATH = File.expand_path(File.dirname(__FILE__))
 
-COMPILE_TARGET = 'release'
+COMPILE_TARGET = 'Release'
 PRODUCT = "Rackspace Cloud Server Agent"
 COPYRIGHT = "Copyright (c) 2009 2010 2011, Rackspace Cloud.  All Rights Reserved";
 COMPANY = "Rackspace Cloud"
@@ -15,6 +15,14 @@ DIFFIEHELLMAN_UNIT_TEST_DLL = File.join(ABSOLUTE_PATH,'src','Rackspace.Cloud.Ser
 AGENT_SERVICE_DIR = File.join(ABSOLUTE_PATH,'src','Rackspace.Cloud.Server.Agent.Service','bin','Release')
 UPDATE_SERVICE_DIR = File.join(ABSOLUTE_PATH,'src','Rackspace.Cloud.Server.Agent.UpdaterService','bin','Release')
 BUILDS_DIR = File.join(ABSOLUTE_PATH,'builds')
-NUNIT_CMD_EXE = File.join(ABSOLUTE_PATH,'lib','nunit','nunit-console.exe')
-FRAMEWORK_DIR = File.join(ENV['windir'].dup, 'Microsoft.NET', 'Framework', CLR_VERSION)
-MSBUILD_EXE = File.join(FRAMEWORK_DIR, 'msbuild.exe')
+
+# NOTE(jkoelker) to build on Windows .NET
+#NUNIT_CMD_EXE = File.join(ABSOLUTE_PATH,'lib','nunit','nunit-console.exe')
+#FRAMEWORK_DIR = File.join(ENV['windir'].dup, 'Microsoft.NET', 'Framework', CLR_VERSION)
+#MSBUILD_EXE = File.join(FRAMEWORK_DIR, 'msbuild.exe')
+#NUNIT_OPTION_FLAG = '/'
+
+# NOTE(jkoelker) to build on mono make sure nunit is installed and uncomment
+MSBUILD_EXE = 'xbuild'
+NUNIT_CMD_EXE = 'nunit-console'
+NUNIT_OPTION_FLAG = '-'
