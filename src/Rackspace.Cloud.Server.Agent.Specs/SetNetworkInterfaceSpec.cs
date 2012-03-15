@@ -69,9 +69,11 @@ namespace Rackspace.Cloud.Server.Agent.Specs {
             return new NetworkInterface
                        {
                            ips = new[] {new IpTuple {ip = "192.168.1.110", netmask = "255.255.255.0"}},
+                           ip6s = new[] {new IpTuple {ip = "2001:0DB8::0", netmask = "32"}},
                            dns = new[] {"192.168.1.3", "192.168.1.4"},
                            label = "Front End",
                            gateway = "192.168.1.1",
+                           gateway6 = "fe80::def",
                            mac = macAddress
                        };
         }
