@@ -22,7 +22,7 @@ namespace Rackspace.Cloud.Server.Agent.Configuration
         public IpTuple[] ips { get; set; }
         public IpTuple[] ip6s { get; set; }
         public string gateway { get; set; }
-        public string gateway6 { get; set; }
+        public string gateway_v6 { get; set; }
         public NetworkRoute[] routes { get; set; }
     }
 }

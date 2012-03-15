@@ -12,7 +12,6 @@
 //    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 //    License for the specific language governing permissions and limitations
 //    under the License.
-
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -113,16 +112,16 @@ namespace Rackspace.Cloud.Server.Agent.Actions
             var primaryIp6HasBeenAssigned = false;
             for (var i = 0; i != networkInterface.ip6s.Length; i++) {
                 if (networkInterface.ip6s[i].enabled != "1") continue;
-                if (!string.IsNullOrEmpty(networkInterface.gateway6) && !primaryIp6HasBeenAssigned) {
+                if (!string.IsNullOrEmpty(networkInterface.gateway_v6) && !primaryIp6HasBeenAssigned) {
                     _executableProcessQueue.Enqueue("netsh",
                                                     String.Format(
-                                                        "interface ipv6 add address interface=\"{0}\" addrress={1}",
-                                                        interfaceName, networkInterface.ips[i].ip));
+                                                        "interface ipv6 add address interface=\"{0}\" address={1}",
+                                                        interfaceName, networkInterface.ip6s[i].ip));
                     _executableProcessQueue.Enqueue("netsh",
                                                     String.Format(
                                                         // NOTE(jkoelker) Do we need the siteprefixlength here??
                                                         "interface ipv6 add route interface=\"{0}\" prefix=\"::/0\" nexthop=\"{1}\" metric=2",
-                                                        interfaceName, networkInterface.gateway6));
+                                                        interfaceName, networkInterface.gateway_v6));
                     primaryIp6HasBeenAssigned = true;
                     continue;
                 }
@@ -140,6 +139,22 @@ namespace Rackspace.Cloud.Server.Agent.Actions
 
         private void CleanseInterfaceForSetup(string interfaceName) {
             _executableProcessQueue.Enqueue("netsh", string.Format("interface ip set address name=\"{0}\" source=dhcp", interfaceName), new[] { "0", "1" });
+
+            foreach (System.Net.NetworkInformation.NetworkInterface nic in System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces()) {
+                if (nic.Name != interfaceName) {
+                    continue;
+                }
+
+                foreach(System.Net.NetworkInformation.IPAddressInformation ipInfo in nic.GetIPProperties().UnicastAddresses) {
+                    if (ipInfo.Address.AddressFamily != System.Net.Sockets.AddressFamily.InterNetworkV6 || ipInfo.Address.IsIPv6LinkLocal){
+                        continue;
+                    }
+
+                    _executableProcessQueue.Enqueue("netsh", string.Format("interface ipv6 delete address interface=\"{0}\" address=\"{1}\"",
+                                                                           interfaceName, ipInfo.Address.ToString()), new[] { "0", "1" });
+                }
+
+            }
         }
 
         private void CleanseDnsForSetup(string interfaceName) {

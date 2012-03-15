@@ -73,7 +73,7 @@ namespace Rackspace.Cloud.Server.Agent.Specs {
                            dns = new[] {"192.168.1.3", "192.168.1.4"},
                            label = "Front End",
                            gateway = "192.168.1.1",
-                           gateway6 = "fe80::def",
+                           gateway_v6 = "fe80::def",
                            mac = macAddress
                        };
         }
