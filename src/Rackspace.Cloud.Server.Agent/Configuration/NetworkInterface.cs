@@ -20,7 +20,9 @@ namespace Rackspace.Cloud.Server.Agent.Configuration
         public string[] dns { set; get; }
         public string label { get; set; }
         public IpTuple[] ips { get; set; }
+        public IpTuple[] ip6s { get; set; }
         public string gateway { get; set; }
+        public string gateway6 { get; set; }
         public NetworkRoute[] routes { get; set; }
     }
 }
