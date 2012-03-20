@@ -140,6 +140,9 @@ namespace Rackspace.Cloud.Server.Agent.Actions
         private void CleanseInterfaceForSetup(string interfaceName) {
             _executableProcessQueue.Enqueue("netsh", string.Format("interface ip set address name=\"{0}\" source=dhcp", interfaceName), new[] { "0", "1" });
 
+            // TODO(jkoelker) Parsing of routing table from interface and deleting all the routes
+            _executableProcessQueue.Enqueue("netsh", string.Format("interface ipv6 delete route interface=\"{0}\" prefix=\"::/0\"", interfaceName), new[] { "0", "1" });
+
             foreach (System.Net.NetworkInformation.NetworkInterface nic in System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces()) {
                 if (nic.Name != interfaceName) {
                     continue;
@@ -153,7 +156,6 @@ namespace Rackspace.Cloud.Server.Agent.Actions
                     _executableProcessQueue.Enqueue("netsh", string.Format("interface ipv6 delete address interface=\"{0}\" address=\"{1}\"",
                                                                            interfaceName, ipInfo.Address.ToString()), new[] { "0", "1" });
                 }
-
             }
         }
 
