@@ -78,10 +78,10 @@ namespace Rackspace.Cloud.Server.Agent.Actions
                 CleanseDnsForSetup(interfaceName);
                 SetupDns(interfaceName, networkInterface);
             }
-
+                    
             if(interfaceName != networkInterface.label)
                 _executableProcessQueue.Enqueue("netsh", String.Format("interface set interface name=\"{0}\" newname=\"{1}\"", interfaceName, networkInterface.label));
-
+            
             _executableProcessQueue.Go();
         }
 
@@ -89,7 +89,7 @@ namespace Rackspace.Cloud.Server.Agent.Actions
             _logger.Log("Network Interfaces found locally:");
             foreach (var networkInterface in nameAndMacs) {
                 _logger.Log(String.Format("{0} ({1})", networkInterface.Key, networkInterface.Value));
-            }
+            } 
         }
 
         private void SetupInterface(string interfaceName, NetworkInterface networkInterface) {
@@ -101,33 +101,12 @@ namespace Rackspace.Cloud.Server.Agent.Actions
                                                     String.Format(
                                                         "interface ip add address name=\"{0}\" addr={1} mask={2} gateway={3} gwmetric=2",
                                                         interfaceName, networkInterface.ips[i].ip, networkInterface.ips[i].netmask, networkInterface.gateway));
-                    primaryIpHasBeenAssigned = true;
+                    primaryIpHasBeenAssigned = true; 
                     continue;
                 }
 
                 _executableProcessQueue.Enqueue("netsh", String.Format("interface ip add address name=\"{0}\" addr={1} mask={2}",
                                                                        interfaceName, networkInterface.ips[i].ip, networkInterface.ips[i].netmask));
-            }
-
-
-            var primaryIp6HasBeenAssigned = false;
-            for (var i = 0; i != networkInterface.ip6s.Length; i++) {
-                if (networkInterface.ip6s[i].enabled != "1") continue;
-                if (!string.IsNullOrEmpty(networkInterface.gateway6) && !primaryIp6HasBeenAssigned) {
-                    _executableProcessQueue.Enqueue("netsh",
-                                                    String.Format(
-                                                        "interface ipv6 add address interface=\"{0}\" addrress={1}",
-                                                        interfaceName, networkInterface.ips[i].ip));
-                    _executableProcessQueue.Enqueue("netsh",
-                                                    String.Format(
-                                                        // NOTE(jkoelker) Do we need the siteprefixlength here??
-                                                        "interface ipv6 add route interface=\"{0}\" prefix=\"::/0\" nexthop=\"{1}\" metric=2",
-                                                        interfaceName, networkInterface.gateway6));
-                    primaryIp6HasBeenAssigned = true;
-                    continue;
-                }
-                _executableProcessQueue.Enqueue("netsh", String.Format("interface ipv6 add address interface=\"{0}\" address={1}",
-                                                                       interfaceName, networkInterface.ip6s[i].ip));
             }
         }
 
