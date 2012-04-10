@@ -15,7 +15,7 @@
 
 namespace Rackspace.Cloud.Server.Agent.Configuration
 {
-    public class IpTuple {
+    public class Ipv4Tuple {
         private string _enabled = "1";
 
         public string ip { set; get; }

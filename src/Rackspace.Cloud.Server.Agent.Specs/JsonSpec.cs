@@ -26,7 +26,7 @@ namespace Rackspace.Cloud.Server.Agent.Specs {
             _partialJsonStringForImport = "{\"name\":\"password\",\"value\":\"somepassword\"}";
             _fullJsonStringWithObjectCompletelyPopulated = "{\"name\":\"password\",\"value\":\"somepassword\",\"key\":\"67745jhgj7683\"}";
             _fullJsonStringWithObjectPartiallyPopulated = "{\"key\":null,\"name\":\"password\",\"value\":\"somepassword\"}";
-            
+
             _fullInterfaceJsonString = "{\"mac\":\"40:40:ed:65:h6\",\"dns\":[\"1.1.1.1\",\"64.39.2.138\"],\"label\":\"Label 1\",\"ips\":[{\"Ip\":\"3.3.3.3\",\"NetMask\":\"255.255.255.0\"},{\"Ip\":\"4.4.4.4\",\"NetMask\":\"255.255.255.0\"}],\"gateway\":\"10.1.1.100\"}";
         }
 
@@ -99,7 +99,7 @@ namespace Rackspace.Cloud.Server.Agent.Specs {
             const string stringCorrt = "{\"mac\":\"40:40:92:9e:44:48\",\"dns\":[\"72.3.128.240\",\"72.3.128.241\"],\"label\":\"public\",\"ips\":[{\"ip\":\"98.129.220.138\",\"netmask\":\"255.255.255.0\"}],\"gateway\":\"98.129.220.1\"}";
             const string stringSomething =
                 "{\"label\": \"private\", \"ips\": [{\"netmask\": \"255.255.224.0\", \"ip\": \"10.176.64.48\"}], \"mac\": \"40:40:d0:ed:cb:96\"}";
-            
+
             var interface1 = new NetworkInterface
                                  {
                                      gateway = "98.129.220.1",
@@ -109,13 +109,19 @@ namespace Rackspace.Cloud.Server.Agent.Specs {
                                      ips =
                                          new[]
                                              {
-                                                 new IpTuple {ip = "98.129.220.138", netmask = "255.255.255.0", enabled = "1"},
-                                             }
+                                                 new Ipv4Tuple {ip = "98.129.220.138", netmask = "255.255.255.0", enabled = "1"},
+                                             },
+                                     ip6s = new[]
+                                                {
+                                                    new Ipv6Tuple {ip = "2001:4801:787F:202:278E:89D8:FF06:B476", netmask = "96", enabled = "1", gateway = "fe80::def"} 
+                                                }
                                  };
 
             var serialized = _jsonInterface.Serialize(interface1);
-            Assert.That(serialized, Is.EqualTo("{\"mac\":\"40:40:92:9e:44:48\",\"dns\":[\"72.3.128.240\",\"72.3.128.241\"],\"label\":\"public\",\"ips\":[{\"ip\":\"98.129.220.138\",\"netmask\":\"255.255.255.0\",\"enabled\":\"1\"}],\"gateway\":\"98.129.220.1\",\"routes\":null}"));
-            
+            Assert.That(serialized, Is.EqualTo("{\"mac\":\"40:40:92:9e:44:48\",\"dns\":[\"72.3.128.240\",\"72.3.128.241\"],\"label\":\"public\",\"ips\":[{\"ip\":\"98.129.220.138\",\"netmask\":\"255.255.255.0\",\"enabled\":\"1\"}]," +
+                "\"ip6s\":[{\"ip\":\"2001:4801:787F:202:278E:89D8:FF06:B476\",\"netmask\":\"96\",\"gateway\":\"fe80::def\",\"enabled\":\"1\"}]," + 
+                "\"gateway\":\"98.129.220.1\",\"routes\":null}"));
+
             _jsonInterface.Deserialize(stringCorrt);
             _jsonInterface.Deserialize(stringWrong);
             _jsonInterface.Deserialize(stringSomething);

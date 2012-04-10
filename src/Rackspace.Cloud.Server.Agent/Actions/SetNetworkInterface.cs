@@ -33,11 +33,13 @@ namespace Rackspace.Cloud.Server.Agent.Actions
         private readonly IExecutableProcessQueue _executableProcessQueue;
         private readonly IWmiMacNetworkNameGetter _wmiMacNetworkNameGetter;
         private readonly ILogger _logger;
+        private readonly IIPFinder _ipFinder;
 
-        public SetNetworkInterface(IExecutableProcessQueue executableProcessQueue, IWmiMacNetworkNameGetter wmiMacNetworkNameGetter, ILogger logger) {
+        public SetNetworkInterface(IExecutableProcessQueue executableProcessQueue, IWmiMacNetworkNameGetter wmiMacNetworkNameGetter, ILogger logger, IIPFinder ipFinder) {
             _executableProcessQueue = executableProcessQueue;
             _wmiMacNetworkNameGetter = wmiMacNetworkNameGetter;
             _logger = logger;
+            _ipFinder = ipFinder;
         }
 
         public void Execute(List<NetworkInterface> networkInterfaces) {
@@ -72,27 +74,42 @@ namespace Rackspace.Cloud.Server.Agent.Actions
         private void SetNetworkInterfaceValues(NetworkInterface networkInterface, string interfaceName)
         {
             CleanseInterfaceForSetup(interfaceName);
-            SetupInterface(interfaceName, networkInterface);
+            SetupIpv4Interface(interfaceName, networkInterface);
+            SetupIpv6Interface(interfaceName, networkInterface);
 
             if (networkInterface.dns != null && networkInterface.dns.Length > 0) {
                 CleanseDnsForSetup(interfaceName);
                 SetupDns(interfaceName, networkInterface);
             }
-                    
+
             if(interfaceName != networkInterface.label)
                 _executableProcessQueue.Enqueue("netsh", String.Format("interface set interface name=\"{0}\" newname=\"{1}\"", interfaceName, networkInterface.label));
-            
+
             _executableProcessQueue.Go();
+        }
+
+        private void SetupIpv6Interface(string interfaceName, NetworkInterface networkInterface)
+        {
+            if (networkInterface.ip6s.Length == 0) return;
+            var ip6tuple = networkInterface.ip6s[0];
+            if (ip6tuple.enabled != "1") return;
+            string command = string.Format("interface ipv6 add address interface=\"{0}\" address={1}/{2}",
+                interfaceName, ip6tuple.ip, ip6tuple.netmask);
+            _executableProcessQueue.Enqueue("netsh", command);
+
+            command = string.Format("interface ipv6 add route prefix=::/0 interface=\"{0}\" nexthop={1} publish=Yes",
+                interfaceName, ip6tuple.gateway);
+            _executableProcessQueue.Enqueue("netsh", command);
         }
 
         private void LogLocalInterfaces(IDictionary<string, string> nameAndMacs) {
             _logger.Log("Network Interfaces found locally:");
             foreach (var networkInterface in nameAndMacs) {
                 _logger.Log(String.Format("{0} ({1})", networkInterface.Key, networkInterface.Value));
-            } 
+            }
         }
 
-        private void SetupInterface(string interfaceName, NetworkInterface networkInterface) {
+        private void SetupIpv4Interface(string interfaceName, NetworkInterface networkInterface) {
             var primaryIpHasBeenAssigned = false;
             for (var i = 0; i != networkInterface.ips.Length; i++) {
                 if (networkInterface.ips[i].enabled != "1") continue;
@@ -101,7 +118,7 @@ namespace Rackspace.Cloud.Server.Agent.Actions
                                                     String.Format(
                                                         "interface ip add address name=\"{0}\" addr={1} mask={2} gateway={3} gwmetric=2",
                                                         interfaceName, networkInterface.ips[i].ip, networkInterface.ips[i].netmask, networkInterface.gateway));
-                    primaryIpHasBeenAssigned = true; 
+                    primaryIpHasBeenAssigned = true;
                     continue;
                 }
 
@@ -117,8 +134,22 @@ namespace Rackspace.Cloud.Server.Agent.Actions
             }
         }
 
-        private void CleanseInterfaceForSetup(string interfaceName) {
-            _executableProcessQueue.Enqueue("netsh", string.Format("interface ip set address name=\"{0}\" source=dhcp", interfaceName), new[] { "0", "1" });
+        private void CleanseInterfaceForSetup(string interfaceName)
+        {
+            _executableProcessQueue.Enqueue("netsh",
+                                            string.Format("interface ip set address name=\"{0}\" source=dhcp",
+                                                          interfaceName), new[] {"0", "1"});
+            foreach (var ipv6Address in _ipFinder.findIpv6Addresses(interfaceName))
+            {
+                //Address returned is of the format 'address%scope'
+                string address = ipv6Address.ToString().Split('%')[0].ToUpper();
+                var command = string.Format("interface ipv6 delete address interface=\"{0}\" address={1}",
+                                            interfaceName, address);
+                _executableProcessQueue.Enqueue("netsh", command);
+            }
+            _executableProcessQueue.Enqueue("netsh",
+                                            string.Format("interface ipv6 delete route ::/0 \"{0}\"", interfaceName),
+                                            new[] {"0", "1"});
         }
 
         private void CleanseDnsForSetup(string interfaceName) {

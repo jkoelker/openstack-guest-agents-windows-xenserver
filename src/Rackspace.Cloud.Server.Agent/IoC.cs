@@ -65,6 +65,7 @@ namespace Rackspace.Cloud.Server.Agent {
             StructureMapConfiguration.BuildInstancesOf<IVersionChecker>().TheDefaultIsConcreteType<VersionChecker>();
             StructureMapConfiguration.BuildInstancesOf<IUnzipper>().TheDefaultIsConcreteType<Unzipper>();
             StructureMapConfiguration.BuildInstancesOf<IFileCopier>().TheDefaultIsConcreteType<FileCopier>();
+            StructureMapConfiguration.BuildInstancesOf<IIPFinder>().TheDefaultIsConcreteType<IPFinder>();
 
 
             StructureMapConfiguration.BuildInstancesOf<IDiffieHellman>().TheDefaultIs(
